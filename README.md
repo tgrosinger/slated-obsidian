@@ -1,5 +1,7 @@
 # Agenda for Obsidian
 
+**Note:** The name will likely need to change as the functionality of this plugin solidifies.
+
 The goal of this plugin will be to bring advanced task management and agenda functionality to the Obsidian knowledgebase.
 
 This plugin is still in the ideation and design phase. This repo serves as an early collaboration hub. I encourage you to create pull-requests with suggestions and recommendations. If it's easier, you can also open issues which I will use to synthesize ideas into this document.
