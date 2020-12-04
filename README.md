@@ -65,6 +65,7 @@ Let's try to prevent proliferation of similar plugins that each has a subset of 
   - The calendar plugin might be usable embedded as a date picker ([tracking thread](https://github.com/liamcain/obsidian-calendar-plugin/issues/59))
   - See [this Github thread](https://github.com/ryanjamurphy/review-obsidian/issues/8)
 - How can this integrate with the Daily Notes plugin? (built-in)
+  - [This library](https://www.npmjs.com/package/obsidian-daily-notes-interface) replicates the daily notes functionality, but allows creating notes in the future.
   - A task which has a due date should be stored or transcluded into the corresponding daily note
   - The [review plugin](https://github.com/ryanjamurphy/review-obsidian) is perfect for this
 - Agenda view may be solved by an upcoming plugin from @ryanjamurphy
