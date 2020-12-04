@@ -14,14 +14,13 @@ This plugin is still in the ideation and design phase. This repo serves as an ea
 
 ## Inspiration
 
-- [[org-mode]]
+- org-mode
   - [TODO items manual](https://orgmode.org/manual/TODO-Items.html)
   - [Date and times manual](https://orgmode.org/manual/Dates-and-Times.html)
   - [Agenda views manual](https://orgmode.org/manual/Agenda-Views.html)
   - [Custom agenda views tutorial](https://orgmode.org/worg/org-tutorials/org-custom-agenda-commands.html)
 - [TaskPaper](https://www.taskpaper.com/)
-- ToDo.txt
-  - [ice-recur plugin](https://github.com/rlpowell/todo-text-stuff/blob/master/ice_recur) has an interesting recurrence format.
+- [NotePlan]()
 
 ## User Experience
 
@@ -35,6 +34,25 @@ This plugin is still in the ideation and design phase. This repo serves as an ea
 - Priorities
   - todo.txt uses `(A)` at the beginning of a task
   - org-mode uses `[A]` just after the `TODO`
+- Recurrence
+  - When a task is viewed with recurrence configured, the plugin will ensure the next task has been created
+    - In other words, lazily evaluate the recurrence configs
+  - Optionally, generate and include links to next and previous occurrence of a task
+  - Using [rrule](https://www.npmjs.com/package/rrule) library, which supports NLP or very advanced config
+    - While this library is capable of very powerful repetition configs, it does not look like the NLP is as advanced as I would like
+- Task moving
+  - Inspired by NotePlan, tasks can be moved to another date.
+  - Moved tasks will link to their original location.
+  - Original location will remain in place, be crossed out, checked, and link to new location
+  
+## Example tasks
+
+- [ ] Go to the dentist ;8:30am
+- [ ] (A) Vacuum the stairs
+- [ ] Make bread ;Every Sunday
+- [ ] Bring dog to the vet <2020-11-22
+- [ ] ~~Wash the car~~ >2021-05-01
+- [ ] Do the dishes ;Every weekday at 5pm
 
 ## Integration
 
