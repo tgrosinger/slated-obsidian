@@ -53,6 +53,8 @@ This plugin is still in the ideation and design phase. This repo serves as an ea
 Let's try to prevent proliferation of similar plugins that each has a subset of what a user is looking for by making it clear this plugin is for and by the community! Additionally, look for areas where tight integration with other plugins will make both richer.
 
 - How can this integrate with the Calendar plugin? (@liamcain)
+  - See [this Github thread](liamcain/obsidian-calendar-plugin#59)
+  - Also [this Github thread](ryanjamurphy/review-obsidian#8)
 - How can this integrate with the Daily Notes plugin? (built-in)
 - Seems like there might be some similarity with the review plugin? (@ryanjamurphy)
 - Other plugin authors that should be contacted?
