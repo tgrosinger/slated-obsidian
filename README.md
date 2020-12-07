@@ -36,25 +36,34 @@ This plugin is still in the ideation and design phase. This repo serves as an ea
 - Priorities
   - todo.txt uses `(A)` at the beginning of a task
   - org-mode uses `[A]` just after the `TODO`
+- Block IDs
+  - When a task is going to be moved or has a repetition pattern added, generate a block ID
+  - The block ID will be used to tie all tasks in a repetition back to the original
+  - The block ID will be used to tie a task that has been moved back to it's originally scheduled location
+  - A popup will make it easy to navigate to previous/upcoming occurences of this task
 - Recurrence
-  - When a task is viewed with recurrence configured, the plugin will ensure the next task has been created
-    - In other words, lazily evaluate the recurrence configs
+  - Denoted with either a semicolon, or 📅
+  - If the task recurrence has a definite end, all tasks should be created and put into daily notes right away
+  - For tasks which have no definite end, a configurable number into the future will be created
+    - This is checked dynamically whenever a recurring task is detected
   - Optionally, generate and include links to next and previous occurrence of a task
+    - This may not be necessary if a popup can aid in navigating to other occurences using the block ID
   - Using [rrule](https://www.npmjs.com/package/rrule) library, which supports NLP or very advanced config
-    - While this library is capable of very powerful repetition configs, it does not look like the NLP is as advanced as I would like
+  - Recurrence is stored in plain text after a task, but a popup will help configure the pattern.
 - Task moving
   - Inspired by NotePlan, tasks can be moved to another date.
-  - Moved tasks will link to their original location.
-  - Original location will remain in place, be crossed out, checked, and link to new location
+  - Moved tasks will contain the block ID from the original location.
+  - Original location will remain in place, be crossed out, checked, and have block ID
   
 ## Example tasks
 
-- [ ] Go to the dentist ;8:30am
+- [ ] Go to the dentist ;8:30am ^jzzz3f4
+- [ ] Make ferry reservation 📅 7:00am ^0sd238l
 - [ ] (A) Vacuum the stairs
-- [ ] Make bread ;Every Sunday
-- [ ] Bring dog to the vet <2020-11-22
-- [ ] ~~Wash the car~~ >2021-05-01
-- [ ] Do the dishes ;Every weekday at 5pm
+- [ ] Make bread ;Every Sunday ^ze6w5od
+- [ ] Bring dog to the vet <2020-11-22 ^3k2codg
+- [x] ~~Wash the car~~ >2021-05-01 ^uos9sdy
+- [ ] Do the dishes 📅 Every weekday at 5pm ^v423ddx
 
 ## Integration
 
