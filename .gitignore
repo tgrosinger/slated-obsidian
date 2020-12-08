@@ -1,0 +1,18 @@
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+package-lock.json
+
+# build
+main.js
+*.js.map
+
+# yarn
+yarn-error.log
+
+# Obsidian
+
+data.json
