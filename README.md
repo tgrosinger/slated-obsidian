@@ -1,6 +1,6 @@
-# Agenda for Obsidian
+# Scheduled for Obsidian
 
-**Note:** The name will likely need to change as the functionality of this plugin solidifies.
+**Note:** The name will possibly change again as the functionality of this plugin solidifies.
 
 The goal of this plugin will be to bring advanced task management and agenda functionality to the Obsidian knowledgebase.
 
