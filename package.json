@@ -1,0 +1,36 @@
+{
+  "name": "scheduled-obsidian",
+  "version": "0.0.1",
+  "description": "Schedule, move, and repeat tasks",
+  "main": "main.js",
+  "scripts": {
+    "dev": "rollup --config rollup.config.js -w",
+    "build": "rollup --config rollup.config.js",
+    "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
+    "eslint": "eslint . --ext .ts,.tsx --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^9.0.0",
+    "@rollup/plugin-typescript": "^6.0.0",
+    "@types/node": "^14.14.2",
+    "@typescript-eslint/eslint-plugin": "4.6.0",
+    "@typescript-eslint/parser": "4.6.0",
+    "eslint": "7.12.1",
+    "eslint-plugin-babel": "5.3.1",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-jsdoc": "30.7.3",
+    "eslint-plugin-prefer-arrow": "1.2.2",
+    "eslint-plugin-simple-import-sort": "5.0.3",
+    "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
+    "rollup": "^2.32.1",
+    "tslib": "^2.0.3",
+    "typescript": "^4.0.3"
+  },
+  "dependencies": {
+    "obsidian-daily-notes-interface": "^0.2.2"
+  }
+}

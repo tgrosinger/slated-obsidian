@@ -1,0 +1,8 @@
+{
+  "id": "scheduled-obsidian",
+  "name": "Scheduled",
+  "description": "Schdule, move, and repeat tasks",
+  "isDesktopOnly": false,
+  "version": "0.0.1",
+  "js": "main.js"
+}
