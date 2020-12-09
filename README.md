@@ -1,28 +1,25 @@
-# Scheduled for Obsidian
+# Slated for Obsidian
 
-**Note:** The name will possibly change again as the functionality of this plugin solidifies.
+Advanced task management in the Obsidian knowledgebase.
 
-The goal of this plugin will be to bring advanced task management and agenda functionality to the Obsidian knowledgebase.
+Move tasks and set up repeating tasks in 100% Obsidian Markdown.
 
-This plugin is still in the ideation and design phase. This repo serves as an early collaboration hub. I encourage you to create pull-requests with suggestions and recommendations. If it's easier, you can also open issues which I will use to synthesize ideas into this document.
-
-## Requirements
+## Design Requirements
 
 - Maintain compatibility with Markdown
   - This is essential for ease of use (especially on mobile) and to avoid lock-in
+  - Obsidian variations from official Markdown are allowed, such as block links
 - Use well understood patterns wherever possible
   - Checkboxes to indicate open/done status for example
   - Existing tag and link syntax
+  - Adopt priority syntax from todo.txt
 
 ## Inspiration
 
 - org-mode
   - [TODO items manual](https://orgmode.org/manual/TODO-Items.html)
   - [Date and times manual](https://orgmode.org/manual/Dates-and-Times.html)
-  - [Agenda views manual](https://orgmode.org/manual/Agenda-Views.html)
-  - [Custom agenda views tutorial](https://orgmode.org/worg/org-tutorials/org-custom-agenda-commands.html)
-- [TaskPaper](https://www.taskpaper.com/)
-- [NotePlan]()
+- [NotePlan](https://noteplan.co/)
 
 ## User Experience
 
@@ -61,8 +58,8 @@ This plugin is still in the ideation and design phase. This repo serves as an ea
 - [ ] Make ferry reservation 📅 7:00am ^0sd238l
 - [ ] (A) Vacuum the stairs
 - [ ] Make bread ;Every Sunday ^ze6w5od
-- [ ] Bring dog to the vet <2020-11-22 ^3k2codg
-- [x] ~~Wash the car~~ >2021-05-01 ^uos9sdy
+- [ ] Bring dog to the vet <[[2020-11-22^3k2codg]]
+- [x] ~~Wash the car~~ >[[2021-05-01]] ^uos9sdy
 - [ ] Do the dishes 📅 Every weekday at 5pm ^v423ddx
 
 ## Integration
@@ -79,14 +76,5 @@ Let's try to prevent proliferation of similar plugins that each has a subset of 
   - The [review plugin](https://github.com/ryanjamurphy/review-obsidian) is perfect for this
 - Agenda view may be solved by an upcoming plugin from @ryanjamurphy
   > An Obsidian plugin to track overdue items (e.g., tasks in daily notes before today not yet completed/moved/cancelled)
-
-## Crazy Ideas
-
-- Search for dates throughout the vault
-  - Have a simple way to include them in the Agenda
-  - This would be useful for things like birthdays in a contacts note
-
-## Open Questions
-
-- Can there be saved queries that can be opened in the custom view?
-- How does [day planner](https://github.com/lynchjames/obsidian-day-planner) do desktop notifications (@lynchjames)?
+- Tasks with specified times can show OS notifications
+  - [Example from Day Planner](https://github.com/lynchjames/obsidian-day-planner/blob/main/src/main.ts#L120)

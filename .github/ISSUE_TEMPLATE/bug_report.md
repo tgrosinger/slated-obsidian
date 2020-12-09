@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]
  - Obsidian Version: [e.g. v0.9.10] (Settings → About → Current Version)
- - Scheduled Version: [e.g. 0.4.0] (Settings → Third-party plugin → Scroll to Scheduled)
+ - Slated Version: [e.g. 0.4.0] (Settings → Third-party plugin → Scroll to Slated)
 
 **Additional context**
 Add any other context about the problem here.

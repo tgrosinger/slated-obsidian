@@ -1,7 +1,7 @@
 {
-  "id": "scheduled-obsidian",
-  "name": "Scheduled",
-  "description": "Schdule, move, and repeat tasks",
+  "id": "slated-obsidian",
+  "name": "Slated",
+  "description": "Task Management - schdule, move, and repeat tasks",
   "isDesktopOnly": false,
   "version": "0.0.1",
   "js": "main.js"

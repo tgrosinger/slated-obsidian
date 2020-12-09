@@ -3,7 +3,7 @@ on:
   push:
     tags: ["*"]
 env:
-  PLUGIN_NAME: scheduled-obsidian
+  PLUGIN_NAME: slated-obsidian
 jobs:
   build:
     runs-on: ubuntu-latest

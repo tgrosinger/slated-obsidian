@@ -1,9 +1,10 @@
 {
-  "name": "scheduled-obsidian",
+  "name": "slated-obsidian",
   "version": "0.0.1",
-  "description": "Schedule, move, and repeat tasks",
+  "description": "Task management - schedule, move, and repeat tasks",
   "main": "main.js",
   "scripts": {
+    "test": "jest",
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js",
     "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
@@ -13,24 +14,33 @@
   "author": "",
   "license": "GPL-3.0",
   "devDependencies": {
+    "@babel/core": "7.12.9",
+    "@babel/preset-env": "7.12.7",
+    "@babel/preset-typescript": "7.12.7",
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
+    "@types/jest": "26.0.18",
     "@types/node": "^14.14.2",
     "@typescript-eslint/eslint-plugin": "4.6.0",
     "@typescript-eslint/parser": "4.6.0",
+    "babel-jest": "26.6.3",
     "eslint": "7.12.1",
     "eslint-plugin-babel": "5.3.1",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jsdoc": "30.7.3",
     "eslint-plugin-prefer-arrow": "1.2.2",
     "eslint-plugin-simple-import-sort": "5.0.3",
+    "jest": "26.6.3",
+    "jest-mock-extended": "1.0.10",
+    "moment": "2.29.1",
     "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
     "rollup": "^2.32.1",
     "tslib": "^2.0.3",
     "typescript": "^4.0.3"
   },
   "dependencies": {
-    "obsidian-daily-notes-interface": "^0.2.2"
+    "neverthrow": "3.0.0",
+    "obsidian-daily-notes-interface": "0.2.2"
   }
 }
