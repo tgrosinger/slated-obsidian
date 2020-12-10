@@ -1,4 +1,6 @@
+import { invalid } from 'moment';
 import { TFile } from 'obsidian';
+import { RRule } from 'rrule';
 import { SettingsInstance } from 'src/settings';
 import { VaultIntermediate } from 'src/vault';
 
@@ -7,12 +9,12 @@ const blockHashRe = /\^[a-zA-Z0-9]+/;
 interface RepeatingTaskLine {
   lineNum: number;
   line: string;
-  repeatConfig: string;
+  repeatConfig: RRule | undefined;
 
   /**
    * Indicate that a repeatConfig was detected, but it is not understood.
    */
-  repeatConfigValid: boolean;
+  invalidRepeatConfig: boolean;
 
   blockID: string;
 
@@ -44,7 +46,9 @@ export class TaskHandler {
    */
   public async processFile(file: TFile): Promise<void> {
     const repeatingTasks = await this.normalizeFileRepeatingTasks(file);
-    repeatingTasks.map(this.propogateRepetitionsForTask);
+    repeatingTasks
+      .filter(({ invalidRepeatConfig }) => !invalidRepeatConfig)
+      .forEach(this.propogateRepetitionsForTask);
   }
 
   /**
@@ -73,8 +77,11 @@ export class TaskHandler {
     const repeatingTaskLines = splitFileContents
       .map((line, index) => ({ line, lineNum: index }))
       .filter(({ line }) => this.isLineTask(line))
-      .filter(({ line }) => this.isRepeatingTask(line))
-      .map((val) => this.parseRepeatingTaskLine(val))
+      .map((val) => this.parseTaskLine(val))
+      .filter(
+        ({ repeatConfig, invalidRepeatConfig }) =>
+          repeatConfig || invalidRepeatConfig,
+      )
       .map((taskLine) => this.ensureBlockID(taskLine));
 
     repeatingTaskLines
@@ -82,10 +89,12 @@ export class TaskHandler {
       .map((taskLine) => (splitFileContents[taskLine.lineNum] = taskLine.line));
     this.vault.writeFile(file, splitFileContents.join('\n'));
 
-    return repeatingTaskLines.map(this.parseRepeatingTaskLine);
+    // Notify on invalid repeating configs
+
+    return repeatingTaskLines.map(this.parseTaskLine);
   };
 
-  private parseRepeatingTaskLine = ({
+  private parseTaskLine = ({
     line,
     lineNum,
   }: {
@@ -93,30 +102,17 @@ export class TaskHandler {
     lineNum: number;
   }): RepeatingTaskLine => {
     const blockID = blockHashRe.exec(line);
-    const repeatConfig = this.getRepeatConfig(line);
-
-    return {
+    const taskLine: RepeatingTaskLine = {
       line,
       lineNum,
-      repeatConfig,
-      repeatConfigValid: true, // TODO: Need to parse repeat config
+      repeatConfig: undefined,
+      invalidRepeatConfig: false,
       blockID: blockID && blockID.length === 1 ? blockID[0] : undefined,
       blockIDUnsaved: false,
     };
+    this.fillRepeatConfig(taskLine);
+    return taskLine;
   };
-
-  /**
-   * Test if the provided task line has a repetition configuration.
-   *
-   * Repetition configurations are at the end of a task and are separated by
-   * either a semicolon, or 📅.
-   *
-   * @param taskLine A line in the file which is already known to be a task.
-   */
-  private readonly isRepeatingTask = (taskLine: string): boolean =>
-    // Jest does not like this line.
-    // return taskLine.contains(';') || taskLine.contains('📅');
-    taskLine.indexOf(';') >= 0 || taskLine.indexOf('📅') >= 0;
 
   /**
    * Test if this line is a task. This is called for every line in a file after
@@ -135,8 +131,27 @@ export class TaskHandler {
     );
   };
 
-  private readonly getRepeatConfig = (line: string): string | undefined =>
-    undefined;
+  /**
+   * Looks for the repeating config portion of a task line.
+   * The repeating config occurs after a semicolon or 📅 but excludes the blockID.
+   */
+  private readonly fillRepeatConfig = (taskLine: RepeatingTaskLine): void => {
+    const lineMinusID = taskLine.line.replace('^' + taskLine.blockID, '');
+    let parts = lineMinusID.split('📅');
+    if (parts.length === 1) {
+      parts = lineMinusID.split(';');
+      if (parts.length === 1) {
+        // No repeat config defined
+        return;
+      }
+    }
+    if (parts.length > 2) {
+      taskLine.invalidRepeatConfig = true;
+      return;
+    }
+
+    taskLine.repeatConfig = RRule.fromText(parts[1]);
+  };
 
   /**
    * If the provided taskLine does not have a blockID, one is created and the

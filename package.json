@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "neverthrow": "3.0.0",
-    "obsidian-daily-notes-interface": "0.2.2"
+    "obsidian-daily-notes-interface": "0.2.2",
+    "rrule": "2.6.6"
   }
 }

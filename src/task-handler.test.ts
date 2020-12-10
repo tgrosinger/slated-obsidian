@@ -17,10 +17,15 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
     taskHandler = new TaskHandler(vault, settings);
   });
 
-  test('first test', () => {
-    taskHandler.processFile(file);
-    expect(vault.readFile).toHaveBeenCalledWith(file, false);
-  });
+  /**
+   * Tests to add:
+   * - 📅 is recognized to denote the repeat config
+   * - ; is recognized to denote the repeat config
+   * - Multiple instances of repeat config denoters is marked invalid
+   * - Invalid repeat config does not call propogateRepetitionsForTask
+   * - Invalid repeat config creates a Notify
+   * - Invalid repeat config gets a blockID appended
+   */
 
   describe('valid task lines', () => {
     test('single line with repeat', async () => {
