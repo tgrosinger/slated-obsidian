@@ -4,7 +4,7 @@ import { RRule } from 'rrule';
 import { SettingsInstance } from 'src/settings';
 import { VaultIntermediate } from 'src/vault';
 
-const blockHashRe = /\^[a-zA-Z0-9]+/;
+const blockHashRe = /\^[\-a-zA-Z0-9]+/;
 
 interface RepeatingTaskLine {
   lineNum: number;
@@ -45,73 +45,48 @@ export class TaskHandler {
    * - Insert a configurable number of infinite repeating tasks
    */
   public async processFile(file: TFile): Promise<void> {
-    const repeatingTasks = await this.normalizeFileRepeatingTasks(file);
-    repeatingTasks
-      .filter(({ invalidRepeatConfig }) => !invalidRepeatConfig)
+    const allTasks = await this.normalizeFileTasks(file);
+    allTasks
+      .filter((task) => task.repeats && task.repeatValid)
       .forEach(this.propogateRepetitionsForTask);
   }
 
   /**
    * Ensure that future repetitions of the provided task have been created.
    */
-  private propogateRepetitionsForTask(task: RepeatingTaskLine): void {
+  private propogateRepetitionsForTask(task: TaskLine): void {
     // throw new Error('Not implemented');
     console.log('TODO: Propogate task: ' + task.line);
   }
 
   /**
-   * Scan the file looking for tasks with a repeating config. For each
-   * repeating task, ensure it has a block ID on the line, and validate the
-   * repeating config. Normalized file is saved, then returns a list of
-   * RepeatingLineItems.
+   * Scan the file looking for tasks. Parse the task, and if it is a repeating
+   * task, ensure it has a block ID and validate the repeat config. Normalized
+   * file is saved, then returns a list of all the TaskItems.
    */
-  private readonly normalizeFileRepeatingTasks = async (
+  private readonly normalizeFileTasks = async (
     file: TFile,
-  ): Promise<RepeatingTaskLine[]> => {
+  ): Promise<TaskLine[]> => {
     const fileContents = await this.vault.readFile(file, false);
     if (!fileContents) {
       return [];
     }
 
     const splitFileContents = fileContents.split('\n');
-    const repeatingTaskLines = splitFileContents
+    const taskLines = splitFileContents
       .map((line, index) => ({ line, lineNum: index }))
       .filter(({ line }) => this.isLineTask(line))
-      .map((val) => this.parseTaskLine(val))
-      .filter(
-        ({ repeatConfig, invalidRepeatConfig }) =>
-          repeatConfig || invalidRepeatConfig,
-      )
-      .map((taskLine) => this.ensureBlockID(taskLine));
+      .map(({ line, lineNum }) => new TaskLine(line, lineNum));
+    const repeatingTaskLines = taskLines.filter((taskLine) => taskLine.repeats);
 
     repeatingTaskLines
-      .filter((taskLine) => taskLine.blockIDUnsaved)
+      .filter((taskLine) => taskLine.modfied)
       .map((taskLine) => (splitFileContents[taskLine.lineNum] = taskLine.line));
     this.vault.writeFile(file, splitFileContents.join('\n'));
 
-    // Notify on invalid repeating configs
+    // TODO: Notify on invalid repeating configs
 
-    return repeatingTaskLines.map(this.parseTaskLine);
-  };
-
-  private parseTaskLine = ({
-    line,
-    lineNum,
-  }: {
-    line: string;
-    lineNum: number;
-  }): RepeatingTaskLine => {
-    const blockID = blockHashRe.exec(line);
-    const taskLine: RepeatingTaskLine = {
-      line,
-      lineNum,
-      repeatConfig: undefined,
-      invalidRepeatConfig: false,
-      blockID: blockID && blockID.length === 1 ? blockID[0] : undefined,
-      blockIDUnsaved: false,
-    };
-    this.fillRepeatConfig(taskLine);
-    return taskLine;
+    return taskLines;
   };
 
   /**
@@ -130,43 +105,6 @@ export class TaskHandler {
       line.startsWith('- [X] ')
     );
   };
-
-  /**
-   * Looks for the repeating config portion of a task line.
-   * The repeating config occurs after a semicolon or 📅 but excludes the blockID.
-   */
-  private readonly fillRepeatConfig = (taskLine: RepeatingTaskLine): void => {
-    const lineMinusID = taskLine.line.replace('^' + taskLine.blockID, '');
-    let parts = lineMinusID.split('📅');
-    if (parts.length === 1) {
-      parts = lineMinusID.split(';');
-      if (parts.length === 1) {
-        // No repeat config defined
-        return;
-      }
-    }
-    if (parts.length > 2) {
-      taskLine.invalidRepeatConfig = true;
-      return;
-    }
-
-    taskLine.repeatConfig = RRule.fromText(parts[1]);
-  };
-
-  /**
-   * If the provided taskLine does not have a blockID, one is created and the
-   * blockIDUnsaved flag is set to true. The same taskLine is returned.
-   */
-  private readonly ensureBlockID = (
-    taskLine: RepeatingTaskLine,
-  ): RepeatingTaskLine => {
-    if (!taskLine.blockID) {
-      taskLine.blockID = createTaskBlockHash();
-      taskLine.line += ` ^${taskLine.blockID}`;
-      taskLine.blockIDUnsaved = true;
-    }
-    return taskLine;
-  };
 }
 
 const createTaskBlockHash = (): string => {
@@ -180,3 +118,105 @@ const createTaskBlockHash = (): string => {
   }
   return result;
 };
+
+export class TaskLine {
+  public readonly lineNum: number;
+
+  private readonly originalLine: string;
+  private _line: string;
+  private _modified: boolean;
+
+  private _blockID: string;
+
+  private hasRepeatConfig: boolean;
+  private repeatParseError: boolean;
+  private _rrule: RRule | undefined;
+
+  constructor(line: string, lineNum: number) {
+    this.originalLine = line;
+    this._line = line;
+    this.lineNum = lineNum;
+
+    this.parseBlockID();
+    this.parseRepeatConfig();
+    if (this.hasRepeatConfig && !this._blockID) {
+      this.addBlockID();
+    }
+  }
+
+  /**
+   * line returns the current (possibly modified) value of this task line.
+   */
+  public get line(): string {
+    return this._line;
+  }
+
+  /**
+   * modified indicates if the line has been updated from the original value.
+   * Modifications may include:
+   * - Adding a block ID
+   * - Adding a date that this task was moved to
+   * - Checking or unchecking this task
+   */
+  public get modfied(): boolean {
+    return this._modified;
+  }
+
+  public get blockID(): string {
+    return this._blockID;
+  }
+
+  public get repeats(): boolean {
+    return this.hasRepeatConfig;
+  }
+
+  public get repeatValid(): boolean {
+    return !this.repeatParseError;
+  }
+
+  public get repeatConfig(): RRule {
+    return this._rrule;
+  }
+
+  /**
+   * Looks for the repeating config portion of a task line.
+   * The repeating config occurs after a semicolon or 📅 but excludes the blockID.
+   */
+  private parseRepeatConfig = () => {
+    const lineMinusID = this.originalLine.replace('^' + this._blockID, '');
+    let parts = lineMinusID.split('📅');
+    if (parts.length === 1) {
+      parts = lineMinusID.split(';');
+      if (parts.length === 1) {
+        this.hasRepeatConfig = false;
+        return;
+      }
+    }
+    this.hasRepeatConfig = true;
+
+    if (parts.length > 2) {
+      this.repeatParseError = true;
+      return;
+    }
+
+    this._rrule = RRule.fromText(parts[1]);
+  };
+
+  private parseBlockID = () => {
+    const blockID = blockHashRe.exec(this.originalLine);
+    this._blockID = blockID && blockID.length === 1 ? blockID[0] : '';
+  };
+
+  /**
+   * Create a blockID and append to the line.
+   */
+  private readonly addBlockID = (): void => {
+    if (this._blockID != '') {
+      return;
+    }
+
+    this._blockID = createTaskBlockHash();
+    this._line += ' ^' + this._blockID;
+    this._modified = true;
+  };
+}
