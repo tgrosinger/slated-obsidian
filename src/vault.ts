@@ -1,7 +1,11 @@
+import moment from 'moment';
 import { Moment } from 'moment';
 import { Result } from 'neverthrow';
 import { TFile, Vault } from 'obsidian';
-import { createDailyNote } from 'obsidian-daily-notes-interface';
+import {
+  createDailyNote,
+  getDailyNoteSettings,
+} from 'obsidian-daily-notes-interface';
 
 export class VaultIntermediate {
   private readonly vault: Vault;
@@ -10,16 +14,19 @@ export class VaultIntermediate {
     this.vault = vault;
   }
 
-  public getDailyNoteContents = (date: Moment): string => {
-    const file = createDailyNote(date);
-    throw new Error('Method not implemented.');
-  };
+  public getDailyNote = (date: Moment): Promise<TFile> => createDailyNote(date);
 
   public setDailyNoteContents = (
     date: Moment,
     contents: string,
   ): Result<void, Error> => {
     throw new Error('Method not implemented.');
+  };
+
+  public findMomentForDailyNote = (file: TFile): Moment | undefined => {
+    let { format } = getDailyNoteSettings();
+    const date = moment(file.basename, format, true);
+    return date.isValid() ? date : null;
   };
 
   public readFile = (file: TFile, useCache: boolean): Promise<string> =>

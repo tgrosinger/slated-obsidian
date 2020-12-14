@@ -17,12 +17,14 @@ export default class SlatedPlugin extends Plugin {
       this.app.workspace.on('file-open', (file: TFile) => {
         // This callback is fired whenever a file receives focus
         // not just when the file is first opened.
+        console.debug('Slated: File opened: ' + file.basename);
         this.taskHandler.processFile(file);
       }),
     );
     this.registerEvent(
       this.app.vault.on('modify', (file: TFile) => {
         // This callback is fired whenever a file is saved
+        console.debug('Slated: File modified: ' + file.basename);
         this.taskHandler.processFile(file);
       }),
     );

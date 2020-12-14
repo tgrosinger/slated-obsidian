@@ -1,13 +1,25 @@
+import moment from 'moment';
 import { SettingsInstance } from './settings';
 import { TaskHandler, TaskLine } from './task-handler';
 import { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { TFile } from 'obsidian';
 
-// TODO: Convert from `it` to another layer of `describe` with tests?
+const format = 'YYYY-MM-DD';
+const startDate = moment('2020-12-31');
+
+const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
+  const mockFile = mock<TFile>();
+  mockFile.basename = basename;
+  return mockFile;
+};
+
+const getMockFileForMoment = (date: moment.Moment): MockProxy<TFile> => {
+  return getMockFileWithBasename(date.format(format));
+};
 
 describe('When a taskLine is created', () => {
-  it('should properly parse an existing block hash', () => {
+  test('should properly parse an existing block hash', () => {
     const blockID = '^a1b2c3';
     const input = '- [ ] this is the task ' + blockID;
     const taskLine = new TaskLine(input, 1);
@@ -15,14 +27,14 @@ describe('When a taskLine is created', () => {
     expect(taskLine.blockID).toEqual(blockID);
   });
 
-  it('should leave the block hash empty when there is not one', () => {
+  test('should leave the block hash empty when there is not one', () => {
     const input = '- [ ] this is the task';
     const taskLine = new TaskLine(input, 1);
     expect(taskLine.line).toEqual(input);
     expect(taskLine.blockID).toEqual('');
   });
 
-  it('should create a block hash for repeating tasks', () => {
+  test('should create a block hash for repeating tasks', () => {
     const input = '- [ ] this is the task ; Every Sunday';
     const regexInput = '- \\[ \\] this is the task ; Every Sunday';
     const taskLine = new TaskLine(input, 1);
@@ -32,7 +44,7 @@ describe('When a taskLine is created', () => {
     );
   });
 
-  it('should properly parse the repeating config', () => {
+  test('should properly parse the repeating config', () => {
     const input = '- [ ] this is the task ; Every Sunday ^a1b2c3';
     const taskLine = new TaskLine(input, 1);
     expect(taskLine.line).toEqual(input);
@@ -41,7 +53,7 @@ describe('When a taskLine is created', () => {
     );
   });
 
-  it('should properly assess when there is not a repeating config', () => {
+  test('should properly assess when there is not a repeating config', () => {
     const input = '- [ ] this is the task';
     const taskLine = new TaskLine(input, 1);
     expect(taskLine.line).toEqual(input);
@@ -57,9 +69,9 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
   let taskHandler: TaskHandler;
 
   beforeEach(() => {
-    file = mock<TFile>();
+    file = getMockFileForMoment(startDate);
     vault = mock<VaultIntermediate>();
-    settings = mock<SettingsInstance>();
+    settings = new SettingsInstance({ futureRepetitionsCount: 2 });
     taskHandler = new TaskHandler(vault, settings);
   });
 
@@ -67,8 +79,6 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
    * TODO: Add tasks specifically of TaskLine class
    *
    * Tests to add:
-   * - 📅 is recognized to denote the repeat config
-   * - ; is recognized to denote the repeat config
    * - Multiple instances of repeat config denoters is marked invalid
    * - Invalid repeat config does not call propogateRepetitionsForTask
    * - Invalid repeat config creates a Notify
@@ -77,9 +87,22 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
 
   describe('valid task lines', () => {
     test('single line with repeat', async () => {
-      vault.readFile.mockReturnValue(
-        Promise.resolve('- [ ] a test task ; Every Sunday'),
-      );
+      vault.readFile
+        .mockReturnValueOnce(
+          Promise.resolve('- [ ] a test task ; Every Sunday'),
+        )
+        .mockReturnValue(Promise.resolve(''));
+      vault.findMomentForDailyNote.mockImplementation((file) => {
+        const date = moment(file.basename, format, true);
+        return date.isValid() ? date : null;
+      });
+
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
 
       await taskHandler.processFile(file);
 
@@ -90,8 +113,21 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
           '- [ ] a test task ; Every Sunday ^task-',
         ),
       ).toBeTruthy();
+
+      expect(futureFiles.length).toEqual(2);
+      expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
+      expect(vault.writeFile.mock.calls[2][0]).toEqual(futureFiles[1]);
+
+      // TODO: This should not actually be the same. It should have a link
+      expect(vault.writeFile.mock.calls[1][1]).toEqual(
+        '\n## Tasks\n' + vault.writeFile.mock.calls[0][1],
+      );
+      expect(vault.writeFile.mock.calls[2][1]).toEqual(
+        '\n## Tasks\n' + vault.writeFile.mock.calls[0][1],
+      );
     });
 
+    /*
     test('multi-line including non-tasks', async () => {
       const inputLines = [
         '# My Header',
@@ -102,6 +138,13 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
       ];
 
       vault.readFile.mockReturnValue(Promise.resolve(inputLines.join('\n')));
+      vault.findMomentForDailyNote.mockReturnValue(moment.utc());
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = mock<TFile>();
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
 
       await taskHandler.processFile(file);
 
@@ -120,5 +163,6 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
         }
       }
     });
+    */
   });
 });

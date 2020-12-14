@@ -1,29 +1,11 @@
-import { invalid } from 'moment';
+import moment from 'moment';
+import { Moment } from 'moment';
 import { TFile } from 'obsidian';
-import { RRule } from 'rrule';
+import RRule from 'rrule';
 import { SettingsInstance } from 'src/settings';
 import { VaultIntermediate } from 'src/vault';
 
 const blockHashRe = /\^[\-a-zA-Z0-9]+/;
-
-interface RepeatingTaskLine {
-  lineNum: number;
-  line: string;
-  repeatConfig: RRule | undefined;
-
-  /**
-   * Indicate that a repeatConfig was detected, but it is not understood.
-   */
-  invalidRepeatConfig: boolean;
-
-  blockID: string;
-
-  /**
-   * Indicates that this blockID was added during parsing, and is not yet saved
-   * in the file.
-   */
-  blockIDUnsaved: boolean;
-}
 
 export class TaskHandler {
   private readonly settings: SettingsInstance;
@@ -45,18 +27,81 @@ export class TaskHandler {
    * - Insert a configurable number of infinite repeating tasks
    */
   public async processFile(file: TFile): Promise<void> {
+    const date = this.vault.findMomentForDailyNote(file);
+    if (date === undefined) {
+      console.debug(
+        'Slated: Not in a daily note, not processing contained tasks',
+      );
+      return;
+    }
+
     const allTasks = await this.normalizeFileTasks(file);
-    allTasks
+    const unresolvedPropogations = allTasks
       .filter((task) => task.repeats && task.repeatValid)
-      .forEach(this.propogateRepetitionsForTask);
+      .map((task) => this.propogateRepetitionsForTask(task, date));
+
+    await Promise.all(unresolvedPropogations);
   }
 
   /**
    * Ensure that future repetitions of the provided task have been created.
    */
-  private propogateRepetitionsForTask(task: TaskLine): void {
-    // throw new Error('Not implemented');
-    console.log('TODO: Propogate task: ' + task.line);
+  private async propogateRepetitionsForTask(
+    task: TaskLine,
+    date: Moment,
+  ): Promise<void[]> {
+    const nextN = task.repeatConfig.all(
+      (_, len) => len < this.settings.futureRepetitionsCount,
+    );
+
+    const pendingUpdates = nextN.map((date) =>
+      this.vault
+        .getDailyNote(moment(date))
+        .then((file) => this.ensureTaskRepeatExists(file, task)),
+    );
+    return Promise.all(pendingUpdates);
+  }
+
+  private async ensureTaskRepeatExists(
+    file: TFile,
+    task: TaskLine,
+  ): Promise<void> {
+    console.debug(
+      'Slated: Ensuring repeating task exists in file: ' + file.basename,
+    );
+    const fileContents = (await this.vault.readFile(file, false)) || '';
+    const splitFileContents = fileContents.split('\n');
+    let taskSectionHeader = -1;
+    let endOfTasksSection = -1;
+    for (let i = 0; i < splitFileContents.length; i++) {
+      const line = splitFileContents[i];
+      if (line.indexOf(task.blockID) >= 0) {
+        // TODO: Verify that the task line does in fact match
+
+        // modify if not quite right.
+        return;
+      }
+
+      if (line === this.settings.tasksHeader) {
+        taskSectionHeader = i;
+      } else if (line.startsWith('#')) {
+        endOfTasksSection = i - 1;
+      }
+    }
+
+    if (taskSectionHeader === -1) {
+      // append the task section, then the task
+      splitFileContents.push(this.settings.tasksHeader);
+      splitFileContents.push(task.line);
+    } else if (endOfTasksSection === -1) {
+      // task section exists at end of file, just append task to list
+      splitFileContents.push(task.line);
+    } else {
+      // task section exists and has end, append to section
+      splitFileContents.splice(endOfTasksSection, 0, task.line);
+    }
+
+    return this.vault.writeFile(file, splitFileContents.join('\n'));
   }
 
   /**
@@ -67,6 +112,8 @@ export class TaskHandler {
   private readonly normalizeFileTasks = async (
     file: TFile,
   ): Promise<TaskLine[]> => {
+    console.debug('Slated: Normalizing tasks in file: ' + file.basename);
+
     const fileContents = await this.vault.readFile(file, false);
     if (!fileContents) {
       return [];
@@ -79,9 +126,20 @@ export class TaskHandler {
       .map(({ line, lineNum }) => new TaskLine(line, lineNum));
     const repeatingTaskLines = taskLines.filter((taskLine) => taskLine.repeats);
 
-    repeatingTaskLines
-      .filter((taskLine) => taskLine.modfied)
-      .map((taskLine) => (splitFileContents[taskLine.lineNum] = taskLine.line));
+    const modifiedLines = repeatingTaskLines.filter(
+      (taskLine) => taskLine.modfied,
+    );
+
+    // NOTE: We must not write the file if no changes were made because we hook
+    // on file-modified. If we always write, then it will infinitely update.
+
+    if (modifiedLines.length === 0) {
+      return taskLines;
+    }
+
+    modifiedLines.map(
+      (taskLine) => (splitFileContents[taskLine.lineNum] = taskLine.line),
+    );
     this.vault.writeFile(file, splitFileContents.join('\n'));
 
     // TODO: Notify on invalid repeating configs
