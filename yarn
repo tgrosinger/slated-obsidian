@@ -11,6 +11,7 @@
 
 docker run --rm \
     -it \
+    --env YARN_CACHE_FOLDER=/code/yarn-cache \
     -v "$(pwd)":/code \
     -w /code \
     --entrypoint yarn \
