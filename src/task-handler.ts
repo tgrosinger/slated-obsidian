@@ -1,9 +1,9 @@
+import type { Moment } from 'moment';
 import moment from 'moment';
-import { Moment } from 'moment';
-import { TFile } from 'obsidian';
+import type { TFile } from 'obsidian';
 import RRule from 'rrule';
-import { SettingsInstance } from 'src/settings';
-import { VaultIntermediate } from 'src/vault';
+import type { SettingsInstance } from 'src/settings';
+import type { VaultIntermediate } from 'src/vault';
 
 const blockHashRe = /\^[\-a-zA-Z0-9]+/;
 
@@ -54,9 +54,9 @@ export class TaskHandler {
       (_, len) => len < this.settings.futureRepetitionsCount,
     );
 
-    const pendingUpdates = nextN.map((date) =>
+    const pendingUpdates = nextN.map((updateDate) =>
       this.vault
-        .getDailyNote(moment(date))
+        .getDailyNote(moment(updateDate))
         .then((file) => this.ensureTaskRepeatExists(file, task)),
     );
     return Promise.all(pendingUpdates);
@@ -240,7 +240,7 @@ export class TaskLine {
    * Looks for the repeating config portion of a task line.
    * The repeating config occurs after a semicolon or 📅 but excludes the blockID.
    */
-  private parseRepeatConfig = () => {
+  private readonly parseRepeatConfig = (): void => {
     const lineMinusID = this.originalLine.replace('^' + this._blockID, '');
     let parts = lineMinusID.split('📅');
     if (parts.length === 1) {
@@ -260,7 +260,7 @@ export class TaskLine {
     this._rrule = RRule.fromText(parts[1]);
   };
 
-  private parseBlockID = () => {
+  private readonly parseBlockID = (): void => {
     const blockID = blockHashRe.exec(this.originalLine);
     this._blockID = blockID && blockID.length === 1 ? blockID[0] : '';
   };
@@ -269,7 +269,7 @@ export class TaskLine {
    * Create a blockID and append to the line.
    */
   private readonly addBlockID = (): void => {
-    if (this._blockID != '') {
+    if (this._blockID !== '') {
       return;
     }
 

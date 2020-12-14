@@ -1,7 +1,8 @@
 import { ISettings, SettingsInstance } from './settings';
 import { TaskHandler } from './task-handler';
+import Test from './ui/Test.svelte';
 import { VaultIntermediate } from './vault';
-import { Plugin, TFile } from 'obsidian';
+import { App, Modal, Plugin, TFile } from 'obsidian';
 
 export default class SlatedPlugin extends Plugin {
   private taskHandler: TaskHandler;
@@ -28,10 +29,40 @@ export default class SlatedPlugin extends Plugin {
         this.taskHandler.processFile(file);
       }),
     );
+
+    this.addCommand({
+      id: 'open-sample-modal',
+      name: 'Open Sample Modal',
+      checkCallback: (checking: boolean) => {
+        if (checking) {
+          return this.app.workspace.activeLeaf !== undefined;
+        }
+
+        new SampleModal(this.app).open();
+      },
+    });
   }
 
   private async loadSettings(): Promise<void> {
     const loadedSettings = await this.loadData();
     this.settings = new SettingsInstance(loadedSettings);
   }
+}
+
+class SampleModal extends Modal {
+  constructor(app: App) {
+    super(app);
+  }
+
+  public onOpen = (): void => {
+    const { contentEl } = this;
+    const app = new Test({
+      target: contentEl,
+    });
+  };
+
+  public onClose = (): void => {
+    const { contentEl } = this;
+    contentEl.empty();
+  };
 }

@@ -1,9 +1,9 @@
-import moment from 'moment';
 import { SettingsInstance } from './settings';
 import { TaskHandler, TaskLine } from './task-handler';
-import { VaultIntermediate } from './vault';
+import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { TFile } from 'obsidian';
+import moment from 'moment';
+import type { TFile } from 'obsidian';
 
 const format = 'YYYY-MM-DD';
 const startDate = moment('2020-12-31');
@@ -14,9 +14,8 @@ const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
   return mockFile;
 };
 
-const getMockFileForMoment = (date: moment.Moment): MockProxy<TFile> => {
-  return getMockFileWithBasename(date.format(format));
-};
+const getMockFileForMoment = (date: moment.Moment): MockProxy<TFile> =>
+  getMockFileWithBasename(date.format(format));
 
 describe('When a taskLine is created', () => {
   test('should properly parse an existing block hash', () => {
@@ -57,8 +56,8 @@ describe('When a taskLine is created', () => {
     const input = '- [ ] this is the task';
     const taskLine = new TaskLine(input, 1);
     expect(taskLine.line).toEqual(input);
-    expect(taskLine.repeats).toBeFalsy;
-    expect(taskLine.repeatValid).toBeFalsy;
+    expect(taskLine.repeats).toBeFalsy();
+    expect(taskLine.repeatValid).toBeFalsy();
   });
 });
 
@@ -92,8 +91,8 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
           Promise.resolve('- [ ] a test task ; Every Sunday'),
         )
         .mockReturnValue(Promise.resolve(''));
-      vault.findMomentForDailyNote.mockImplementation((file) => {
-        const date = moment(file.basename, format, true);
+      vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
+        const date = moment(dailyNote.basename, format, true);
         return date.isValid() ? date : null;
       });
 

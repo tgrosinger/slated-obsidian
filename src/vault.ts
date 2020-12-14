@@ -1,7 +1,7 @@
+import type { Moment } from 'moment';
 import moment from 'moment';
-import { Moment } from 'moment';
-import { Result } from 'neverthrow';
-import { TFile, Vault } from 'obsidian';
+import type { Result } from 'neverthrow';
+import type { TFile, Vault } from 'obsidian';
 import {
   createDailyNote,
   getDailyNoteSettings,
@@ -24,7 +24,7 @@ export class VaultIntermediate {
   };
 
   public findMomentForDailyNote = (file: TFile): Moment | undefined => {
-    let { format } = getDailyNoteSettings();
+    const { format } = getDailyNoteSettings();
     const date = moment(file.basename, format, true);
     return date.isValid() ? date : null;
   };
