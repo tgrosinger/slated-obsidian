@@ -3471,8 +3471,8 @@ obsidian-daily-notes-interface@0.2.2:
     tslib "2.0.3"
 
 "obsidian@https://github.com/obsidianmd/obsidian-api/tarball/master":
-  version "0.9.21"
-  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#92aca642c3274431b4e94bdd5a2aedee3301e03f"
+  version "0.10.0"
+  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#740d65fe84a4528e524a69cf48c24369b4261ab9"
   dependencies:
     "@types/codemirror" "0.0.98"
 

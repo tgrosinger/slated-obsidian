@@ -12,6 +12,7 @@ main.js
 
 # yarn
 yarn-error.log
+yarn-cache
 
 # Obsidian
 
