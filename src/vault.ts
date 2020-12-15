@@ -4,7 +4,10 @@ import type { Result } from 'neverthrow';
 import type { TFile, Vault } from 'obsidian';
 import {
   createDailyNote,
+  getAllDailyNotes,
+  getDailyNote,
   getDailyNoteSettings,
+  IDailyNote,
 } from 'obsidian-daily-notes-interface';
 
 export class VaultIntermediate {
@@ -14,7 +17,22 @@ export class VaultIntermediate {
     this.vault = vault;
   }
 
-  public getDailyNote = (date: Moment): Promise<TFile> => createDailyNote(date);
+  public getDailyNote = (
+    date: Moment,
+    dailyNotes?: IDailyNote[],
+  ): Promise<TFile> => {
+    const _dailyNotes = dailyNotes || this.getAllDailyNotes();
+    const desiredNote = getDailyNote(date, _dailyNotes);
+    if (desiredNote) {
+      return Promise.resolve(desiredNote);
+    }
+    return this.createDailyNote(date);
+  };
+
+  public createDailyNote = (date: Moment): Promise<TFile> =>
+    createDailyNote(date);
+
+  public getAllDailyNotes = (): IDailyNote[] => getAllDailyNotes();
 
   public setDailyNoteContents = (
     date: Moment,

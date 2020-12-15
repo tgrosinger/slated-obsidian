@@ -1,6 +1,7 @@
 import type { Moment } from 'moment';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
+import type { IDailyNote } from 'obsidian-daily-notes-interface';
 import RRule from 'rrule';
 import type { SettingsInstance } from 'src/settings';
 import type { VaultIntermediate } from 'src/vault';
@@ -36,9 +37,12 @@ export class TaskHandler {
     }
 
     const allTasks = await this.normalizeFileTasks(file);
+    const allDailyNotes = this.vault.getAllDailyNotes();
     const unresolvedPropogations = allTasks
       .filter((task) => task.repeats && task.repeatValid)
-      .map((task) => this.propogateRepetitionsForTask(task, date));
+      .map((task) =>
+        this.propogateRepetitionsForTask(task, date, allDailyNotes),
+      );
 
     await Promise.all(unresolvedPropogations);
   }
@@ -49,6 +53,7 @@ export class TaskHandler {
   private async propogateRepetitionsForTask(
     task: TaskLine,
     date: Moment,
+    allDailyNotes: IDailyNote[],
   ): Promise<void[]> {
     const nextN = task.repeatConfig.all(
       (_, len) => len < this.settings.futureRepetitionsCount,
@@ -71,7 +76,7 @@ export class TaskHandler {
     );
     const fileContents = (await this.vault.readFile(file, false)) || '';
     const splitFileContents = fileContents.split('\n');
-    let taskSectionHeader = -1;
+    let hasTasksSectionHeader = false;
     let endOfTasksSection = -1;
     for (let i = 0; i < splitFileContents.length; i++) {
       const line = splitFileContents[i];
@@ -83,24 +88,27 @@ export class TaskHandler {
       }
 
       if (line === this.settings.tasksHeader) {
-        taskSectionHeader = i;
+        hasTasksSectionHeader = true;
       } else if (line.startsWith('#')) {
         endOfTasksSection = i - 1;
       }
     }
 
-    if (taskSectionHeader === -1) {
-      // append the task section, then the task
-      splitFileContents.push(this.settings.tasksHeader);
-      splitFileContents.push(task.line);
-    } else if (endOfTasksSection === -1) {
-      // task section exists at end of file, just append task to list
-      splitFileContents.push(task.line);
-    } else {
-      // task section exists and has end, append to section
-      splitFileContents.splice(endOfTasksSection, 0, task.line);
+    const toAppend = hasTasksSectionHeader
+      ? [task.line]
+      : [this.settings.tasksHeader, task.line];
+    let appendIndex =
+      endOfTasksSection === -1 ? splitFileContents.length : endOfTasksSection;
+
+    while (appendIndex > 0) {
+      if (splitFileContents[appendIndex - 1] === '') {
+        appendIndex--;
+      } else {
+        break;
+      }
     }
 
+    splitFileContents.splice(appendIndex, 0, ...toAppend);
     return this.vault.writeFile(file, splitFileContents.join('\n'));
   }
 
