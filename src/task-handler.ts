@@ -1,12 +1,9 @@
 import type { Moment } from 'moment';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
-import type { IDailyNote } from 'obsidian-daily-notes-interface';
-import RRule from 'rrule';
 import type { SettingsInstance } from 'src/settings';
 import type { VaultIntermediate } from 'src/vault';
-
-const blockHashRe = /\^[\-a-zA-Z0-9]+/;
+import { TaskLine } from './task-line';
 
 export class TaskHandler {
   private readonly settings: SettingsInstance;
@@ -37,12 +34,9 @@ export class TaskHandler {
     }
 
     const allTasks = await this.normalizeFileTasks(file);
-    const allDailyNotes = this.vault.getAllDailyNotes();
     const unresolvedPropogations = allTasks
       .filter((task) => task.repeats && task.repeatValid)
-      .map((task) =>
-        this.propogateRepetitionsForTask(task, date, allDailyNotes),
-      );
+      .map((task) => this.propogateRepetitionsForTask(task, date));
 
     await Promise.all(unresolvedPropogations);
   }
@@ -53,7 +47,6 @@ export class TaskHandler {
   private async propogateRepetitionsForTask(
     task: TaskLine,
     date: Moment,
-    allDailyNotes: IDailyNote[],
   ): Promise<void[]> {
     const nextN = task.repeatConfig.all(
       (_, len) => len < this.settings.futureRepetitionsCount,
@@ -76,7 +69,7 @@ export class TaskHandler {
     );
     const fileContents = (await this.vault.readFile(file, false)) || '';
     const splitFileContents = fileContents.split('\n');
-    let hasTasksSectionHeader = false;
+    let tasksSectionHeader = -1;
     let endOfTasksSection = -1;
     for (let i = 0; i < splitFileContents.length; i++) {
       const line = splitFileContents[i];
@@ -88,27 +81,24 @@ export class TaskHandler {
       }
 
       if (line === this.settings.tasksHeader) {
-        hasTasksSectionHeader = true;
+        tasksSectionHeader = i;
       } else if (line.startsWith('#')) {
         endOfTasksSection = i - 1;
       }
     }
 
-    const toAppend = hasTasksSectionHeader
-      ? [task.line]
-      : [this.settings.tasksHeader, task.line];
-    let appendIndex =
-      endOfTasksSection === -1 ? splitFileContents.length : endOfTasksSection;
-
-    while (appendIndex > 0) {
-      if (splitFileContents[appendIndex - 1] === '') {
-        appendIndex--;
-      } else {
-        break;
-      }
+    if (tasksSectionHeader === -1) {
+      splitFileContents.splice(
+        splitFileContents.length,
+        0,
+        ...(this.settings.blankLineAfterHeader
+          ? [this.settings.tasksHeader, '\n']
+          : [this.settings.tasksHeader]),
+      );
+      endOfTasksSection = splitFileContents.length;
     }
 
-    splitFileContents.splice(appendIndex, 0, ...toAppend);
+    splitFileContents.splice(endOfTasksSection, 0, task.line);
     return this.vault.writeFile(file, splitFileContents.join('\n'));
   }
 
@@ -170,119 +160,5 @@ export class TaskHandler {
       line.startsWith('- [x] ') ||
       line.startsWith('- [X] ')
     );
-  };
-}
-
-const createTaskBlockHash = (): string => {
-  // TODO: Should this be task-<timestamp> instead?
-  //       Or make it user configurable?
-  let result = 'task-';
-  const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for (let i = 0; i <= 4; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-export class TaskLine {
-  public readonly lineNum: number;
-
-  private readonly originalLine: string;
-  private _line: string;
-  private _modified: boolean;
-
-  private _blockID: string;
-
-  private hasRepeatConfig: boolean;
-  private repeatParseError: boolean;
-  private _rrule: RRule | undefined;
-
-  constructor(line: string, lineNum: number) {
-    this.originalLine = line;
-    this._line = line;
-    this.lineNum = lineNum;
-
-    this.parseBlockID();
-    this.parseRepeatConfig();
-    if (this.hasRepeatConfig && !this._blockID) {
-      this.addBlockID();
-    }
-  }
-
-  /**
-   * line returns the current (possibly modified) value of this task line.
-   */
-  public get line(): string {
-    return this._line;
-  }
-
-  /**
-   * modified indicates if the line has been updated from the original value.
-   * Modifications may include:
-   * - Adding a block ID
-   * - Adding a date that this task was moved to
-   * - Checking or unchecking this task
-   */
-  public get modfied(): boolean {
-    return this._modified;
-  }
-
-  public get blockID(): string {
-    return this._blockID;
-  }
-
-  public get repeats(): boolean {
-    return this.hasRepeatConfig;
-  }
-
-  public get repeatValid(): boolean {
-    return !this.repeatParseError;
-  }
-
-  public get repeatConfig(): RRule {
-    return this._rrule;
-  }
-
-  /**
-   * Looks for the repeating config portion of a task line.
-   * The repeating config occurs after a semicolon or 📅 but excludes the blockID.
-   */
-  private readonly parseRepeatConfig = (): void => {
-    const lineMinusID = this.originalLine.replace('^' + this._blockID, '');
-    let parts = lineMinusID.split('📅');
-    if (parts.length === 1) {
-      parts = lineMinusID.split(';');
-      if (parts.length === 1) {
-        this.hasRepeatConfig = false;
-        return;
-      }
-    }
-    this.hasRepeatConfig = true;
-
-    if (parts.length > 2) {
-      this.repeatParseError = true;
-      return;
-    }
-
-    this._rrule = RRule.fromText(parts[1]);
-  };
-
-  private readonly parseBlockID = (): void => {
-    const blockID = blockHashRe.exec(this.originalLine);
-    this._blockID = blockID && blockID.length === 1 ? blockID[0] : '';
-  };
-
-  /**
-   * Create a blockID and append to the line.
-   */
-  private readonly addBlockID = (): void => {
-    if (this._blockID !== '') {
-      return;
-    }
-
-    this._blockID = createTaskBlockHash();
-    this._line += ' ^' + this._blockID;
-    this._modified = true;
   };
 }
