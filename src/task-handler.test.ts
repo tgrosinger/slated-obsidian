@@ -17,11 +17,11 @@ declare global {
 }
 
 expect.extend({
-  toHaveLines(
+  toHaveLines: (
     received: string,
     expected: string[],
     regexLines: number[],
-  ): jest.CustomMatcherResult {
+  ): jest.CustomMatcherResult => {
     const receivedLines = received.split('\n');
 
     if (receivedLines.length !== expected.length) {
@@ -58,10 +58,8 @@ const format = 'YYYY-MM-DD';
 const startDateStr = '2020-12-31';
 const startDate = moment(startDateStr);
 
-const escapeRegExp = (str: string): string => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-};
-
+const escapeRegExp = (str: string): string =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
   const mockFile = mock<TFile>();
   mockFile.basename = basename;
@@ -116,7 +114,7 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
           expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
           expect(vault.writeFile.mock.calls[0][1]).toMatch(
             new RegExp(
-              escapeRegExp(`- [ ] a test task ; Every Sunday ^task-`) +
+              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
                 '[a-z0-9]{4}',
             ),
           );
@@ -160,7 +158,7 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
           expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
           expect(vault.writeFile.mock.calls[0][1]).toMatch(
             new RegExp(
-              escapeRegExp(`- [ ] a test task ; Every Sunday ^task-`) +
+              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
                 '[-a-zA-Z0-9]{4}',
             ),
           );
@@ -200,7 +198,7 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
           expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
           expect(vault.writeFile.mock.calls[0][1]).toMatch(
             new RegExp(
-              escapeRegExp(`- [ ] a test task ; Every Sunday ^task-`) +
+              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
                 '[-a-zA-Z0-9]{4}',
             ),
           );

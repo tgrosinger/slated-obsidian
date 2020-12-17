@@ -1,6 +1,6 @@
+import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 import RRule from 'rrule';
-import type { VaultIntermediate } from './vault';
 
 const repeatScheduleRe = /[;📅]\W*([a-zA-Z0-9\W]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
@@ -17,18 +17,18 @@ export class TaskLine {
   private _line: string;
   private _modified: boolean;
 
-  private _repeatConfig: string;
+  private readonly _repeatConfig: string;
   private _blockID: string;
-  private _movedToLink: string;
-  private _movedToNoteName: string;
-  private _movedFromLink: string;
-  private _movedFromNoteName: string;
-  private _repeatsFromLink: string;
-  private _repeatsFromNoteName: string;
+  private readonly _movedToLink: string;
+  private readonly _movedToNoteName: string;
+  private readonly _movedFromLink: string;
+  private readonly _movedFromNoteName: string;
+  private readonly _repeatsFromLink: string;
+  private readonly _repeatsFromNoteName: string;
 
-  private hasRepeatConfig: boolean;
-  private repeatParseError: boolean;
-  private _rrule: RRule | undefined;
+  private readonly hasRepeatConfig: boolean;
+  private readonly repeatParseError: boolean;
+  private readonly _rrule: RRule | undefined;
 
   constructor(
     line: string,

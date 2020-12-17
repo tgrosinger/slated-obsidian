@@ -1,9 +1,9 @@
+import { TaskLine } from './task-line';
 import type { Moment } from 'moment';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
 import type { SettingsInstance } from 'src/settings';
 import type { VaultIntermediate } from 'src/vault';
-import { TaskLine } from './task-line';
 
 export class TaskHandler {
   private readonly settings: SettingsInstance;
@@ -135,10 +135,10 @@ export class TaskHandler {
     if (lastContentLine === -1) {
       // There is no content in this section, so return the header index
       return sectionHeader;
-    } else {
+    } 
       // There is content in this section, return the last line of it.
       return lastContentLine;
-    }
+    
   };
 
   private readonly getBlockIDIndex = (
@@ -167,7 +167,7 @@ export class TaskHandler {
       return;
     }
 
-    let toInsert: string[] = [];
+    const toInsert: string[] = [];
     if (i > 0 && lines[i - 1].startsWith('#')) {
       // Line before is a heading, leave a space
       toInsert.push('');

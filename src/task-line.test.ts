@@ -1,11 +1,11 @@
-import { mock, MockProxy } from 'jest-mock-extended';
-import type { TFile } from 'obsidian';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
+import { mock, MockProxy } from 'jest-mock-extended';
+import type { TFile } from 'obsidian';
 
-const escapeRegExp = (str: string): string => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-};
+const escapeRegExp = (str: string): string => 
+   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+;
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;

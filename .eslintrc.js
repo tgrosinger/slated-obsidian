@@ -65,7 +65,7 @@ module.exports = {
     ],
     // "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-extraneous-class": "error",
-    "@typescript-eslint/no-namespace": "error",
+    //"@typescript-eslint/no-namespace": "error",
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/no-this-alias": ["error", { allowDestructuring: true }],
     "@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
