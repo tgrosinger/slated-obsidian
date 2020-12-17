@@ -63,44 +63,127 @@ export class TaskHandler {
   private async ensureTaskRepeatExists(
     file: TFile,
     task: TaskLine,
+    i = 0, // Starting index for searching the file
   ): Promise<void> {
     console.debug(
       'Slated: Ensuring repeating task exists in file: ' + file.basename,
     );
     const fileContents = (await this.vault.readFile(file, false)) || '';
-    const splitFileContents = fileContents.split('\n');
-    let tasksSectionHeader = -1;
-    let endOfTasksSection = -1;
-    for (let i = 0; i < splitFileContents.length; i++) {
-      const line = splitFileContents[i];
-      if (line.indexOf(task.blockID) >= 0) {
-        // TODO: Verify that the task line does in fact match
+    const lines = fileContents.split('\n');
+    const lineToWrite = task.line; // TODO: This should not actually be just line
 
-        // modify if not quite right.
-        return;
-      }
+    const blockIDIndex = this.getBlockIDIndex(lines, task.blockID);
 
-      if (line === this.settings.tasksHeader) {
-        tasksSectionHeader = i;
-      } else if (line.startsWith('#')) {
-        endOfTasksSection = i - 1;
-      }
+    if (blockIDIndex !== -1) {
+      return; // TODO: Verify it is actually the correct format and such
     }
 
-    if (tasksSectionHeader === -1) {
-      splitFileContents.splice(
-        splitFileContents.length,
-        0,
-        ...(this.settings.blankLineAfterHeader
-          ? [this.settings.tasksHeader, '\n']
-          : [this.settings.tasksHeader]),
-      );
-      endOfTasksSection = splitFileContents.length;
-    }
+    const taskSectionIndex = this.getIndexTasksSection(lines);
+    const taskSectionEndIndex = this.getIndexSectionLastContent(
+      lines,
+      taskSectionIndex,
+    );
 
-    splitFileContents.splice(endOfTasksSection, 0, task.line);
-    return this.vault.writeFile(file, splitFileContents.join('\n'));
+    this.insertLine(lines, lineToWrite, taskSectionEndIndex + 1);
+    return this.vault.writeFile(file, lines.join('\n'));
   }
+
+  private readonly getIndexTasksSection = (lines: string[]): number => {
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] === this.settings.tasksHeader) {
+        return i;
+      }
+    }
+
+    // Tasks section not found, so add it
+
+    if (lines.length === 1) {
+      // Empty file, just replace the first line
+      lines[0] = this.settings.tasksHeader;
+      return 0;
+    }
+
+    lines.push(this.settings.tasksHeader);
+    return lines.length - 1;
+  };
+
+  /**
+   * Returns the index of the last line of content in the provided section.
+   * If there is no content in this section, the index of the header is returned.
+   */
+  private readonly getIndexSectionLastContent = (
+    lines: string[],
+    sectionHeader: number,
+  ): number => {
+    let lastContentLine = -1;
+    let nextHeaderLine = -1;
+
+    // Start on the line after the header.
+    // NOTE: That could be the end of the file!
+    for (let i = sectionHeader + 1; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.startsWith('#')) {
+        nextHeaderLine = i;
+        break;
+      }
+
+      if (line.trim() !== '') {
+        lastContentLine = i;
+      }
+    }
+
+    if (lastContentLine === -1) {
+      // There is no content in this section, so return the header index
+      return sectionHeader;
+    } else {
+      // There is content in this section, return the last line of it.
+      return lastContentLine;
+    }
+  };
+
+  private readonly getBlockIDIndex = (
+    lines: string[],
+    blockID: string,
+  ): number => {
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf(blockID) > -1) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  /**
+   * Insert the provided line before the provided index. If the settings call
+   * for a blank line around headings, insert blank lines as necessary.
+   */
+  private readonly insertLine = (
+    lines: string[],
+    line: string,
+    i: number,
+  ): void => {
+    if (!this.settings.blankLineAfterHeader) {
+      lines.splice(i, 0, line);
+      return;
+    }
+
+    let toInsert: string[] = [];
+    if (i > 0 && lines[i - 1].startsWith('#')) {
+      // Line before is a heading, leave a space
+      toInsert.push('');
+    }
+    toInsert.push(line);
+    if (i < lines.length && lines[i].startsWith('#')) {
+      // Next line is a heading, leave a space
+      toInsert.push('');
+    } else if (i === lines.length) {
+      // Last line of the file, leave a space
+      toInsert.push('');
+    }
+
+    lines.splice(i, 0, ...toInsert);
+  };
 
   /**
    * Scan the file looking for tasks. Parse the task, and if it is a repeating

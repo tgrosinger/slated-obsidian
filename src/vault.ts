@@ -12,17 +12,14 @@ import {
 
 export class VaultIntermediate {
   private readonly vault: Vault;
+  private dailyNoteCache: IDailyNote[] | undefined;
 
   constructor(vault: Vault) {
     this.vault = vault;
   }
 
-  public getDailyNote = (
-    date: Moment,
-    dailyNotes?: IDailyNote[],
-  ): Promise<TFile> => {
-    const _dailyNotes = dailyNotes || this.getAllDailyNotes();
-    const desiredNote = getDailyNote(date, _dailyNotes);
+  public getDailyNote = (date: Moment): Promise<TFile> => {
+    const desiredNote = getDailyNote(date, this.getAllDailyNotes());
     if (desiredNote) {
       return Promise.resolve(desiredNote);
     }
@@ -32,7 +29,12 @@ export class VaultIntermediate {
   public createDailyNote = (date: Moment): Promise<TFile> =>
     createDailyNote(date);
 
-  public getAllDailyNotes = (): IDailyNote[] => getAllDailyNotes();
+  public getAllDailyNotes = (): IDailyNote[] => {
+    if (this.dailyNoteCache === undefined) {
+      this.dailyNoteCache = getAllDailyNotes();
+    }
+    return this.dailyNoteCache;
+  };
 
   public setDailyNoteContents = (
     date: Moment,

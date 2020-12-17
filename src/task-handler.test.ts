@@ -17,6 +17,8 @@ const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
 const getMockFileForMoment = (date: moment.Moment): MockProxy<TFile> =>
   getMockFileWithBasename(date.format(format));
 
+const p = (str: string): Promise<string> => Promise.resolve(str);
+
 describe('scanAndPropogateRepetitions reads file contents', () => {
   let file: MockProxy<TFile>;
   let vault: jest.Mocked<VaultIntermediate>;
@@ -26,98 +28,121 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
   beforeEach(() => {
     file = getMockFileForMoment(startDate);
     vault = mock<VaultIntermediate>();
-    settings = new SettingsInstance({ futureRepetitionsCount: 2 });
+    settings = new SettingsInstance({ futureRepetitionsCount: 1 });
     taskHandler = new TaskHandler(vault, settings);
+
+    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
+      const date = moment(dailyNote.basename, format, true);
+      return date.isValid() ? date : null;
+    });
   });
 
-  /**
-   * TODO: Add tasks specifically of TaskLine class
-   *
-   * Tests to add:
-   * - Multiple instances of repeat config denoters is marked invalid
-   * - Invalid repeat config does not call propogateRepetitionsForTask
-   * - Invalid repeat config creates a Notify
-   * - Invalid repeat config gets a blockID appended
-   */
+  describe('taskHandler.processFile', () => {
+    describe('when the future file exists', () => {
+      describe('when a newline should be inserted after headings', () => {
+        test('if it has a tasks section, the task is appended to existing', async () => {
+          vault.readFile
+            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
+            .mockReturnValueOnce(
+              Promise.resolve(
+                '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
+              ),
+            );
 
-  describe('valid task lines', () => {
-    test('single line with repeat', async () => {
-      vault.readFile
-        .mockReturnValueOnce(
-          Promise.resolve('- [ ] a test task ; Every Sunday'),
-        )
-        .mockReturnValue(Promise.resolve(''));
-      vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
-        const date = moment(dailyNote.basename, format, true);
-        return date.isValid() ? date : null;
-      });
+          const futureFiles: TFile[] = [];
+          vault.getDailyNote.mockImplementation((date) => {
+            const mockFile = getMockFileForMoment(date);
+            futureFiles.push(mockFile);
+            return Promise.resolve(mockFile);
+          });
 
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = getMockFileForMoment(date);
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
+          await taskHandler.processFile(file);
 
-      await taskHandler.processFile(file);
-
-      expect(vault.readFile).toHaveBeenCalledWith(file, false);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
-      expect(
-        vault.writeFile.mock.calls[0][1].startsWith(
-          '- [ ] a test task ; Every Sunday ^task-',
-        ),
-      ).toBeTruthy();
-
-      expect(futureFiles.length).toEqual(2);
-      expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[2][0]).toEqual(futureFiles[1]);
-
-      // TODO: This should not actually be the same. It should have a link
-      expect(vault.writeFile.mock.calls[1][1]).toEqual(
-        '\n## Tasks\n' + vault.writeFile.mock.calls[0][1],
-      );
-      expect(vault.writeFile.mock.calls[2][1]).toEqual(
-        '\n## Tasks\n' + vault.writeFile.mock.calls[0][1],
-      );
-    });
-
-    /*
-    test('multi-line including non-tasks', async () => {
-      const inputLines = [
-        '# My Header',
-        '',
-        '- [ ] a test task ; Every Sunday',
-        '- [ ] another task with no repeat',
-        '  - a subtask',
-      ];
-
-      vault.readFile.mockReturnValue(Promise.resolve(inputLines.join('\n')));
-      vault.findMomentForDailyNote.mockReturnValue(moment.utc());
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = mock<TFile>();
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
-
-      await taskHandler.processFile(file);
-
-      expect(vault.readFile).toHaveBeenCalledWith(file, false);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
-
-      const outputLines = vault.writeFile.mock.calls[0][1].split('\n');
-      expect(outputLines.length).toEqual(inputLines.length);
-      for (let i = 0; i < inputLines.length; i++) {
-        if (i === 2) {
+          expect(vault.readFile).toHaveBeenCalledWith(file, false);
+          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
           expect(
-            outputLines[i].startsWith(inputLines[i] + ' ^task-'),
+            vault.writeFile.mock.calls[0][1].startsWith(
+              '- [ ] a test task ; Every Sunday ^task-',
+            ),
           ).toBeTruthy();
-        } else {
-          expect(outputLines[i]).toEqual(inputLines[i]);
-        }
-      }
+
+          expect(futureFiles.length).toEqual(1);
+          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
+
+          // TODO: This should not actually be the same. It should have a link
+          expect(vault.writeFile.mock.calls[1][1]).toEqual(
+            '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n' +
+              vault.writeFile.mock.calls[0][1] +
+              '\n\n## Another Header\n',
+          );
+        });
+
+        test('if it has a tasks section, the task is appended', async () => {
+          vault.readFile
+            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
+            .mockReturnValueOnce(Promise.resolve('# Hello\n\n## Tasks\n'));
+
+          const futureFiles: TFile[] = [];
+          vault.getDailyNote.mockImplementation((date) => {
+            const mockFile = getMockFileForMoment(date);
+            futureFiles.push(mockFile);
+            return Promise.resolve(mockFile);
+          });
+
+          await taskHandler.processFile(file);
+
+          expect(vault.readFile).toHaveBeenCalledWith(file, false);
+          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
+          expect(
+            vault.writeFile.mock.calls[0][1].startsWith(
+              '- [ ] a test task ; Every Sunday ^task-',
+            ),
+          ).toBeTruthy();
+
+          expect(futureFiles.length).toEqual(1);
+          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
+
+          // TODO: This should not actually be the same. It should have a link
+          expect(vault.writeFile.mock.calls[1][1]).toEqual(
+            '# Hello\n\n## Tasks\n\n' + vault.writeFile.mock.calls[0][1] + '\n',
+          );
+        });
+
+        test('if it does not have a tasks section, one is created', async () => {
+          vault.readFile
+            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
+            .mockReturnValueOnce(
+              Promise.resolve('# Hello\n\n## Another Section\n'),
+            );
+
+          const futureFiles: TFile[] = [];
+          vault.getDailyNote.mockImplementation((date) => {
+            const mockFile = getMockFileForMoment(date);
+            futureFiles.push(mockFile);
+            return Promise.resolve(mockFile);
+          });
+
+          await taskHandler.processFile(file);
+
+          expect(vault.readFile).toHaveBeenCalledWith(file, false);
+          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
+          expect(
+            vault.writeFile.mock.calls[0][1].startsWith(
+              '- [ ] a test task ; Every Sunday ^task-',
+            ),
+          ).toBeTruthy();
+
+          expect(futureFiles.length).toEqual(1);
+          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
+
+          // TODO: This should not actually be the same. It should have a link
+          expect(vault.writeFile.mock.calls[1][1]).toEqual(
+            '# Hello\n\n## Another Section\n\n## Tasks\n\n' +
+              vault.writeFile.mock.calls[0][1] +
+              '\n',
+          );
+        });
+      });
     });
-    */
   });
 });

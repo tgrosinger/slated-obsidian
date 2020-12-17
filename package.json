@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "jest",
+    "test-watch": "jest --watchAll",
     "dev": "rollup --config rollup.config.js -w",
     "build": "rollup --config rollup.config.js",
     "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
@@ -42,7 +43,7 @@
   "dependencies": {
     "neverthrow": "3.0.0",
     "obsidian-daily-notes-interface": "0.2.2",
-    "rrule": "2.6.6",
+    "rrule": "/rrule",
     "svelte": "3.31.0"
   }
 }
