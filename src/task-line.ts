@@ -1,4 +1,6 @@
+import type { TFile } from 'obsidian';
 import RRule from 'rrule';
+import type { VaultIntermediate } from './vault';
 
 const repeatScheduleRe = /[;📅]\W*([a-zA-Z0-9\W]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
@@ -8,6 +10,8 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
   public readonly lineNum: number;
+  private readonly file: TFile;
+  private readonly vault: VaultIntermediate;
 
   private readonly originalLine: string;
   private _line: string;
@@ -26,10 +30,17 @@ export class TaskLine {
   private repeatParseError: boolean;
   private _rrule: RRule | undefined;
 
-  constructor(line: string, lineNum: number) {
+  constructor(
+    line: string,
+    lineNum: number,
+    file: TFile,
+    vault: VaultIntermediate,
+  ) {
     this.originalLine = line;
     this._line = line;
     this.lineNum = lineNum;
+    this.file = file;
+    this.vault = vault;
 
     const repeatMatches = repeatScheduleRe.exec(line);
     if (repeatMatches && repeatMatches.length === 2) {
@@ -71,7 +82,6 @@ export class TaskLine {
 
     const repeatsFromLink = repeatsFromRe.exec(line);
     if (repeatsFromLink) {
-      console.log(repeatsFromLink);
       this._repeatsFromLink = repeatsFromLink[0];
       if (repeatsFromLink.length > 1 && repeatsFromLink[1] !== '') {
         this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
@@ -108,6 +118,16 @@ export class TaskLine {
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
   public lineAsMovedFrom = (): string => {
     throw new Error('Not implemented');
+  };
+
+  // Converts the line to be used in places where it was copied to another note
+  // because it repeats.
+  // Something like:
+  // - [ ] This is the task ; Every Sunday <<[[2020-12-25^task-abc123]]
+  public lineAsRepeated = (): string => {
+    const withoutBlockID = this._line.replace('^' + this._blockID, '');
+    const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
+    return withoutBlockID + `<<[[${rootTaskLink}]]`;
   };
 
   public get movedTo(): string {

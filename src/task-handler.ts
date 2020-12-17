@@ -70,7 +70,6 @@ export class TaskHandler {
     );
     const fileContents = (await this.vault.readFile(file, false)) || '';
     const lines = fileContents.split('\n');
-    const lineToWrite = task.line; // TODO: This should not actually be just line
 
     const blockIDIndex = this.getBlockIDIndex(lines, task.blockID);
 
@@ -84,7 +83,7 @@ export class TaskHandler {
       taskSectionIndex,
     );
 
-    this.insertLine(lines, lineToWrite, taskSectionEndIndex + 1);
+    this.insertLine(lines, task.lineAsRepeated(), taskSectionEndIndex + 1);
     return this.vault.writeFile(file, lines.join('\n'));
   }
 
@@ -204,7 +203,9 @@ export class TaskHandler {
     const taskLines = splitFileContents
       .map((line, index) => ({ line, lineNum: index }))
       .filter(({ line }) => this.isLineTask(line))
-      .map(({ line, lineNum }) => new TaskLine(line, lineNum));
+      .map(
+        ({ line, lineNum }) => new TaskLine(line, lineNum, file, this.vault),
+      );
     const repeatingTaskLines = taskLines.filter((taskLine) => taskLine.repeats);
 
     const modifiedLines = repeatingTaskLines.filter(
