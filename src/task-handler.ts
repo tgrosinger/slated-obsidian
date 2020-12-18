@@ -35,7 +35,7 @@ export class TaskHandler {
 
     const allTasks = await this.normalizeFileTasks(file);
     const unresolvedPropogations = allTasks
-      .filter((task) => task.repeats && task.repeatValid)
+      .filter((task) => task.repeats && task.repeater?.isValid())
       .map((task) => this.propogateRepetitionsForTask(task, date));
 
     await Promise.all(unresolvedPropogations);
@@ -48,9 +48,7 @@ export class TaskHandler {
     task: TaskLine,
     date: Moment,
   ): Promise<void[]> {
-    const nextN = task.repeatConfig.all(
-      (_, len) => len < this.settings.futureRepetitionsCount,
-    );
+    const nextN = task.repeater.next(this.settings.futureRepetitionsCount);
 
     const pendingUpdates = nextN.map((updateDate) =>
       this.vault
@@ -135,10 +133,9 @@ export class TaskHandler {
     if (lastContentLine === -1) {
       // There is no content in this section, so return the header index
       return sectionHeader;
-    } 
-      // There is content in this section, return the last line of it.
-      return lastContentLine;
-    
+    }
+    // There is content in this section, return the last line of it.
+    return lastContentLine;
   };
 
   private readonly getBlockIDIndex = (

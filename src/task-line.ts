@@ -1,6 +1,7 @@
 import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 import RRule from 'rrule';
+import { RepeatAdapter } from './repeat';
 
 const taskRe = /^- \[[ xX]\] /;
 const repeatScheduleRe = /[;📅]\W*([a-zA-Z0-9\W]+)/;
@@ -11,6 +12,9 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
   public readonly lineNum: number;
+  public readonly repeats: boolean;
+  public readonly repeater: RepeatAdapter | undefined;
+
   private readonly file: TFile;
   private readonly vault: VaultIntermediate;
 
@@ -20,16 +24,9 @@ export class TaskLine {
 
   private readonly _repeatConfig: string;
   private _blockID: string;
-  private readonly _movedToLink: string;
   private readonly _movedToNoteName: string;
-  private readonly _movedFromLink: string;
   private readonly _movedFromNoteName: string;
-  private readonly _repeatsFromLink: string;
   private readonly _repeatsFromNoteName: string;
-
-  private readonly hasRepeatConfig: boolean;
-  private readonly repeatParseError: boolean;
-  private readonly _rrule: RRule | undefined;
 
   constructor(
     line: string,
@@ -49,13 +46,11 @@ export class TaskLine {
 
     const repeatMatches = repeatScheduleRe.exec(line);
     if (repeatMatches && repeatMatches.length === 2) {
-      this.hasRepeatConfig = true;
+      this.repeats = true;
       this._repeatConfig = repeatMatches[1];
-      this._rrule = RRule.fromText(this._repeatConfig);
-      this.repeatParseError = this._rrule.toString() === '';
+      this.repeater = new RepeatAdapter(RRule.fromText(this._repeatConfig));
     } else {
-      this.hasRepeatConfig = false;
-      this.repeatParseError = false;
+      this.repeats = false;
     }
 
     const blockIDMatches = blockHashRe.exec(line);
@@ -71,7 +66,6 @@ export class TaskLine {
 
     const movedFromLink = movedFromRe.exec(line);
     if (movedFromLink) {
-      this._movedFromLink = movedFromLink[0];
       if (movedFromLink.length > 1 && movedFromLink[1] !== '') {
         this._movedFromNoteName = movedFromLink[1].split('|')[0];
       }
@@ -79,7 +73,6 @@ export class TaskLine {
 
     const movedToLink = movedToRe.exec(line);
     if (movedToLink) {
-      this._movedToLink = movedToLink[0];
       if (movedToLink.length > 1 && movedToLink[1] !== '') {
         this._movedToNoteName = movedToLink[1].split('|')[0];
       }
@@ -87,13 +80,12 @@ export class TaskLine {
 
     const repeatsFromLink = repeatsFromRe.exec(line);
     if (repeatsFromLink) {
-      this._repeatsFromLink = repeatsFromLink[0];
       if (repeatsFromLink.length > 1 && repeatsFromLink[1] !== '') {
         this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
       }
     }
 
-    if (this.hasRepeatConfig && this.repeatValid && !this._blockID) {
+    if (this.repeats && this.repeater.isValid() && !this._blockID) {
       this.addBlockID();
     }
   }
@@ -160,18 +152,6 @@ export class TaskLine {
 
   public get blockID(): string {
     return this._blockID;
-  }
-
-  public get repeats(): boolean {
-    return this.hasRepeatConfig;
-  }
-
-  public get repeatValid(): boolean {
-    return !this.repeatParseError;
-  }
-
-  public get repeatConfig(): RRule {
-    return this._rrule;
   }
 
   /**

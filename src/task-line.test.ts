@@ -52,10 +52,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
-      expect(tl.repeatValid).toBeTruthy();
+      expect(tl.repeater.isValid()).toBeTruthy();
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
-      expect(tl.repeatConfig.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
     });
     test('When there are spaces', () => {
@@ -64,10 +64,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
-      expect(tl.repeatValid).toBeTruthy();
+      expect(tl.repeater.isValid()).toBeTruthy();
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
-      expect(tl.repeatConfig.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
     });
     test('When the calendar emoji is used', () => {
@@ -76,10 +76,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
-      expect(tl.repeatValid).toBeTruthy();
+      expect(tl.repeater.isValid()).toBeTruthy();
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
-      expect(tl.repeatConfig.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
     });
   });
@@ -180,7 +180,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('2020-12-25');
     });
     test('When the note name is not a date', () => {
@@ -190,7 +190,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('some other note');
     });
   });
@@ -201,7 +201,7 @@ describe('Tasks are parsed correctly', () => {
       const tl = new TaskLine(line, 1, file, vault);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeTruthy();
-      expect(tl.repeatValid).toBeFalsy();
+      expect(tl.repeater.isValid()).toBeFalsy();
       expect(tl.blockID).toEqual('');
     });
   });
