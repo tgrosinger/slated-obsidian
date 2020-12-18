@@ -60,6 +60,7 @@ const startDate = moment(startDateStr);
 
 const escapeRegExp = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+
 const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
   const mockFile = mock<TFile>();
   mockFile.basename = basename;

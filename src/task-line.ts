@@ -47,7 +47,7 @@ export class TaskLine {
       this.hasRepeatConfig = true;
       this._repeatConfig = repeatMatches[1];
       this._rrule = RRule.fromText(this._repeatConfig);
-      this.repeatParseError = this._rrule === undefined;
+      this.repeatParseError = this._rrule.toString() === '';
     } else {
       this.hasRepeatConfig = false;
       this.repeatParseError = false;
@@ -88,7 +88,7 @@ export class TaskLine {
       }
     }
 
-    if (this.hasRepeatConfig && !this._blockID) {
+    if (this.hasRepeatConfig && this.repeatValid && !this._blockID) {
       this.addBlockID();
     }
   }

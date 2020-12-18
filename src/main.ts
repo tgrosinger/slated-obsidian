@@ -8,6 +8,8 @@ export default class SlatedPlugin extends Plugin {
   private taskHandler: TaskHandler;
   private settings: ISettings;
 
+  private lastFile: TFile | undefined;
+
   public async onload(): Promise<void> {
     await this.loadSettings();
 
@@ -19,13 +21,12 @@ export default class SlatedPlugin extends Plugin {
         // This callback is fired whenever a file receives focus
         // not just when the file is first opened.
         console.debug('Slated: File opened: ' + file.basename);
-        this.taskHandler.processFile(file);
-      }),
-    );
-    this.registerEvent(
-      this.app.vault.on('modify', (file: TFile) => {
-        // This callback is fired whenever a file is saved
-        console.debug('Slated: File modified: ' + file.basename);
+
+        if (this.lastFile) {
+          this.taskHandler.processFile(this.lastFile);
+        }
+
+        this.lastFile = file;
         this.taskHandler.processFile(file);
       }),
     );

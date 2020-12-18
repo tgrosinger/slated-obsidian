@@ -3,9 +3,8 @@ import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import type { TFile } from 'obsidian';
 
-const escapeRegExp = (str: string): string => 
-   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
-;
+const escapeRegExp = (str: string): string =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
@@ -193,6 +192,17 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeTruthy();
       expect(tl.repeatConfig.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('some other note');
+    });
+  });
+
+  describe('When the task repetition is invalid', () => {
+    test('When the user is still typing', () => {
+      const line = '- [ ] The task; Eve';
+      const tl = new TaskLine(line, 1, file, vault);
+      expect(tl.line).toEqual(line);
+      expect(tl.repeats).toBeTruthy();
+      expect(tl.repeatValid).toBeFalsy();
+      expect(tl.blockID).toEqual('');
     });
   });
 });
