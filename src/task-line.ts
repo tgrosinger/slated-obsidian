@@ -2,6 +2,7 @@ import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 import RRule from 'rrule';
 
+const taskRe = /^- \[[ xX]\] /;
 const repeatScheduleRe = /[;📅]\W*([a-zA-Z0-9\W]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
 const movedToRe = />\[\[([^\]]+)\]\]/;
@@ -41,6 +42,10 @@ export class TaskLine {
     this.lineNum = lineNum;
     this.file = file;
     this.vault = vault;
+
+    if (!this.isTask()) {
+      return;
+    }
 
     const repeatMatches = repeatScheduleRe.exec(line);
     if (repeatMatches && repeatMatches.length === 2) {
@@ -168,6 +173,12 @@ export class TaskLine {
   public get repeatConfig(): RRule {
     return this._rrule;
   }
+
+  /**
+   * Return whether the line stored is actually a valid Markdown task. NOTE:
+   * This uses regex and is not quite as performant as TaskHandler.isLineTask()
+   */
+  public isTask = (): boolean => taskRe.test(this.line);
 
   /**
    * Create a blockID and append to the line.
