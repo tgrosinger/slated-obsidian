@@ -127,6 +127,7 @@ class TaskMoveModal extends Modal {
       target: contentEl,
       props: {
         task: this.task,
+        closer: () => this.close(),
       },
     });
   };
@@ -151,6 +152,7 @@ class TaskRepeatModal extends Modal {
       target: contentEl,
       props: {
         task: this.task,
+        close: () => this.close(),
       },
     });
   };

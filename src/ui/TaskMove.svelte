@@ -3,6 +3,7 @@
 
   // Creation Parameters
   export let task: TaskLine;
+  export let close: () => void;
 
   // Internal Properties
   let currentView: 'repeat';

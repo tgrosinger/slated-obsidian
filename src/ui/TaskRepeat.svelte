@@ -56,6 +56,7 @@
 
   // Creation Parameters
   export let task: TaskLine;
+  export let close: () => void;
 
   // Internal Properties
   let repeatType = Frequency.None;
@@ -64,16 +65,17 @@
   // Functions
   const save = () => {
     console.log('Updating task...');
+    task.save();
+    close();
   };
 
   // Setup
-  repeatType = task.repeater.frequency();
 </script>
 
 <div>This is task Repeat</div>
 <dif>{task.line}</dif>
 
-<select bind:value={repeatType}>
+<select bind:value={task.repeater.frequency}>
   <option value={Frequency.None}>None</option>
   <option value={Frequency.Daily}>Daily</option>
   <option value={Frequency.Weekly}>Weekly</option>

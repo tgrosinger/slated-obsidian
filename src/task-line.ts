@@ -4,7 +4,7 @@ import RRule from 'rrule';
 import { RepeatAdapter } from './repeat';
 
 const taskRe = /^- \[[ xX]\] /;
-const repeatScheduleRe = /[;📅]\W*([a-zA-Z0-9\W]+)/;
+const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
 const movedToRe = />\[\[([^\]]+)\]\]/;
 const repeatsFromRe = /<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
@@ -48,7 +48,10 @@ export class TaskLine {
     if (repeatMatches && repeatMatches.length === 2) {
       this.repeats = true;
       this._repeatConfig = repeatMatches[1];
-      this.repeater = new RepeatAdapter(RRule.fromText(this._repeatConfig));
+      this.repeater = new RepeatAdapter(
+        RRule.fromText(this._repeatConfig),
+        this.handleRepeaterUpdated,
+      );
     } else {
       this.repeats = false;
     }
@@ -159,6 +162,30 @@ export class TaskLine {
    * This uses regex and is not quite as performant as TaskHandler.isLineTask()
    */
   public isTask = (): boolean => taskRe.test(this.line);
+
+  public save = async (): Promise<void> => {
+    if (!this.modfied) {
+      return;
+    }
+
+    const fileContents = await this.vault.readFile(this.file, false);
+    const lines = fileContents.split('\n');
+    lines[this.lineNum] = this._line;
+    const newFileContents = lines.join('\n');
+
+    return this.vault.writeFile(this.file, newFileContents).then(() => {
+      this._modified = false;
+    });
+  };
+
+  private readonly handleRepeaterUpdated = (): void => {
+    this._modified = true;
+
+    const oldRepeatConfig = repeatScheduleRe.exec(this._line)[1];
+    this._line = this._line
+      .replace(oldRepeatConfig, this.repeater.toText() + ' ')
+      .trim();
+  };
 
   /**
    * Create a blockID and append to the line.

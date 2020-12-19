@@ -11,9 +11,11 @@ export enum Frequency {
 
 export class RepeatAdapter {
   private readonly rrule: RRule;
+  private readonly modifiedHook: () => void;
 
-  constructor(rrule: RRule) {
+  constructor(rrule: RRule, modifiedHook: () => void) {
     this.rrule = rrule;
+    this.modifiedHook = modifiedHook;
   }
 
   public isValid = (): boolean => this.rrule.toString() !== '';
@@ -26,7 +28,7 @@ export class RepeatAdapter {
       ? this.rrule.toText()
       : this.rrule.toString();
 
-  public frequency = (): Frequency => {
+  public get frequency(): Frequency {
     switch (this.rrule.options.freq) {
       case RFrequency.YEARLY:
         return Frequency.Yearly;
@@ -42,5 +44,27 @@ export class RepeatAdapter {
           `Invalid frequency ${this.rrule.options.freq} in repetition`,
         );
     }
-  };
+  }
+
+  public set frequency(frequency: Frequency) {
+    switch (frequency) {
+      case Frequency.Yearly:
+        this.rrule.options.freq = RFrequency.YEARLY;
+        break;
+      case Frequency.Monthly:
+        this.rrule.options.freq = RFrequency.MONTHLY;
+        break;
+      case Frequency.Weekly:
+        this.rrule.options.freq = RFrequency.WEEKLY;
+        break;
+      case Frequency.Daily:
+        this.rrule.options.freq = RFrequency.DAILY;
+        break;
+      default:
+        // TODO: Display a notification instead?
+        throw new Error(`Invalid frequency ${frequency} requested`);
+    }
+
+    this.modifiedHook();
+  }
 }
