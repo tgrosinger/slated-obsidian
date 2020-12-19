@@ -67,4 +67,18 @@ export class RepeatAdapter {
 
     this.modifiedHook();
   }
+
+  public get interval(): number {
+    return this.rrule.options.interval;
+  }
+
+  public set interval(n: number) {
+    // do not set to null or 0
+    const newVal = n ? n : 1;
+
+    if (newVal !== this.rrule.options.interval) {
+      this.rrule.options.interval = n ? n : 1;
+      this.modifiedHook();
+    }
+  }
 }

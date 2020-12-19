@@ -58,13 +58,9 @@
   export let task: TaskLine;
   export let close: () => void;
 
-  // Internal Properties
-  let repeatType = Frequency.None;
-  let interval = 1;
-
   // Functions
   const save = () => {
-    console.log('Updating task...');
+    console.debug('Updating task...');
     task.save();
     close();
   };
@@ -72,23 +68,38 @@
   // Setup
 </script>
 
-<div>This is task Repeat</div>
-<dif>{task.line}</dif>
+<div>
+  <h1>Task Repetition</h1>
+  <p>{task.repeater.toText()}</p>
+  <div>
+    <span>Every</span>
+    <input
+      id="slated-interval-selector"
+      bind:value={task.repeater.interval}
+      type="number"
+      min="1" />
+    <select id="slated-frequency-selector" bind:value={task.repeater.frequency}>
+      <option value={Frequency.Daily}>
+        {task.repeater.interval > 1 ? 'Days' : 'Day'}
+      </option>
+      <option value={Frequency.Weekly}>
+        {task.repeater.interval > 1 ? 'Weeks' : 'Week'}
+      </option>
+      <option value={Frequency.Monthly}>
+        {task.repeater.interval > 1 ? 'Months' : 'Month'}
+      </option>
+      <option value={Frequency.Yearly}>
+        {task.repeater.interval > 1 ? 'Years' : 'Year'}
+      </option>
+    </select>
 
-<select bind:value={task.repeater.frequency}>
-  <option value={Frequency.None}>None</option>
-  <option value={Frequency.Daily}>Daily</option>
-  <option value={Frequency.Weekly}>Weekly</option>
-  <option value={Frequency.Monthly}>Monthly</option>
-  <option value={Frequency.Yearly}>Yearly</option>
-</select>
-
-<input value={interval} type="number" />
-
-{#if repeatType === Frequency.Weekly}
-  {#each weekdays as weekday (weekday.id)}
-    <input type="checkbox" bind:checked={weekday.checked} />{weekday.text}
-  {/each}
-{/if}
-
-<button on:click={save}> Save </button>
+    {#if task.repeater.frequency === Frequency.Weekly}
+      <div id="slated-weekday-selector">
+        {#each weekdays as weekday (weekday.id)}
+          <input type="checkbox" bind:checked={weekday.checked} />{weekday.text}
+        {/each}
+      </div>
+    {/if}
+  </div>
+  <button on:click={save}> Save </button>
+</div>

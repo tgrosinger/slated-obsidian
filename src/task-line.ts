@@ -181,6 +181,12 @@ export class TaskLine {
   private readonly handleRepeaterUpdated = (): void => {
     this._modified = true;
 
+    // TODO: This should trigger an action to look for future occurences of this
+    // task which are no longer correct, remove them, and then recreate future
+    // occurences using the new repeat pattern. Ideally only do this if they
+    // would change though! Use the old pattern before changing to find the
+    // dates to check, and compare against dates generated with the new pattern.
+
     const oldRepeatConfig = repeatScheduleRe.exec(this._line)[1];
     this._line = this._line
       .replace(oldRepeatConfig, this.repeater.toText() + ' ')
