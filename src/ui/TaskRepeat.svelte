@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ButtonGroup from './ButtonGroup.svelte';
   import { Frequency } from 'src/repeat';
   import type { TaskLine } from 'src/task-line';
 
@@ -19,13 +20,13 @@
 
   // TODO: Support localizations
   const weekdays = [
-    { id: 'MO', checked: false, text: 'Monday' },
-    { id: 'TU', checked: false, text: 'Tuesday' },
-    { id: 'WE', checked: false, text: 'Wednesday' },
-    { id: 'TH', checked: false, text: 'Thursday' },
-    { id: 'FR', checked: false, text: 'Friday' },
-    { id: 'SA', checked: false, text: 'Saturday' },
-    { id: 'SU', checked: false, text: 'Sunday' },
+    { id: 'SU', text: 'S', active: false },
+    { id: 'MO', text: 'M', active: false },
+    { id: 'TU', text: 'T', active: false },
+    { id: 'WE', text: 'W', active: false },
+    { id: 'TH', text: 'T', active: false },
+    { id: 'FR', text: 'F', active: false },
+    { id: 'SA', text: 'S', active: false },
   ];
 
   // TODO: Support localizations
@@ -61,43 +62,50 @@
   // Functions
   const save = () => {
     console.debug('Updating task...');
-    task.save();
+    $task.save();
     close();
   };
 
   // Setup
+  console.debug(task);
+
+  const startingSelectedWeekdays = task.repeater.getDaysOfWeek();
+  weekdays.forEach((weekday) => {
+    weekday.active = startingSelectedWeekdays.includes(weekday.id);
+  });
 </script>
 
 <div>
   <h1>Task Repetition</h1>
-  <p>{task.repeater.toText()}</p>
+  <p>{$task.repeater.toText()}</p>
   <div>
     <span>Every</span>
     <input
       id="slated-interval-selector"
-      bind:value={task.repeater.interval}
+      bind:value={$task.repeater.interval}
       type="number"
       min="1" />
-    <select id="slated-frequency-selector" bind:value={task.repeater.frequency}>
+
+    <select class="dropdown" bind:value={$task.repeater.frequency}>
       <option value={Frequency.Daily}>
-        {task.repeater.interval > 1 ? 'Days' : 'Day'}
+        {$task.repeater.interval > 1 ? 'Days' : 'Day'}
       </option>
       <option value={Frequency.Weekly}>
-        {task.repeater.interval > 1 ? 'Weeks' : 'Week'}
+        {$task.repeater.interval > 1 ? 'Weeks' : 'Week'}
       </option>
       <option value={Frequency.Monthly}>
-        {task.repeater.interval > 1 ? 'Months' : 'Month'}
+        {$task.repeater.interval > 1 ? 'Months' : 'Month'}
       </option>
       <option value={Frequency.Yearly}>
-        {task.repeater.interval > 1 ? 'Years' : 'Year'}
+        {$task.repeater.interval > 1 ? 'Years' : 'Year'}
       </option>
     </select>
 
-    {#if task.repeater.frequency === Frequency.Weekly}
-      <div id="slated-weekday-selector">
-        {#each weekdays as weekday (weekday.id)}
-          <input type="checkbox" bind:checked={weekday.checked} />{weekday.text}
-        {/each}
+    {#if $task.repeater.frequency === Frequency.Weekly}
+      <div>
+        <ButtonGroup
+          buttons={weekdays}
+          onUpdate={task.repeater.setDaysOfWeek} />
       </div>
     {/if}
   </div>

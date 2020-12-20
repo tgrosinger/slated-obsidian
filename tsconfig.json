@@ -1,5 +1,7 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
+  "include": [ "src/**/*" ],
+  "exclude": [ "node_modules/*" ],
   "compilerOptions": {
     "baseUrl": ".",
     "inlineSources": true,
@@ -18,12 +20,9 @@
       "es6",
       "scripthost",
       "es2019"
-    ]
+    ],
+    "paths": {
+      "src": ["src/*"]
+    }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules/*"
-  ]
 }

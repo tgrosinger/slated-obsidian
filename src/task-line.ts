@@ -4,7 +4,7 @@ import RRule, { Frequency } from 'rrule';
 import { RepeatAdapter } from './repeat';
 
 const taskRe = /^- \[[ xX]\] /;
-const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:]+)/;
+const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:\,]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
 const movedToRe = />\[\[([^\]]+)\]\]/;
 const repeatsFromRe = /<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
@@ -27,6 +27,8 @@ export class TaskLine {
   private readonly _movedToNoteName: string;
   private readonly _movedFromNoteName: string;
   private readonly _repeatsFromNoteName: string;
+
+  private subscriptions: { id: number; hook: (val: any) => void }[];
 
   constructor(
     line: string,
@@ -98,6 +100,8 @@ export class TaskLine {
     if (this.repeats && this.repeater.isValid() && !this._blockID) {
       this.addBlockID();
     }
+
+    this.subscriptions = [];
   }
 
   /**
@@ -198,6 +202,38 @@ export class TaskLine {
     });
   };
 
+  /**
+   * The subscribe function implements the Store interface in Svelte. The
+   * subscribers must be called any time there is a change to the task.
+   */
+  public readonly subscribe = (
+    subscription: (value: any) => void,
+  ): (() => void) => {
+    const maxID = this.subscriptions.reduce(
+      (prev, { id }): number => Math.max(prev, id),
+      0,
+    );
+    const newID = maxID + 1;
+
+    this.subscriptions.push({ id: newID, hook: subscription });
+    subscription(this);
+
+    // Return an unsubscribe function
+    return () => {
+      this.subscriptions = this.subscriptions.filter(({ id }) => id !== newID);
+      console.log(`Removing subscription ${newID}`);
+    };
+  };
+
+  /**
+   * The set function implements the Store interface in Svelte. We are not
+   * actually using it to store new values, but it is needed when binding to
+   * task properties.
+   */
+  public readonly set = (_: any): void => {
+    this._modified = true;
+  };
+
   private readonly handleRepeaterUpdated = (): void => {
     this._modified = true;
     this._repeats = this.repeater.isValid();
@@ -221,6 +257,9 @@ export class TaskLine {
         .replace(oldRepeatConfig, this.repeater.toText() + ' ')
         .trim();
     }
+
+    // Notify subscriptions of the change
+    this.subscriptions.forEach(({ hook }) => hook(this));
   };
 
   /**

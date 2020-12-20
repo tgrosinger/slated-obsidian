@@ -6,6 +6,9 @@ import { VaultIntermediate } from './vault';
 import { App, MarkdownView, Modal, Plugin, TFile } from 'obsidian';
 import { TaskLine } from './task-line';
 
+// TODO: Can I use a webworker to perform a scan of files in the vault for
+// tasks that would otherwise be missed and not have a repetition created?
+
 export default class SlatedPlugin extends Plugin {
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;

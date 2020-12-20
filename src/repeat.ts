@@ -1,5 +1,6 @@
 import type RRule from 'rrule';
 import { Frequency as RFrequency } from 'rrule';
+import { ALL_WEEKDAYS, WeekdayStr, Weekday } from 'rrule/dist/esm/src/weekday';
 
 export enum Frequency {
   None = 'NONE',
@@ -79,6 +80,36 @@ export class RepeatAdapter {
     if (newVal !== this.rrule.options.interval) {
       this.rrule.options.interval = n ? n : 1;
       this.modifiedHook();
+    }
+  }
+
+  public setDaysOfWeek = (ids: string[]): void => {
+    const weekdayList: Weekday[] = new Array(ids.length);
+    const numberList: number[] = new Array(ids.length);
+
+    for (let i = 0; i < ids.length; i++) {
+      // TODO: Can this be done without the type assertion?
+      const n = ALL_WEEKDAYS.indexOf(ids[i] as WeekdayStr);
+      weekdayList[i] = new Weekday(n);
+      numberList[i] = n;
+    });
+
+    this.rrule.origOptions.byweekday = weekdayList;
+    // rrule.toText seems to use origOptions, not options, but set anyway
+    this.rrule.options.byweekday = numberList;
+
+    this.modifiedHook();
+  };
+
+  public getDaysOfWeek(): string[] {
+    // rrule.toText seems to use origOptions, not options
+    const weekdays = this.rrule.origOptions.byweekday;
+    if (!weekdays) {
+      return [];
+    } else if (Array.isArray(weekdays)) {
+      return weekdays.map((day) => day.toString());
+    } else {
+      return [weekdays.toString()];
     }
   }
 }
