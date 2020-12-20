@@ -1,6 +1,6 @@
 import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
-import RRule from 'rrule';
+import RRule, { Frequency } from 'rrule';
 import { RepeatAdapter } from './repeat';
 
 const taskRe = /^- \[[ xX]\] /;
@@ -12,7 +12,6 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
   public readonly lineNum: number;
-  public readonly repeats: boolean;
   public readonly repeater: RepeatAdapter | undefined;
 
   private readonly file: TFile;
@@ -22,6 +21,7 @@ export class TaskLine {
   private _line: string;
   private _modified: boolean;
 
+  private _repeats: boolean;
   private readonly _repeatConfig: string;
   private _blockID: string;
   private readonly _movedToNoteName: string;
@@ -46,14 +46,21 @@ export class TaskLine {
 
     const repeatMatches = repeatScheduleRe.exec(line);
     if (repeatMatches && repeatMatches.length === 2) {
-      this.repeats = true;
+      this._repeats = true;
       this._repeatConfig = repeatMatches[1];
       this.repeater = new RepeatAdapter(
         RRule.fromText(this._repeatConfig),
         this.handleRepeaterUpdated,
       );
     } else {
-      this.repeats = false;
+      this._repeats = false;
+      this.repeater = new RepeatAdapter(
+        new RRule({
+          freq: Frequency.WEEKLY,
+          interval: 1,
+        }),
+        this.handleRepeaterUpdated,
+      );
     }
 
     const blockIDMatches = blockHashRe.exec(line);
@@ -98,6 +105,10 @@ export class TaskLine {
    */
   public get line(): string {
     return this._line;
+  }
+
+  public get repeats(): boolean {
+    return this._repeats;
   }
 
   // isOriginalInstance indicates if this is the task actually annotated with a
@@ -164,6 +175,15 @@ export class TaskLine {
   public isTask = (): boolean => taskRe.test(this.line);
 
   public save = async (): Promise<void> => {
+    if (!this._repeats) {
+      // A save with no options changed.
+      this.handleRepeaterUpdated();
+
+      if (!this._blockID) {
+        this.addBlockID();
+      }
+    }
+
     if (!this.modfied) {
       return;
     }
@@ -180,6 +200,7 @@ export class TaskLine {
 
   private readonly handleRepeaterUpdated = (): void => {
     this._modified = true;
+    this._repeats = this.repeater.isValid();
 
     // TODO: This should trigger an action to look for future occurences of this
     // task which are no longer correct, remove them, and then recreate future
@@ -187,10 +208,19 @@ export class TaskLine {
     // would change though! Use the old pattern before changing to find the
     // dates to check, and compare against dates generated with the new pattern.
 
-    const oldRepeatConfig = repeatScheduleRe.exec(this._line)[1];
-    this._line = this._line
-      .replace(oldRepeatConfig, this.repeater.toText() + ' ')
-      .trim();
+    const oldRepeatMatches = repeatScheduleRe.exec(this._line);
+    if (!oldRepeatMatches) {
+      // Adding a repeat config to a task that previously did not have one
+
+      // TODO: Make sure the blockID is still at the very end
+      // TODO: Add an option for the preferred divider type
+      this._line += ' 📅 ' + this.repeater.toText();
+    } else {
+      const oldRepeatConfig = oldRepeatMatches[1];
+      this._line = this._line
+        .replace(oldRepeatConfig, this.repeater.toText() + ' ')
+        .trim();
+    }
   };
 
   /**
