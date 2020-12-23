@@ -1,12 +1,28 @@
 <script lang="ts">
+  type IButton = {
+    id: string;
+    text: string;
+  };
+
   type Button = {
     id: string;
     text: string;
     active: boolean;
   };
 
-  export let buttons: Button[];
+  export let buttons: IButton[];
+  export let activeButtonIDs: string[];
   export let onUpdate: (ids: string[]) => void;
+
+  $: _buttons = buttons.map(
+    (btn): Button => {
+      return {
+        id: btn.id,
+        text: btn.text,
+        active: activeButtonIDs.includes(btn.id),
+      };
+    },
+  );
 
   const newToggleButton = (button: Button): ((e: MouseEvent) => void) => {
     return (e: MouseEvent) => {
@@ -18,12 +34,12 @@
         target.addClass('mod-cta');
       }
 
-      onUpdate(buttons.filter((b) => b.active).map((b) => b.id));
+      onUpdate(_buttons.filter((b) => b.active).map((b) => b.id));
     };
   };
 </script>
 
-{#each buttons as button}
+{#each _buttons as button}
   <button
     class={button.active ? 'mod-cta' : ''}
     on:click={newToggleButton(button)}>{button.text}</button>

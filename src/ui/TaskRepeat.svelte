@@ -1,16 +1,18 @@
 <script lang="ts">
   import ButtonGroup from './ButtonGroup.svelte';
+  import WeekDaysOfMonthSelector from './WeekDaysOfMonthSelector.svelte';
   import { Frequency } from 'src/repeat';
   import type { TaskLine } from 'src/task-line';
 
   // Repetition types:
-  // - [ ] Daily with interval
-  // - [ ] Weekly with weekday selector and interval
-  // - [ ] Monthly with day of month selctor (including "last day") and interval
-  // - [ ] Monthly with [1-5, last], weekday selector, and interval
-  // - [ ] Yearly with month selector, [1-5, last], weekday selector, and interval
-  // - [ ] All of the above with "Until..."
-  // - [ ] All of the above with "For ... occurences"
+  // - Daily with interval
+  // - Weekly with weekday selector and interval
+  // - Monthly with day of month selctor (including "last day") and interval
+  // - Monthly with [1-5, last], weekday selector, and interval
+  // - Yearly with month selector, [1-5, last], weekday selector, and interval
+  // - All of the above with:
+  //   - "Until..."
+  //   - "For ... occurences"
 
   // Tips:
   // - day of month can be selected with negatives (-1 = last day)
@@ -18,61 +20,47 @@
   // - nth weekday is represented as '1FR' or '-1SU'
   // - Lots more examples: https://www.kanzaki.com/docs/ical/rrule.html
 
+  export let task: TaskLine;
+  export let close: () => void;
+
   // TODO: Support localizations
   const weekdays = [
-    { id: 'SU', text: 'S', active: false },
-    { id: 'MO', text: 'M', active: false },
-    { id: 'TU', text: 'T', active: false },
-    { id: 'WE', text: 'W', active: false },
-    { id: 'TH', text: 'T', active: false },
-    { id: 'FR', text: 'F', active: false },
-    { id: 'SA', text: 'S', active: false },
+    { id: 'SU', text: 'S' },
+    { id: 'MO', text: 'M' },
+    { id: 'TU', text: 'T' },
+    { id: 'WE', text: 'W' },
+    { id: 'TH', text: 'T' },
+    { id: 'FR', text: 'F' },
+    { id: 'SA', text: 'S' },
   ];
 
   // TODO: Support localizations
   const months = [
-    { id: '1', checked: false, text: 'January' },
-    { id: '2', checked: false, text: 'February' },
-    { id: '3', checked: false, text: 'March' },
-    { id: '4', checked: false, text: 'April' },
-    { id: '5', checked: false, text: 'May' },
-    { id: '6', checked: false, text: 'June' },
-    { id: '7', checked: false, text: 'July' },
-    { id: '8', checked: false, text: 'August' },
-    { id: '9', checked: false, text: 'September' },
-    { id: '10', checked: false, text: 'October' },
-    { id: '11', checked: false, text: 'November' },
-    { id: '12', checked: false, text: 'December' },
+    { id: '1', text: 'Jan' },
+    { id: '2', text: 'Feb' },
+    { id: '3', text: 'Mar' },
+    { id: '4', text: 'Apr' },
+    { id: '5', text: 'May' },
+    { id: '6', text: 'Jun' },
+    { id: '7', text: 'Jul' },
+    { id: '8', text: 'Aug' },
+    { id: '9', text: 'Sep' },
+    { id: '10', text: 'Oct' },
+    { id: '11', text: 'Nov' },
+    { id: '12', text: 'Dec' },
   ];
 
-  // TODO: Support localizations
-  const weeks = [
-    { id: '1', checked: false, text: 'First' },
-    { id: '2', checked: false, text: 'Second' },
-    { id: '3', checked: false, text: 'Third' },
-    { id: '4', checked: false, text: 'Fourth' },
-    { id: '5', checked: false, text: 'Fifth' },
-    { id: '-1', checked: false, text: 'Last' },
-  ];
-
-  // Creation Parameters
-  export let task: TaskLine;
-  export let close: () => void;
-
-  // Functions
   const save = () => {
     console.debug('Updating task...');
     $task.save();
     close();
   };
 
-  // Setup
-  console.debug(task);
+  const startingRepeatType =
+    task.repeater.getWeekDaysOfMonth().length > 0 ? 'every' : 'onThe';
+  let monthlyRepeatType = startingRepeatType;
 
-  const startingSelectedWeekdays = task.repeater.getDaysOfWeek();
-  weekdays.forEach((weekday) => {
-    weekday.active = startingSelectedWeekdays.includes(weekday.id);
-  });
+  console.debug(task);
 </script>
 
 <div>
@@ -86,6 +74,7 @@
       type="number"
       min="1" />
 
+    <!-- svelte-ignore a11y-no-onchange -->
     <select class="dropdown" bind:value={$task.repeater.frequency}>
       <option value={Frequency.Daily}>
         {$task.repeater.interval > 1 ? 'Days' : 'Day'}
@@ -105,7 +94,45 @@
       <div>
         <ButtonGroup
           buttons={weekdays}
+          activeButtonIDs={task.repeater.daysOfWeek}
           onUpdate={task.repeater.setDaysOfWeek} />
+      </div>
+    {/if}
+
+    {#if $task.repeater.frequency === Frequency.Yearly}
+      <div>
+        <ButtonGroup
+          buttons={months}
+          activeButtonIDs={task.repeater.monthsOfYear}
+          onUpdate={task.repeater.setMonthsOfYear} />
+      </div>
+    {/if}
+
+    {#if $task.repeater.frequency === Frequency.Monthly || $task.repeater.frequency === Frequency.Yearly}
+      <div>
+        <select class="dropdown" bind:value={monthlyRepeatType}>
+          <option value={'onThe'}>on the</option>
+          <option value={'every'}>every</option>
+        </select>
+
+        {#if monthlyRepeatType == 'onThe'}
+          <input
+            bind:value={$task.repeater.dayOfMonth}
+            disabled={$task.repeater.dayOfMonth === -1}
+            type="number" />
+          <label>
+            <input
+              bind:checked={$task.repeater.lastDayOfMonth}
+              type="checkbox" />
+            Last Day
+          </label>
+        {:else}
+          <span>
+            <WeekDaysOfMonthSelector
+              initialSelected={task.repeater.getWeekDaysOfMonth()}
+              onUpdate={task.repeater.setWeekDaysOfMonth} />
+          </span>
+        {/if}
       </div>
     {/if}
   </div>
