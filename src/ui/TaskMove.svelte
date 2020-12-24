@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TaskLine } from 'src/task-line';
+  import type { Moment } from 'moment';
 
   // Creation Parameters
   export let task: TaskLine;
@@ -11,9 +12,14 @@
   const showMove = () => {
     this.currentView = 'move';
   };
+
+  const onClickDay = (date: Moment, isMetaPressed: boolean) => {
+    console.log('click!');
+  };
 </script>
 
 <div>This is task Move</div>
-<dif>{task.line}</dif>
+<div>{task.line}</div>
 
 <button on:click={showMove}> Move </button>
+<button on:click={close}> Close </button>

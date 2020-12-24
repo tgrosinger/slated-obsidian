@@ -25,29 +25,29 @@
 
   // TODO: Support localizations
   const weekdays = [
-    { id: 'SU', text: 'S' },
-    { id: 'MO', text: 'M' },
-    { id: 'TU', text: 'T' },
-    { id: 'WE', text: 'W' },
-    { id: 'TH', text: 'T' },
-    { id: 'FR', text: 'F' },
-    { id: 'SA', text: 'S' },
+    { id: 6, text: 'S' },
+    { id: 0, text: 'M' },
+    { id: 1, text: 'T' },
+    { id: 2, text: 'W' },
+    { id: 3, text: 'T' },
+    { id: 4, text: 'F' },
+    { id: 5, text: 'S' },
   ];
 
   // TODO: Support localizations
   const months = [
-    { id: '1', text: 'Jan' },
-    { id: '2', text: 'Feb' },
-    { id: '3', text: 'Mar' },
-    { id: '4', text: 'Apr' },
-    { id: '5', text: 'May' },
-    { id: '6', text: 'Jun' },
-    { id: '7', text: 'Jul' },
-    { id: '8', text: 'Aug' },
-    { id: '9', text: 'Sep' },
-    { id: '10', text: 'Oct' },
-    { id: '11', text: 'Nov' },
-    { id: '12', text: 'Dec' },
+    { id: 1, text: 'Jan' },
+    { id: 2, text: 'Feb' },
+    { id: 3, text: 'Mar' },
+    { id: 4, text: 'Apr' },
+    { id: 5, text: 'May' },
+    { id: 6, text: 'Jun' },
+    { id: 7, text: 'Jul' },
+    { id: 8, text: 'Aug' },
+    { id: 9, text: 'Sep' },
+    { id: 10, text: 'Oct' },
+    { id: 11, text: 'Nov' },
+    { id: 12, text: 'Dec' },
   ];
 
   const save = () => {

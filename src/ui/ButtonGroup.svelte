@@ -1,18 +1,18 @@
 <script lang="ts">
   type IButton = {
-    id: string;
+    id: number;
     text: string;
   };
 
   type Button = {
-    id: string;
+    id: number;
     text: string;
     active: boolean;
   };
 
   export let buttons: IButton[];
-  export let activeButtonIDs: string[];
-  export let onUpdate: (ids: string[]) => void;
+  export let activeButtonIDs: number[];
+  export let onUpdate: (ids: number[]) => void;
 
   $: _buttons = buttons.map(
     (btn): Button => {

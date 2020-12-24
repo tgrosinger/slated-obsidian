@@ -1,6 +1,5 @@
 import type RRule from 'rrule';
-import { Frequency as RFrequency } from 'rrule';
-import { ALL_WEEKDAYS, WeekdayStr, Weekday } from 'rrule/dist/esm/src/weekday';
+import { Frequency as RFrequency, Weekday, ByWeekday } from 'rrule';
 
 export enum Frequency {
   None = 'NONE',
@@ -28,6 +27,8 @@ export class RepeatAdapter {
     this.rrule.isFullyConvertibleToText()
       ? this.rrule.toText()
       : this.rrule.toString();
+
+  public toString = (): string => this.rrule.toString();
 
   public get frequency(): Frequency {
     switch (this.rrule.options.freq) {
@@ -95,15 +96,13 @@ export class RepeatAdapter {
     }
   }
 
-  public setDaysOfWeek = (ids: string[]): void => {
+  public setDaysOfWeek = (ids: number[]): void => {
     const weekdayList: Weekday[] = new Array(ids.length);
     const numberList: number[] = new Array(ids.length);
 
     for (let i = 0; i < ids.length; i++) {
-      // TODO: Can this be done without the type assertion?
-      const n = ALL_WEEKDAYS.indexOf(ids[i] as WeekdayStr);
-      weekdayList[i] = new Weekday(n);
-      numberList[i] = n;
+      weekdayList[i] = new Weekday(ids[i]);
+      numberList[i] = ids[i];
     }
 
     this.rrule.origOptions.byweekday = weekdayList;
@@ -112,14 +111,14 @@ export class RepeatAdapter {
     this.modifiedHook();
   };
 
-  public get daysOfWeek(): string[] {
+  public get daysOfWeek(): number[] {
     const weekdays = this.rrule.origOptions.byweekday;
     if (!weekdays) {
       return [];
     } else if (Array.isArray(weekdays)) {
-      return weekdays.map((day) => day.toString());
+      return weekdays.map(this.ByWeekdayToNumber);
     } else {
-      return [weekdays.toString()];
+      return [this.ByWeekdayToNumber(weekdays)];
     }
   }
 
@@ -200,21 +199,31 @@ export class RepeatAdapter {
     return [];
   };
 
-  public get monthsOfYear(): string[] {
+  public get monthsOfYear(): number[] {
     const months = this.rrule.origOptions.bymonth;
     if (months === undefined) {
       return [];
     }
     if (typeof months === 'number') {
-      return [months.toString()];
+      return [months];
     }
-    return months.map((n) => n.toString());
+    return months;
   }
 
-  public setMonthsOfYear = (ids: string[]): void => {
-    this.rrule.origOptions.bymonth = ids.map((n) => parseInt(n));
+  public setMonthsOfYear = (ids: number[]): void => {
+    this.rrule.origOptions.bymonth = ids;
     this.rrule.options.bymonth = this.rrule.origOptions.bymonth;
 
     this.modifiedHook();
   };
+
+  private ByWeekdayToNumber(wd: ByWeekday): number {
+    if (typeof wd === 'number') {
+      return wd;
+    } else if (typeof wd === 'string') {
+      return 0; // TODO
+    } else {
+      return wd.weekday;
+    }
+  }
 }

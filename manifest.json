@@ -4,5 +4,6 @@
   "description": "Task Management - schdule, move, and repeat tasks",
   "isDesktopOnly": false,
   "version": "0.0.1",
+  "minAppVersion": "0.10.2",
   "js": "main.js"
 }

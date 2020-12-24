@@ -92,6 +92,7 @@ export default class SlatedPlugin extends Plugin {
       cursorPos.line,
       activeLeaf.view.file,
       this.vault,
+      this.settings,
     );
 
     return task.isTask();
@@ -111,6 +112,7 @@ export default class SlatedPlugin extends Plugin {
       cursorPos.line,
       activeLeaf.view.file,
       this.vault,
+      this.settings,
     );
     fn(task);
   };
