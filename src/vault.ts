@@ -36,13 +36,6 @@ export class VaultIntermediate {
     return this.dailyNoteCache;
   };
 
-  public setDailyNoteContents = (
-    date: Moment,
-    contents: string,
-  ): Result<void, Error> => {
-    throw new Error('Method not implemented.');
-  };
-
   public findMomentForDailyNote = (file: TFile): Moment | undefined => {
     const { format } = getDailyNoteSettings();
     const date = moment(file.basename, format, true);
@@ -54,4 +47,10 @@ export class VaultIntermediate {
 
   public writeFile = (file: TFile, data: string): Promise<void> =>
     this.vault.modify(file, data);
+
+  public getFileByName = (fileName: string) => {
+    return this.vault
+      .getMarkdownFiles()
+      .filter(({ basename }) => basename === fileName);
+  };
 }

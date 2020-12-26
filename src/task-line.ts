@@ -2,9 +2,19 @@ import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 import { RepeatAdapter } from './repeat';
-import type { Moment } from 'moment';
 import moment from 'moment';
-import type { SettingsInstance } from 'src/settings';
+import type { SettingsInstance } from './settings';
+import {
+  addTaskRepetition,
+  fileIsDailyNote,
+  getBlockIDIndex,
+  getIndexSectionLastContent,
+  getIndexTasksHeading,
+  insertLine,
+  removeTaskRepetition,
+  updateTaskRepetition,
+} from './file-helpers';
+import { intersection, difference, concat } from 'lodash';
 
 const taskRe = /^- \[[ xX]\] /;
 const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:\,]+)/;
@@ -27,6 +37,7 @@ export class TaskLine {
 
   private _repeats: boolean;
   private readonly _repeatConfig: string;
+  private _modifiedRepeatConfig: string;
   private _blockID: string;
   private readonly _movedToNoteName: string;
   private readonly _movedFromNoteName: string;
@@ -124,7 +135,7 @@ export class TaskLine {
   // isOriginalInstance indicates if this is the task actually annotated with a
   // block ID, or if instead it is referring to another task by blockID.
   public get isOriginalInstance(): boolean {
-    throw new Error('Not implemented');
+    return this.repeats && !this.repeatsFrom;
   }
 
   // Converts the line to be used in places where it was moved to another note.
@@ -185,7 +196,7 @@ export class TaskLine {
   public isTask = (): boolean => taskRe.test(this.line);
 
   public save = async (): Promise<void> => {
-    if (!this._repeats) {
+    if (!this.repeats) {
       // A save with no options changed.
       this.handleRepeaterUpdated();
 
@@ -197,6 +208,8 @@ export class TaskLine {
     if (!this.modfied) {
       return;
     }
+
+    this.updateFutureOccurences();
 
     const fileContents = await this.vault.readFile(this.file, false);
     const lines = fileContents.split('\n');
@@ -243,160 +256,33 @@ export class TaskLine {
   /**
    * Ensure that future repetitions of the provided task have been created.
    */
-  public async propogateRepetitions(date: Moment): Promise<void[]> {
+  public async propogateRepetitions(): Promise<void[]> {
     const nextN = this.repeater.next(this.settings.futureRepetitionsCount);
 
     const pendingUpdates = nextN.map((updateDate) =>
       this.vault
         .getDailyNote(moment(updateDate))
-        .then((file) => this.ensureRepeatExists(file)),
+        .then((file) =>
+          addTaskRepetition(file, this, this.settings, this.vault),
+        ),
     );
     return Promise.all(pendingUpdates);
   }
 
-  private async ensureRepeatExists(
-    file: TFile,
-    i = 0, // Starting index for searching the file
-  ): Promise<void> {
-    console.debug(
-      'Slated: Ensuring repeating task exists in file: ' + file.basename,
-    );
-    const fileContents = (await this.vault.readFile(file, false)) || '';
-    const lines = fileContents.split('\n');
-
-    const blockIDIndex = this.getBlockIDIndex(lines, this.blockID);
-
-    if (blockIDIndex !== -1) {
-      return; // TODO: Verify it is actually the correct format and such
-    }
-
-    const taskSectionIndex = this.getIndexTasksSection(lines);
-    const taskSectionEndIndex = this.getIndexSectionLastContent(
-      lines,
-      taskSectionIndex,
-    );
-
-    this.insertLine(lines, this.lineAsRepeated(), taskSectionEndIndex + 1);
-    return this.vault.writeFile(file, lines.join('\n'));
-  }
-
-  private readonly getIndexTasksSection = (lines: string[]): number => {
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i] === this.settings.tasksHeader) {
-        return i;
-      }
-    }
-
-    // Tasks section not found, so add it
-
-    if (lines.length === 1) {
-      // Empty file, just replace the first line
-      lines[0] = this.settings.tasksHeader;
-      return 0;
-    }
-
-    lines.push(this.settings.tasksHeader);
-    return lines.length - 1;
-  };
-
-  /**
-   * Returns the index of the last line of content in the provided section.
-   * If there is no content in this section, the index of the header is returned.
-   */
-  private readonly getIndexSectionLastContent = (
-    lines: string[],
-    sectionHeader: number,
-  ): number => {
-    let lastContentLine = -1;
-    let nextHeaderLine = -1;
-
-    // Start on the line after the header.
-    // NOTE: That could be the end of the file!
-    for (let i = sectionHeader + 1; i < lines.length; i++) {
-      const line = lines[i];
-
-      if (line.startsWith('#')) {
-        nextHeaderLine = i;
-        break;
-      }
-
-      if (line.trim() !== '') {
-        lastContentLine = i;
-      }
-    }
-
-    if (lastContentLine === -1) {
-      // There is no content in this section, so return the header index
-      return sectionHeader;
-    }
-    // There is content in this section, return the last line of it.
-    return lastContentLine;
-  };
-
-  private readonly getBlockIDIndex = (
-    lines: string[],
-    blockID: string,
-  ): number => {
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf(blockID) > -1) {
-        return i;
-      }
-    }
-    return -1;
-  };
-
-  /**
-   * Insert the provided line before the provided index. If the settings call
-   * for a blank line around headings, insert blank lines as necessary.
-   */
-  private readonly insertLine = (
-    lines: string[],
-    line: string,
-    i: number,
-  ): void => {
-    if (!this.settings.blankLineAfterHeader) {
-      lines.splice(i, 0, line);
-      return;
-    }
-
-    const toInsert: string[] = [];
-    if (i > 0 && lines[i - 1].startsWith('#')) {
-      // Line before is a heading, leave a space
-      toInsert.push('');
-    }
-    toInsert.push(line);
-    if (i < lines.length && lines[i].startsWith('#')) {
-      // Next line is a heading, leave a space
-      toInsert.push('');
-    } else if (i === lines.length) {
-      // Last line of the file, leave a space
-      toInsert.push('');
-    }
-
-    lines.splice(i, 0, ...toInsert);
-  };
-
   private readonly handleRepeaterUpdated = (): void => {
     this._modified = true;
     this._repeats = this.repeater.isValid();
+    this._modifiedRepeatConfig = this.repeater.toText();
 
-    // TODO: This should trigger an action to look for future occurences of this
-    // task which are no longer correct, remove them, and then recreate future
-    // occurences using the new repeat pattern. Ideally only do this if they
-    // would change though! Use the old pattern before changing to find the
-    // dates to check, and compare against dates generated with the new pattern.
-
-    const oldRepeatMatches = repeatScheduleRe.exec(this._line);
-    if (!oldRepeatMatches) {
+    if (!this._repeatConfig) {
       // Adding a repeat config to a task that previously did not have one
 
       // TODO: Make sure the blockID is still at the very end
       // TODO: Add an option for the preferred divider type
-      this._line += ' 📅 ' + this.repeater.toText();
+      this._line = this.originalLine + ' 📅 ' + this.repeater.toText();
     } else {
-      const oldRepeatConfig = oldRepeatMatches[1];
-      this._line = this._line
-        .replace(oldRepeatConfig, this.repeater.toText() + ' ')
+      this._line = this.originalLine
+        .replace(this._repeatConfig, this.repeater.toText() + ' ')
         .trim();
     }
 
@@ -415,6 +301,73 @@ export class TaskLine {
     this._blockID = createTaskBlockHash();
     this._line += ' ^' + this._blockID;
     this._modified = true;
+  };
+
+  /**
+   * Look for occurences of this task which occur in the future and update.
+   *
+   * Specifically, tasks should be in the future relative to this task, not
+   * necessarily the actual immediate future. Compare the next occurences of
+   * the previous repetition config to the next occurences with the new config.
+   * Add, remove, or update task lines as needed.
+   */
+  private readonly updateFutureOccurences = async (): Promise<void> => {
+    if (!this.repeats) {
+      return;
+    }
+
+    // We will set the start date of the repeater to the date of this note (or
+    // today, if not on a daily note), because it's possible that the repetition
+    // config has been updated previously, and startng our search on the date of
+    // the original instance could be wrong.
+    const startDate = fileIsDailyNote(this.file, this.vault)
+      ? this.vault.findMomentForDailyNote(this.file)
+      : moment().startOf('day');
+
+    const origRRule = RRule.fromText(this._repeatConfig);
+    origRRule.options.dtstart = startDate.toDate();
+    origRRule.origOptions.dtstart = startDate.toDate();
+
+    const newRRule = RRule.fromText(this._modifiedRepeatConfig);
+    newRRule.options.dtstart = startDate.toDate();
+    newRRule.origOptions.dtstart = startDate.toDate();
+
+    // Files to update or remove this task from
+    const origNextN = origRRule.all(
+      (_, n) => n <= this.settings.futureRepetitionsCount,
+    );
+
+    // Files which need this task updated or added
+    const newNextN = origRRule.all(
+      (_, n) => n <= this.settings.futureRepetitionsCount,
+    );
+
+    const toUpdate = intersection(origNextN, newNextN);
+    const toRemove = difference(origNextN, newNextN);
+    const toAdd = difference(newNextN, origNextN);
+
+    await Promise.all(
+      concat(
+        toRemove.map(
+          async (date): Promise<void> => {
+            const f = await this.vault.getDailyNote(moment(date));
+            return removeTaskRepetition(f, this, this.vault);
+          },
+        ),
+        toAdd.map(
+          async (date): Promise<void> => {
+            const f = await this.vault.getDailyNote(moment(date));
+            return addTaskRepetition(f, this, this.settings, this.vault);
+          },
+        ),
+        toUpdate.map(
+          async (date): Promise<void> => {
+            const f = await this.vault.getDailyNote(moment(date));
+            return updateTaskRepetition(f, this, newLine, this.vault);
+          },
+        ),
+      ),
+    );
   };
 }
 

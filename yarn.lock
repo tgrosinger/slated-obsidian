@@ -699,6 +699,11 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
+"@types/lodash@4.14.166":
+  version "4.14.166"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.166.tgz#07e7f2699a149219dbc3c35574f126ec8737688f"
+  integrity sha512-A3YT/c1oTlyvvW/GQqG86EyqWNrT/tisOIh2mW3YCgcx71TNjiTZA3zYZWA5BCmtsOTXjhliy4c4yEkErw6njA==
+
 "@types/node@*":
   version "14.14.14"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.14.tgz#f7fd5f3cc8521301119f63910f0fb965c7d761ae"
@@ -3236,7 +3241,7 @@ lodash.sortby@^4.7.0:
   resolved "https://registry.yarnpkg.com/lodash.sortby/-/lodash.sortby-4.7.0.tgz#edd14c824e2cc9c1e0b0a1b42bb5210516a42438"
   integrity sha1-7dFMgk4sycHgsKG0K7UhBRakJDg=
 
-lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20:
+lodash@4.17.20, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20:
   version "4.17.20"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
@@ -3555,25 +3560,10 @@ object.values@^1.1.1:
     es-abstract "^1.18.0-next.1"
     has "^1.0.3"
 
-"obsidian-calendar-ui@file:../obsidian-calendar-ui":
-  version "0.0.1"
-  dependencies:
-    obsidian-daily-notes-interface "0.4.0"
-    svelte "3.31.0"
-    tslib "2.0.3"
-
 obsidian-daily-notes-interface@0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.2.2.tgz#6aa81dddca0811ad0c6a86ffb52209ea9dd34a39"
   integrity sha512-X1nfDXX/FNK4n6pw2o7/qN/a3ae9RXaky7yBNNMiCTq0DzCXuWXrPjrVGYLt6ekB4Z9a9KiKYThACYcqh9ET3w==
-  dependencies:
-    obsidian obsidianmd/obsidian-api#master
-    tslib "2.0.3"
-
-obsidian-daily-notes-interface@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.4.0.tgz#9bbc1813146ebbff60df986fd717f90b2620d309"
-  integrity sha512-CTokiN+6UJ7umihC5equ3sMx5kO9F3X94sSrMN8nrUHjVQYfZiGX/cFhCqh7laeE7MC0g8Kzwzv6/6VLbpmV6w==
   dependencies:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"

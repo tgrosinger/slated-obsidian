@@ -1,7 +1,8 @@
 import { TaskLine } from './task-line';
 import type { TFile } from 'obsidian';
-import type { SettingsInstance } from 'src/settings';
-import type { VaultIntermediate } from 'src/vault';
+import type { SettingsInstance } from './settings';
+import type { VaultIntermediate } from './vault';
+import { fileIsDailyNote } from './file-helpers';
 
 export class TaskHandler {
   private readonly settings: SettingsInstance;
@@ -23,8 +24,7 @@ export class TaskHandler {
    * - Insert a configurable number of infinite repeating tasks
    */
   public async processFile(file: TFile): Promise<void> {
-    const date = this.vault.findMomentForDailyNote(file);
-    if (date === undefined) {
+    if (!fileIsDailyNote(file, this.vault)) {
       console.debug(
         'Slated: Not in a daily note, not processing contained tasks',
       );
@@ -34,7 +34,7 @@ export class TaskHandler {
     const allTasks = await this.normalizeFileTasks(file);
     const unresolvedPropogations = allTasks
       .filter((task) => task.repeats && task.repeater?.isValid())
-      .map((task) => task.propogateRepetitions(date));
+      .map((task) => task.propogateRepetitions());
 
     await Promise.all(unresolvedPropogations);
   }

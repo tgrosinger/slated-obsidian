@@ -39,6 +39,7 @@ describe('Tasks are parsed correctly', () => {
     expect(tl.line).toEqual(line);
     expect(tl.repeats).toBeFalsy();
     expect(tl.blockID).toEqual('');
+    expect(tl.isOriginalInstance).toBeFalsy();
   });
   test('When the checkbox is checked', () => {
     const line = '- [X] This task is done';
@@ -60,6 +61,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task  ;  Every Sunday';
@@ -72,6 +74,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When the calendar emoji is used', () => {
       const line = '- [ ] The task  📅  Every Sunday';
@@ -84,6 +87,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
   });
 
@@ -94,6 +98,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task ^task-abc123';
@@ -101,6 +106,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
 
@@ -112,6 +118,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When there are spaces', () => {
       const line = '- [x] The task >[[2020-12-25]] ^task-abc123';
@@ -120,6 +127,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task >[[some other note]] ^task-abc123';
@@ -128,6 +136,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('some other note');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When the note has been renamed', () => {
       const line =
@@ -137,6 +146,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
 
@@ -148,6 +158,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task <[[2020-12-25#^task-abc123]]';
@@ -156,6 +167,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task <[[some other note#^task-abc123]]';
@@ -164,6 +176,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedFrom).toEqual('some other note');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When the note has been renamed', () => {
       const line =
@@ -173,6 +186,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
 
@@ -185,6 +199,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeTruthy();
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When the note name is not a date', () => {
       const line =
@@ -195,6 +210,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeTruthy();
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('some other note');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
 
@@ -206,6 +222,17 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeTruthy();
       expect(tl.repeater.isValid()).toBeFalsy();
       expect(tl.blockID).toEqual('');
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
+});
+
+describe('Tasks are created and removed correctly when repetition is updated', () => {
+  describe('When the task updated is the original task', () => {});
+
+  describe('When the task updated is a repetition in the past', () => {});
+
+  describe('When the task updated is a repetition in the future', () => {});
+
+  describe('When the task updated is a repetition on today', () => {});
 });
