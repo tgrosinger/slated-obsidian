@@ -86,7 +86,7 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
 
     vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
       const date = moment(dailyNote.basename, format, true);
-      return date.isValid() ? date : null;
+      return date.isValid() ? date : undefined;
     });
   });
 

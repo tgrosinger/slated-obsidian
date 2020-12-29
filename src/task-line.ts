@@ -35,6 +35,11 @@ export class TaskLine {
   private _line: string;
   private _modified: boolean;
 
+  /**
+   * Do not use directly, instead use baseTaskContent() which memoizes.
+   */
+  private _basetask: string;
+
   private _repeats: boolean;
   private readonly _repeatConfig: string;
   private _modifiedRepeatConfig: string;
@@ -157,9 +162,8 @@ export class TaskLine {
   // Something like:
   // - [ ] This is the task ; Every Sunday <<[[2020-12-25^task-abc123]]
   public lineAsRepeated = (): string => {
-    const withoutBlockID = this._line.replace('^' + this._blockID, '');
-    const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
-    return withoutBlockID + `<<[[${rootTaskLink}]]`;
+    const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
+    return `${this.baseTaskContent()}<<[[${rootTaskLink}]]`;
   };
 
   public get movedTo(): string {
@@ -304,6 +308,46 @@ export class TaskLine {
   };
 
   /**
+   * Returns the task line with no repetition or move links.
+   */
+  private readonly baseTaskContent = (): string => {
+    if (this._basetask) {
+      return this._basetask;
+    }
+
+    let line = this._line;
+    line = line.replace(movedFromRe, '');
+    line = line.replace(movedToRe, '');
+    line = line.replace(repeatsFromRe, '');
+    line = line.replace(blockHashRe, '');
+    this._basetask = line;
+    return line;
+  };
+
+  /**
+   * Attempts to return the name of the file from which this task originated.
+   * That could be a file which this task was moved from, or it could be the
+   * source of the repetition of this task.
+   */
+  private readonly originalFileName = (): string => {
+    if (this.isOriginalInstance) {
+      return this.file.basename;
+    }
+
+    if (this._movedFromNoteName !== '') {
+      return this._movedFromNoteName;
+    }
+
+    if (this._repeatsFromNoteName !== '') {
+      return this._repeatsFromNoteName;
+    }
+
+    throw new Error(
+      `Slated: Unable to find original file name for task: ${this._line}`,
+    );
+  };
+
+  /**
    * Look for occurences of this task which occur in the future and update.
    *
    * Specifically, tasks should be in the future relative to this task, not
@@ -363,7 +407,12 @@ export class TaskLine {
         toUpdate.map(
           async (date): Promise<void> => {
             const f = await this.vault.getDailyNote(moment(date));
-            return updateTaskRepetition(f, this, newLine, this.vault);
+            return updateTaskRepetition(
+              f,
+              this,
+              this.lineAsRepeated(),
+              this.vault,
+            );
           },
         ),
       ),

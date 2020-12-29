@@ -46,7 +46,8 @@
   "dependencies": {
     "lodash": "4.17.20",
     "neverthrow": "3.0.0",
-    "obsidian-daily-notes-interface": "0.2.2",
+    "obsidian-calendar-ui": "0.0.3",
+    "obsidian-daily-notes-interface": "0.4.0",
     "rrule": "/rrule",
     "svelte": "3.31.0"
   }

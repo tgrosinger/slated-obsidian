@@ -3560,23 +3560,32 @@ object.values@^1.1.1:
     es-abstract "^1.18.0-next.1"
     has "^1.0.3"
 
-obsidian-daily-notes-interface@0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.2.2.tgz#6aa81dddca0811ad0c6a86ffb52209ea9dd34a39"
-  integrity sha512-X1nfDXX/FNK4n6pw2o7/qN/a3ae9RXaky7yBNNMiCTq0DzCXuWXrPjrVGYLt6ekB4Z9a9KiKYThACYcqh9ET3w==
+obsidian-calendar-ui@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.0.3.tgz#6dd53d0d4ddf579e88d90e5ba85f149cd8c73484"
+  integrity sha512-EX+yCbaNz58iV1pv+T09MH4GP8Rd8MkfO84RdYsZF4y+LXKg+cb0uUOFMksj4j0n2Qbv23t3dJ0XtDwKs5zmMw==
+  dependencies:
+    obsidian-daily-notes-interface "0.4.0"
+    svelte "3.31.0"
+    tslib "2.0.3"
+
+obsidian-daily-notes-interface@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.4.0.tgz#9bbc1813146ebbff60df986fd717f90b2620d309"
+  integrity sha512-CTokiN+6UJ7umihC5equ3sMx5kO9F3X94sSrMN8nrUHjVQYfZiGX/cFhCqh7laeE7MC0g8Kzwzv6/6VLbpmV6w==
   dependencies:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
 
-"obsidian@https://github.com/obsidianmd/obsidian-api/tarball/master":
-  version "0.10.0"
-  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#740d65fe84a4528e524a69cf48c24369b4261ab9"
+"obsidian@github:obsidianmd/obsidian-api#master":
+  version "0.10.2"
+  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/d10f2f6efc0d0d7c9bf96cd435ef376b18fbd6d8"
   dependencies:
     "@types/codemirror" "0.0.98"
 
-obsidian@obsidianmd/obsidian-api#master:
-  version "0.9.21"
-  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/ea530cce1adaa33eb891f053a56a12fa8640b834"
+"obsidian@https://github.com/obsidianmd/obsidian-api/tarball/master":
+  version "0.10.0"
+  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#740d65fe84a4528e524a69cf48c24369b4261ab9"
   dependencies:
     "@types/codemirror" "0.0.98"
 

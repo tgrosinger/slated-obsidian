@@ -55,7 +55,16 @@ export const updateTaskRepetition = async (
   newLine: string,
   vault: VaultIntermediate,
 ): Promise<void> => {
-  return withFileContents(file, vault, (lines: string[]): boolean => {});
+  return withFileContents(file, vault, (lines: string[]): boolean => {
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf(task.blockID) === -1) {
+        continue;
+      }
+
+      lines.splice(i, 1, newLine);
+      return;
+    }
+  });
 };
 
 /**
@@ -175,7 +184,7 @@ export const insertLine = (
 export const fileIsDailyNote = (
   file: TFile,
   vault: VaultIntermediate,
-): boolean => vault.findMomentForDailyNote(file) === undefined;
+): boolean => vault.findMomentForDailyNote(file) !== undefined;
 
 export const getBlockIDIndex = (lines: string[], blockID: string): number => {
   for (let i = 0; i < lines.length; i++) {

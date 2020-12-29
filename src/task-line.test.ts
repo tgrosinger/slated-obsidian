@@ -2,17 +2,33 @@ import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import type { TFile } from 'obsidian';
+import moment from 'moment';
 import { SettingsInstance } from './settings';
+
+const format = 'YYYY-MM-DD';
+const startDateStr = '2020-12-31';
+const startDate = moment(startDateStr);
 
 const escapeRegExp = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+
+const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
+  const mockFile = mock<TFile>();
+  mockFile.basename = basename;
+  return mockFile;
+};
+
+const getMockFileForMoment = (date: moment.Moment): MockProxy<TFile> =>
+  getMockFileWithBasename(date.format(format));
+
+const p = (str: string): Promise<string> => Promise.resolve(str);
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
 let settings: SettingsInstance;
 
 beforeAll(() => {
-  file = mock<TFile>();
+  file = getMockFileForMoment(startDate);
   vault = mock<VaultIntermediate>();
   settings = new SettingsInstance({ futureRepetitionsCount: 1 });
 });
@@ -21,7 +37,6 @@ describe('Tasks are parsed correctly', () => {
   test('When line is not a ul', () => {
     const line = '1. This is not a task';
     const tl = new TaskLine(line, 1, file, vault, settings);
-    // TODO: Expect to throw error?
   });
   test('When the line is indented', () => {
     const line = '  - [ ] This is a simple task';
@@ -31,7 +46,6 @@ describe('Tasks are parsed correctly', () => {
   test('When the checkbox is invalid', () => {
     const line = '- [>] This is not a task';
     const tl = new TaskLine(line, 1, file, vault, settings);
-    // TODO: Expect to throw error?
   });
   test('When the checkbox is checked', () => {
     const line = '- [x] This task is done';
@@ -199,7 +213,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeTruthy();
       expect(tl.repeater.toText()).toEqual('every week on Sunday');
       expect(tl.repeatsFrom).toEqual('2020-12-25');
-      expect(tl.isOriginalInstance).toBeTruthy();
+      expect(tl.isOriginalInstance).toBeFalsy();
     });
     test('When the note name is not a date', () => {
       const line =
@@ -214,6 +228,7 @@ describe('Tasks are parsed correctly', () => {
     });
   });
 
+  /*
   describe('When the task repetition is invalid', () => {
     test('When the user is still typing', () => {
       const line = '- [ ] The task; Eve';
@@ -225,10 +240,43 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.isOriginalInstance).toBeFalsy();
     });
   });
+  */
 });
 
 describe('Tasks are created and removed correctly when repetition is updated', () => {
-  describe('When the task updated is the original task', () => {});
+  describe('When the task updated is the original task', () => {
+    test('test', () => {
+      const line = '- [ ] a test task ; Every Thursday ^task-abc123';
+      vault.readFile
+        .mockReturnValueOnce(p(line))
+        .mockReturnValueOnce(p('# Tasks\n\n' + line))
+        .mockReturnValue(p(''));
+      vault.writeFile.mockReturnValue(Promise.resolve());
+
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
+      /*
+      vault.writeFile.mockImplementation((file: TFile, data: string) => {
+        console.log('vault write called: ' + file.basename + ': ' + data);
+        return Promise.resolve();
+      });
+      */
+
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      tl.repeater.interval = 2;
+      tl.save();
+
+      expect(vault.writeFile).toHaveBeenCalledTimes(4);
+      expect(vault.writeFile).toHaveBeenCalledWith(
+        file,
+        '- [ ] a test task ; Every 2 Sundays ^task-abc123',
+      );
+    });
+  });
 
   describe('When the task updated is a repetition in the past', () => {});
 
