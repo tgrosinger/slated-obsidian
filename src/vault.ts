@@ -1,25 +1,22 @@
 import type { Moment } from 'moment';
 import moment from 'moment';
-import type { Result } from 'neverthrow';
 import type { TFile, Vault } from 'obsidian';
 import {
   createDailyNote,
   getAllDailyNotes,
   getDailyNote,
   getDailyNoteSettings,
-  IDailyNote,
 } from 'obsidian-daily-notes-interface';
 
 export class VaultIntermediate {
   private readonly vault: Vault;
-  private dailyNoteCache: IDailyNote[] | undefined;
 
   constructor(vault: Vault) {
     this.vault = vault;
   }
 
   public getDailyNote = (date: Moment): Promise<TFile> => {
-    const desiredNote = getDailyNote(date, this.getAllDailyNotes());
+    const desiredNote = getDailyNote(date, getAllDailyNotes());
     if (desiredNote) {
       return Promise.resolve(desiredNote);
     }
@@ -28,13 +25,6 @@ export class VaultIntermediate {
 
   public createDailyNote = (date: Moment): Promise<TFile> =>
     createDailyNote(date);
-
-  public getAllDailyNotes = (): IDailyNote[] => {
-    if (this.dailyNoteCache === undefined) {
-      this.dailyNoteCache = getAllDailyNotes();
-    }
-    return this.dailyNoteCache;
-  };
 
   public findMomentForDailyNote = (file: TFile): Moment | undefined => {
     const { format } = getDailyNoteSettings();

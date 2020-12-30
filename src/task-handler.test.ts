@@ -78,10 +78,13 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
   let settings: jest.Mocked<SettingsInstance>;
   let taskHandler: TaskHandler;
 
-  beforeEach(() => {
+  beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    vault = mock<VaultIntermediate>();
     settings = new SettingsInstance({ futureRepetitionsCount: 1 });
+  });
+
+  beforeEach(() => {
+    vault = mock<VaultIntermediate>();
     taskHandler = new TaskHandler(vault, settings);
 
     vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
@@ -91,138 +94,86 @@ describe('scanAndPropogateRepetitions reads file contents', () => {
   });
 
   describe('taskHandler.processFile', () => {
-    describe('when the future file exists', () => {
-      describe('when a newline should be inserted after headings', () => {
-        test('if it has a tasks section, the task is appended to existing', async () => {
-          vault.readFile
-            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
-            .mockReturnValueOnce(
-              p(
-                '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
-              ),
-            );
+    test('When the file contains only a single task', async () => {
+      vault.readFile.mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'));
 
-          const futureFiles: TFile[] = [];
-          vault.getDailyNote.mockImplementation((date) => {
-            const mockFile = getMockFileForMoment(date);
-            futureFiles.push(mockFile);
-            return Promise.resolve(mockFile);
-          });
+      await taskHandler.processFile(file);
 
-          await taskHandler.processFile(file);
+      expect(vault.readFile).toHaveBeenCalledWith(file, false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
+      expect(vault.writeFile.mock.calls[0][1]).toMatch(
+        new RegExp(
+          escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
+            '[a-z0-9]{4}',
+        ),
+      );
+    });
 
-          expect(vault.readFile).toHaveBeenCalledWith(file, false);
-          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
-          expect(vault.writeFile.mock.calls[0][1]).toMatch(
-            new RegExp(
-              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
-                '[a-z0-9]{4}',
-            ),
-          );
+    test('When the file contains multiple tasks', async () => {
+      vault.readFile.mockReturnValueOnce(
+        p(
+          '- [ ] a test task ; Every Sunday\n- [ ] another task; Every Thursday',
+        ),
+      );
 
-          expect(futureFiles.length).toEqual(1);
-          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
-          expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
-            [
-              '# Hello',
-              '',
-              '## Tasks',
-              '',
-              '- [ ] Something',
-              '  - A sub item',
-              escapeRegExp(
-                `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-`,
-              ) + '[a-zA-Z0-9]{4}\\]\\]',
-              '',
-              '## Another Header',
-              '',
-            ],
-            [6],
-          );
-        });
+      await taskHandler.processFile(file);
 
-        test('if it has a tasks section, the task is appended', async () => {
-          vault.readFile
-            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
-            .mockReturnValueOnce(p('# Hello\n\n## Tasks\n'));
+      expect(vault.readFile).toHaveBeenCalledWith(file, false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+        [
+          escapeRegExp(`- [ ] a test task ; Every Sunday ^task-`) +
+            '[a-zA-Z0-9]{4}',
+          escapeRegExp(`- [ ] another task; Every Thursday ^task-`) +
+            '[a-zA-Z0-9]{4}',
+        ],
+        [0, 1],
+      );
+    });
 
-          const futureFiles: TFile[] = [];
-          vault.getDailyNote.mockImplementation((date) => {
-            const mockFile = getMockFileForMoment(date);
-            futureFiles.push(mockFile);
-            return Promise.resolve(mockFile);
-          });
+    test('When there is other content in the file too', async () => {
+      vault.readFile.mockReturnValueOnce(
+        p(
+          [
+            '# 2020-12-31',
+            '',
+            '## Tasks',
+            '',
+            '- [ ] a test task; Every Monday',
+            '  - a subtask',
+            '',
+            '## Notes',
+            '',
+            '- These are my notes',
+            '',
+          ].join('\n'),
+        ),
+      );
 
-          await taskHandler.processFile(file);
+      await taskHandler.processFile(file);
 
-          expect(vault.readFile).toHaveBeenCalledWith(file, false);
-          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
-          expect(vault.writeFile.mock.calls[0][1]).toMatch(
-            new RegExp(
-              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
-                '[-a-zA-Z0-9]{4}',
-            ),
-          );
-
-          expect(futureFiles.length).toEqual(1);
-          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
-          expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
-            [
-              '# Hello',
-              '',
-              '## Tasks',
-              '',
-              escapeRegExp(
-                `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-`,
-              ) + '[a-zA-Z0-9]{4}\\]\\]',
-              '',
-            ],
-            [4],
-          );
-        });
-
-        test('if it does not have a tasks section, one is created', async () => {
-          vault.readFile
-            .mockReturnValueOnce(p('- [ ] a test task ; Every Sunday'))
-            .mockReturnValueOnce(p('# Hello\n\n## Another Section\n'));
-
-          const futureFiles: TFile[] = [];
-          vault.getDailyNote.mockImplementation((date) => {
-            const mockFile = getMockFileForMoment(date);
-            futureFiles.push(mockFile);
-            return Promise.resolve(mockFile);
-          });
-
-          await taskHandler.processFile(file);
-
-          expect(vault.readFile).toHaveBeenCalledWith(file, false);
-          expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
-          expect(vault.writeFile.mock.calls[0][1]).toMatch(
-            new RegExp(
-              escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
-                '[-a-zA-Z0-9]{4}',
-            ),
-          );
-
-          expect(futureFiles.length).toEqual(1);
-          expect(vault.writeFile.mock.calls[1][0]).toEqual(futureFiles[0]);
-          expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
-            [
-              '# Hello',
-              '',
-              '## Another Section',
-              '',
-              '## Tasks',
-              '',
-              escapeRegExp(
-                `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-`,
-              ) + '[a-zA-Z0-9]{4}\\]\\]',
-              '',
-            ],
-            [6],
-          );
-        });
-      });
+      expect(vault.readFile).toHaveBeenCalledWith(file, false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+        [
+          '# 2020-12-31',
+          '',
+          '## Tasks',
+          '',
+          escapeRegExp(`- [ ] a test task; Every Monday ^task-`) +
+            '[a-zA-Z0-9]{4}',
+          '  - a subtask',
+          '',
+          '## Notes',
+          '',
+          '- These are my notes',
+          '',
+        ],
+        [4],
+      );
     });
   });
 });

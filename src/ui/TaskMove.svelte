@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { TaskLine } from 'src/task-line';
   import type { Moment } from 'moment';
-  import { Calendar, MetadataCache } from 'obsidian-calendar-ui';
 
   // Creation Parameters
   export let task: TaskLine;
@@ -21,8 +20,6 @@
 
 <div>This is task Move</div>
 <div>{task.line}</div>
-
-<Calendar {onClickDay} />
 
 <button on:click={showMove}> Move </button>
 <button on:click={close}> Close </button>

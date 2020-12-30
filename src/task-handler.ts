@@ -31,12 +31,9 @@ export class TaskHandler {
       return;
     }
 
-    const allTasks = await this.normalizeFileTasks(file);
-    const unresolvedPropogations = allTasks
-      .filter((task) => task.repeats && task.repeater?.isValid())
-      .map((task) => task.propogateRepetitions());
-
-    await Promise.all(unresolvedPropogations);
+    return this.normalizeFileTasks(file).then((_) => {
+      return;
+    });
   }
 
   /**
@@ -98,7 +95,8 @@ export class TaskHandler {
     return (
       line.startsWith('- [ ] ') ||
       line.startsWith('- [x] ') ||
-      line.startsWith('- [X] ')
+      line.startsWith('- [X] ') ||
+      line.startsWith('- [>] ')
     );
   };
 }

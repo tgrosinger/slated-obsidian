@@ -1,4 +1,4 @@
-import type RRule from 'rrule';
+import RRule from 'rrule';
 import { Frequency as RFrequency, Weekday, ByWeekday } from 'rrule';
 
 export enum Frequency {
@@ -29,6 +29,8 @@ export class RepeatAdapter {
       : this.rrule.toString();
 
   public toString = (): string => this.rrule.toString();
+
+  public asRRule = (): RRule => RRule.fromText(this.toText());
 
   public get frequency(): Frequency {
     switch (this.rrule.options.freq) {

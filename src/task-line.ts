@@ -16,7 +16,7 @@ import {
 } from './file-helpers';
 import { intersection, difference, concat } from 'lodash';
 
-const taskRe = /^- \[[ xX]\] /;
+const taskRe = /^- \[[ xX>]\] /;
 const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:\,]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
 const movedToRe = />\[\[([^\]]+)\]\]/;
@@ -42,7 +42,6 @@ export class TaskLine {
 
   private _repeats: boolean;
   private readonly _repeatConfig: string;
-  private _modifiedRepeatConfig: string;
   private _blockID: string;
   private readonly _movedToNoteName: string;
   private readonly _movedFromNoteName: string;
@@ -145,7 +144,7 @@ export class TaskLine {
 
   // Converts the line to be used in places where it was moved to another note.
   // Something like:
-  // - [x] This is the task >[[2020-12-25]] ^task-abc123
+  // - [>] This is the task >[[2020-12-25]] ^task-abc123
   public lineAsMovedTo = (): string => {
     throw new Error('Not implemented');
   };
@@ -213,8 +212,6 @@ export class TaskLine {
       return;
     }
 
-    this.updateFutureOccurences();
-
     const fileContents = await this.vault.readFile(this.file, false);
     const lines = fileContents.split('\n');
     lines[this.lineNum] = this._line;
@@ -223,6 +220,21 @@ export class TaskLine {
     return this.vault.writeFile(this.file, newFileContents).then(() => {
       this._modified = false;
     });
+  };
+
+  public readonly createNextRepetition = async (): Promise<void> => {
+    const currentNoteDate = this.vault.findMomentForDailyNote(this.file);
+    const nextDate = this.repeater
+      .asRRule()
+      .after(currentNoteDate.endOf('day').toDate());
+
+    const nextOccurenceFile = await this.vault.getDailyNote(moment(nextDate));
+    return addTaskRepetition(
+      nextOccurenceFile,
+      this,
+      this.settings,
+      this.vault,
+    );
   };
 
   /**
@@ -257,26 +269,9 @@ export class TaskLine {
     this._modified = true;
   };
 
-  /**
-   * Ensure that future repetitions of the provided task have been created.
-   */
-  public async propogateRepetitions(): Promise<void[]> {
-    const nextN = this.repeater.next(this.settings.futureRepetitionsCount);
-
-    const pendingUpdates = nextN.map((updateDate) =>
-      this.vault
-        .getDailyNote(moment(updateDate))
-        .then((file) =>
-          addTaskRepetition(file, this, this.settings, this.vault),
-        ),
-    );
-    return Promise.all(pendingUpdates);
-  }
-
   private readonly handleRepeaterUpdated = (): void => {
     this._modified = true;
     this._repeats = this.repeater.isValid();
-    this._modifiedRepeatConfig = this.repeater.toText();
 
     if (!this._repeatConfig) {
       // Adding a repeat config to a task that previously did not have one
@@ -344,78 +339,6 @@ export class TaskLine {
 
     throw new Error(
       `Slated: Unable to find original file name for task: ${this._line}`,
-    );
-  };
-
-  /**
-   * Look for occurences of this task which occur in the future and update.
-   *
-   * Specifically, tasks should be in the future relative to this task, not
-   * necessarily the actual immediate future. Compare the next occurences of
-   * the previous repetition config to the next occurences with the new config.
-   * Add, remove, or update task lines as needed.
-   */
-  private readonly updateFutureOccurences = async (): Promise<void> => {
-    if (!this.repeats) {
-      return;
-    }
-
-    // We will set the start date of the repeater to the date of this note (or
-    // today, if not on a daily note), because it's possible that the repetition
-    // config has been updated previously, and startng our search on the date of
-    // the original instance could be wrong.
-    const startDate = fileIsDailyNote(this.file, this.vault)
-      ? this.vault.findMomentForDailyNote(this.file)
-      : moment().startOf('day');
-
-    const origRRule = RRule.fromText(this._repeatConfig);
-    origRRule.options.dtstart = startDate.toDate();
-    origRRule.origOptions.dtstart = startDate.toDate();
-
-    const newRRule = RRule.fromText(this._modifiedRepeatConfig);
-    newRRule.options.dtstart = startDate.toDate();
-    newRRule.origOptions.dtstart = startDate.toDate();
-
-    // Files to update or remove this task from
-    const origNextN = origRRule.all(
-      (_, n) => n <= this.settings.futureRepetitionsCount,
-    );
-
-    // Files which need this task updated or added
-    const newNextN = origRRule.all(
-      (_, n) => n <= this.settings.futureRepetitionsCount,
-    );
-
-    const toUpdate = intersection(origNextN, newNextN);
-    const toRemove = difference(origNextN, newNextN);
-    const toAdd = difference(newNextN, origNextN);
-
-    await Promise.all(
-      concat(
-        toRemove.map(
-          async (date): Promise<void> => {
-            const f = await this.vault.getDailyNote(moment(date));
-            return removeTaskRepetition(f, this, this.vault);
-          },
-        ),
-        toAdd.map(
-          async (date): Promise<void> => {
-            const f = await this.vault.getDailyNote(moment(date));
-            return addTaskRepetition(f, this, this.settings, this.vault);
-          },
-        ),
-        toUpdate.map(
-          async (date): Promise<void> => {
-            const f = await this.vault.getDailyNote(moment(date));
-            return updateTaskRepetition(
-              f,
-              this,
-              this.lineAsRepeated(),
-              this.vault,
-            );
-          },
-        ),
-      ),
     );
   };
 }
