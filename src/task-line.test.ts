@@ -91,15 +91,27 @@ describe('Tasks are parsed correctly', () => {
     const line = '  - [ ] This is a simple task';
     const tl = new TaskLine(line, 1, file, vault, settings);
     expect(tl.line).toEqual(line);
+    expect(tl.isTask()).toBeTruthy();
+    expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is invalid', () => {
+    const line = '- [y] This is not a task';
+    const tl = new TaskLine(line, 1, file, vault, settings);
+    expect(tl.isTask()).toBeFalsy();
+    expect(tl.complete).toBeFalsy();
+  });
+  test('When the checkbox is the moved symbol', () => {
     const line = '- [>] This is not a task';
     const tl = new TaskLine(line, 1, file, vault, settings);
+    expect(tl.isTask()).toBeTruthy();
+    expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is checked', () => {
     const line = '- [x] This task is done';
     const tl = new TaskLine(line, 1, file, vault, settings);
     expect(tl.line).toEqual(line);
+    expect(tl.isTask()).toBeTruthy();
+    expect(tl.complete).toBeTruthy();
     expect(tl.repeats).toBeFalsy();
     expect(tl.blockID).toEqual('');
     expect(tl.isOriginalInstance).toBeFalsy();
@@ -108,6 +120,8 @@ describe('Tasks are parsed correctly', () => {
     const line = '- [X] This task is done';
     const tl = new TaskLine(line, 1, file, vault, settings);
     expect(tl.line).toEqual(line);
+    expect(tl.isTask()).toBeTruthy();
+    expect(tl.complete).toBeTruthy();
     expect(tl.repeats).toBeFalsy();
     expect(tl.blockID).toEqual('');
   });

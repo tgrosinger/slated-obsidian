@@ -7,10 +7,12 @@ import { fileIsDailyNote } from './file-helpers';
 export class TaskHandler {
   private readonly settings: SettingsInstance;
   private readonly vault: VaultIntermediate;
+  private taskCache: Record<string, TaskLine[]>;
 
   constructor(vault: VaultIntermediate, settings: SettingsInstance) {
     this.vault = vault;
     this.settings = settings;
+    this.taskCache = {};
   }
 
   /**
@@ -31,9 +33,13 @@ export class TaskHandler {
       return;
     }
 
-    return this.normalizeFileTasks(file).then((_) => {
-      return;
-    });
+    const tasks = await this.normalizeFileTasks(file);
+    const newlyCompletedTasks = this.filterNewlyCompletedTasks(
+      file.basename,
+      tasks,
+    );
+    this.taskCache[file.basename] = tasks;
+    return this.propogateCompletedTasks(newlyCompletedTasks);
   }
 
   /**
@@ -80,6 +86,38 @@ export class TaskHandler {
     // TODO: Notify on invalid repeating configs
 
     return taskLines;
+  };
+
+  private readonly filterNewlyCompletedTasks = (
+    filename: string,
+    tasks: TaskLine[],
+  ): TaskLine[] => {
+    const prevTasks = this.taskCache[filename];
+    return tasks.filter((task) => {
+      if (!task.complete) {
+        return false;
+      }
+
+      for (let i = 0; i < prevTasks.length; i++) {
+        const prevTask = prevTasks[i];
+        if (task.blockID === prevTask.blockID) {
+          // if prevTask complete then not newly completed
+          return !prevTask.complete;
+        }
+      }
+
+      // A newly added task that is also complete.
+      return true;
+    });
+  };
+
+  /**
+   * Create the next occurence for each of the provided tasks.
+   */
+  private readonly propogateCompletedTasks = async (
+    tasks: TaskLine[],
+  ): Promise<void> => {
+    await Promise.all(tasks.map((task) => task.createNextRepetition()));
   };
 
   /**

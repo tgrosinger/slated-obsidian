@@ -4,20 +4,10 @@ import RRule, { Frequency } from 'rrule';
 import { RepeatAdapter } from './repeat';
 import moment from 'moment';
 import type { SettingsInstance } from './settings';
-import {
-  addTaskRepetition,
-  fileIsDailyNote,
-  getBlockIDIndex,
-  getIndexSectionLastContent,
-  getIndexTasksHeading,
-  insertLine,
-  removeTaskRepetition,
-  updateTaskRepetition,
-} from './file-helpers';
-import { intersection, difference, concat } from 'lodash';
+import { addTaskRepetition } from './file-helpers';
 
-const taskRe = /^- \[[ xX>]\] /;
-const repeatScheduleRe = /[;📅]\W*([-a-zA-Z0-9 =;:\,]+)/;
+const taskRe = /^\s*- \[[ xX>]\] /;
+const repeatScheduleRe = /[;📅]\s*([-a-zA-Z0-9 =;:\,]+)/;
 const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
 const movedToRe = />\[\[([^\]]+)\]\]/;
 const repeatsFromRe = /<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
@@ -136,6 +126,16 @@ export class TaskLine {
     return this._repeats;
   }
 
+  public get complete(): boolean {
+    const matches = taskRe.exec(this._line);
+    if (!matches) {
+      return false;
+    }
+
+    const innerChar = matches[0].trimLeft()[3];
+    return innerChar === 'x' || innerChar === 'X';
+  }
+
   // isOriginalInstance indicates if this is the task actually annotated with a
   // block ID, or if instead it is referring to another task by blockID.
   public get isOriginalInstance(): boolean {
@@ -162,7 +162,8 @@ export class TaskLine {
   // - [ ] This is the task ; Every Sunday <<[[2020-12-25^task-abc123]]
   public lineAsRepeated = (): string => {
     const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
-    return `${this.baseTaskContent()}<<[[${rootTaskLink}]]`;
+    const uncheckedContent = this.baseTaskContent().replace(/\[[xX]\]/, '[ ]');
+    return `${uncheckedContent}<<[[${rootTaskLink}]]`;
   };
 
   public get movedTo(): string {

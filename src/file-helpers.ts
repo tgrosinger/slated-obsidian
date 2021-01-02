@@ -101,10 +101,14 @@ export const getIndexTasksHeading = (
 
   // Tasks section not found, so add it
 
-  if (lines.length === 1) {
+  if (lines.length === 1 && lines[0] === '') {
     // Empty file, just replace the first line
     lines[0] = settings.tasksHeader;
     return 0;
+  }
+
+  if (settings.blankLineAfterHeader && lines[lines.length - 1] !== '') {
+    lines.push('');
   }
 
   lines.push(settings.tasksHeader);
