@@ -4,6 +4,10 @@ Advanced task management in the Obsidian knowledgebase.
 
 Move tasks and set up repeating tasks in 100% Obsidian Markdown.
 
+## Alpha Release
+
+**Note:** This plugin is still in an alpha state. Please backup your vault frequently. If you encounter any bugs or have suggestions, please open a [Github Issue](https://github.com/tgrosinger/slated-obsidian/issues/new/choose). Thank you!
+
 ## Screenshots
 
 ![task-repeat-config-1](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-repeat-config-1.png)
@@ -36,6 +40,16 @@ task will link bidirectionally.
 - [ ] Bring dog to the vet <[[2020-11-22^3k2codg]]
 - [x] ~~Wash the car~~ >[[2021-05-01]] ^task-9sdy
 - [ ] Do the dishes 📅 Every weekday at 5pm ^task-3ddx
+
+## Pricing
+
+This plugin is provided to everyone for free, however if you would like to
+say thanks or help support continued development, feel free to send a little
+my way through one of the following methods:
+
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/tgrosinger?style=social)](https://github.com/sponsors/tgrosinger)
+[![Paypal](https://img.shields.io/badge/paypal-tgrosinger-yellow?style=social&logo=paypal)](https://paypal.me/tgrosinger)
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="BuyMeACoffee" width="100">](https://www.buymeacoffee.com/tgrosinger)
 
 ## Credits
 
