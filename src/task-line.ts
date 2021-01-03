@@ -2,9 +2,9 @@ import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 import { RepeatAdapter } from './repeat';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import type { SettingsInstance } from './settings';
-import { addTaskRepetition } from './file-helpers';
+import { addTaskMove, addTaskRepetition } from './file-helpers';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
 const repeatScheduleRe = /[;📅]\s*([-a-zA-Z0-9 =;:\,]+)/;
@@ -145,15 +145,18 @@ export class TaskLine {
   // Converts the line to be used in places where it was moved to another note.
   // Something like:
   // - [>] This is the task >[[2020-12-25]] ^task-abc123
-  public lineAsMovedTo = (): string => {
-    throw new Error('Not implemented');
+  private lineAsMovedTo = (date: Moment): string => {
+    const newFileName = this.vault.fileNameForMoment(date);
+    const uncheckedContent = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
+    return `${uncheckedContent}>[[${newFileName}]] ^${this._blockID}`;
   };
 
   // Converts the line to be used in places where it was moved from another note.
   // Something like:
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
   public lineAsMovedFrom = (): string => {
-    throw new Error('Not implemented');
+    const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
+    return `${this.baseTaskContent()}<[[${rootTaskLink}]]`;
   };
 
   // Converts the line to be used in places where it was copied to another note
@@ -218,9 +221,8 @@ export class TaskLine {
     lines[this.lineNum] = this._line;
     const newFileContents = lines.join('\n');
 
-    return this.vault.writeFile(this.file, newFileContents).then(() => {
-      this._modified = false;
-    });
+    await this.vault.writeFile(this.file, newFileContents);
+    this._modified = false;
   };
 
   public readonly createNextRepetition = async (): Promise<void> => {
@@ -236,6 +238,15 @@ export class TaskLine {
       this.settings,
       this.vault,
     );
+  };
+
+  public readonly move = async (date: Moment): Promise<void> => {
+    const newFile = await this.vault.getDailyNote(date);
+    await addTaskMove(newFile, this, this.settings, this.vault);
+
+    this._line = this.lineAsMovedTo(date);
+    this._modified = true;
+    return this.save();
   };
 
   /**

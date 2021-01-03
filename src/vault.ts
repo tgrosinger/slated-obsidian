@@ -32,6 +32,9 @@ export class VaultIntermediate {
     return date.isValid() ? date : null;
   };
 
+  public fileNameForMoment = (date: Moment): string =>
+    date.format(getDailyNoteSettings().format);
+
   public readFile = (file: TFile, useCache: boolean): Promise<string> =>
     useCache ? this.vault.cachedRead(file) : this.vault.read(file);
 

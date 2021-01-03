@@ -292,6 +292,62 @@ describe('Tasks are parsed correctly', () => {
   });
 });
 
+describe('taskLine.move', () => {
+  beforeAll(() => {
+    file = getMockFileForMoment(startDate);
+    settings = new SettingsInstance({ futureRepetitionsCount: 1 });
+  });
+
+  beforeEach(() => {
+    vault = mock<VaultIntermediate>();
+    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
+      const date = moment(dailyNote.basename, format, true);
+      return date.isValid() ? date : undefined;
+    });
+  });
+
+  describe('when the destination file does not exist', () => {
+    test('when the task has repeating', async () => {
+      vault.readFile.mockImplementation((f, useCache) => {
+        if (f === file) {
+          return p(
+            '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
+          );
+        }
+        return p('');
+      });
+      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
+
+      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+      const tl = new TaskLine(line, 4, file, vault, settings);
+      await tl.move(moment('2021-01-01'));
+
+      expect(futureFiles.length).toEqual(1);
+      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(2);
+      expect(vault.writeFile).toHaveBeenNthCalledWith(
+        1,
+        futureFiles[0],
+        `## Tasks\n\n- [ ] a test task ; Every Sunday <[[${startDateStr}#^task-abc123]]\n`,
+      );
+      expect(vault.writeFile).toHaveBeenNthCalledWith(
+        2,
+        file,
+        '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
+      );
+    });
+
+    test('when the task does not repeat', async () => {});
+  });
+});
+
 describe('taskLine.createNextRepetition', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);

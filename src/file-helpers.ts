@@ -33,6 +33,31 @@ export const addTaskRepetition = async (
   });
 };
 
+export const addTaskMove = async (
+  file: TFile,
+  task: TaskLine,
+  settings: SettingsInstance,
+  vault: VaultIntermediate,
+): Promise<void> => {
+  console.debug('Slated: Moving task exists to file: ' + file.basename);
+
+  return withFileContents(file, vault, (lines: string[]): boolean => {
+    const taskSectionIndex = getIndexTasksHeading(lines, settings);
+    const taskSectionEndIndex = getIndexSectionLastContent(
+      lines,
+      taskSectionIndex,
+    );
+
+    insertLine(
+      lines,
+      task.lineAsMovedFrom(),
+      taskSectionEndIndex + 1,
+      settings,
+    );
+    return true;
+  });
+};
+
 export const removeTaskRepetition = async (
   file: TFile,
   task: TaskLine,

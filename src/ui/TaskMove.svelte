@@ -1,25 +1,32 @@
 <script lang="ts">
   import type { TaskLine } from 'src/task-line';
   import type { Moment } from 'moment';
+  import { Calendar, MetadataCache } from 'obsidian-calendar-ui';
+  import moment from 'moment';
 
   // Creation Parameters
   export let task: TaskLine;
   export let close: () => void;
+  export let metadata: MetadataCache;
 
   // Internal Properties
-  let currentView: 'repeat';
+  const today = moment();
 
   const showMove = () => {
     this.currentView = 'move';
   };
 
-  const onClickDay = (date: Moment, isMetaPressed: boolean) => {
-    console.log('click!');
+  const onClickDay = async (
+    date: Moment,
+    isMetaPressed: boolean,
+  ): Promise<void> => {
+    await task.move(date.startOf('day'));
+    close();
   };
 </script>
 
-<div>This is task Move</div>
-<div>{task.line}</div>
+<p>Select day for task to be moved to:</p>
 
-<button on:click={showMove}> Move </button>
+<Calendar {metadata} {onClickDay} {today} />
+
 <button on:click={close}> Close </button>
