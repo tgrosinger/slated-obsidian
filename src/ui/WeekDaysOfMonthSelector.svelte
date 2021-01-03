@@ -50,28 +50,32 @@
   }
 </script>
 
-<div>
-  {#each $selectedWeeks as week}
-    <select class="dropdown" bind:value={week.week}>
-      <option value="1">First</option>
-      <option value="2">Second</option>
-      <option value="3">Third</option>
-      <option value="4">Fourth</option>
-      <option value="5">Fifth</option>
-      <option value="-1">Last</option>
-    </select>
-    <select class="dropdown" bind:value={week.weekDay}>
-      <option value="6">Sunday</option>
-      <option value="0">Monday</option>
-      <option value="1">Tuesday</option>
-      <option value="2">Wednesday</option>
-      <option value="3">Thursday</option>
-      <option value="4">Friday</option>
-      <option value="5">Saturday</option>
-    </select>
-    {#if $selectedWeeks.length > 1}
-      <button on:click={newRemoveWeek(week.id)}>-</button>
-    {/if}
-  {/each}
+<div id="slated-selected-weeks">
+  <ul>
+    {#each $selectedWeeks as week}
+      <li>
+        <select class="dropdown" bind:value={week.week}>
+          <option value="1">First</option>
+          <option value="2">Second</option>
+          <option value="3">Third</option>
+          <option value="4">Fourth</option>
+          <option value="5">Fifth</option>
+          <option value="-1">Last</option>
+        </select>
+        <select class="dropdown" bind:value={week.weekDay}>
+          <option value="6">Sunday</option>
+          <option value="0">Monday</option>
+          <option value="1">Tuesday</option>
+          <option value="2">Wednesday</option>
+          <option value="3">Thursday</option>
+          <option value="4">Friday</option>
+          <option value="5">Saturday</option>
+        </select>
+        {#if $selectedWeeks.length > 1}
+          <button on:click={newRemoveWeek(week.id)}>-</button>
+        {/if}
+      </li>
+    {/each}
+  </ul>
   <button on:click={addWeek}>+</button>
 </div>

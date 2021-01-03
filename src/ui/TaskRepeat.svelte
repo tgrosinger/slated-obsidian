@@ -63,9 +63,8 @@
   console.debug(task);
 </script>
 
-<div>
+<div class="slated-modal">
   <h1>Task Repetition</h1>
-  <p>{$task.repeater.toText()}</p>
   <div>
     <span>Every</span>
     <input
@@ -75,7 +74,10 @@
       min="1" />
 
     <!-- svelte-ignore a11y-no-onchange -->
-    <select class="dropdown" bind:value={$task.repeater.frequency}>
+    <select
+      id="slated-frequency-selector"
+      class="dropdown"
+      bind:value={$task.repeater.frequency}>
       <option value={Frequency.Daily}>
         {$task.repeater.interval > 1 ? 'Days' : 'Day'}
       </option>
@@ -91,7 +93,7 @@
     </select>
 
     {#if $task.repeater.frequency === Frequency.Weekly}
-      <div>
+      <div class="slated-days-btn-group">
         <ButtonGroup
           buttons={weekdays}
           activeButtonIDs={task.repeater.daysOfWeek}
@@ -100,7 +102,7 @@
     {/if}
 
     {#if $task.repeater.frequency === Frequency.Yearly}
-      <div>
+      <div class="slated-months-btn-group">
         <ButtonGroup
           buttons={months}
           activeButtonIDs={task.repeater.monthsOfYear}
@@ -117,8 +119,10 @@
 
         {#if monthlyRepeatType == 'onThe'}
           <input
+            id="slated-onthe-selector"
             bind:value={$task.repeater.dayOfMonth}
             disabled={$task.repeater.dayOfMonth === -1}
+            placeholder="1"
             type="number" />
           <label>
             <input
@@ -136,5 +140,14 @@
       </div>
     {/if}
   </div>
-  <button on:click={save}> Save </button>
+
+  <h2>Preview</h2>
+
+  <input
+    id="slated-repetition-preview"
+    disabled
+    type="text"
+    value={$task.repeater.toText()} />
+
+  <button id="slated-save-repetition-config" on:click={save}> Save </button>
 </div>

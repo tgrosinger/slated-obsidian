@@ -25,8 +25,6 @@
   };
 </script>
 
-<p>Select day for task to be moved to:</p>
+<p>Select a day for the task to be moved to:</p>
 
 <Calendar {metadata} {onClickDay} {today} />
-
-<button on:click={close}> Close </button>

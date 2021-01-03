@@ -1,3 +1,7 @@
+/*
+ *  Custom preview-mode rendering
+ */
+
 .slated-moved-icon {
   height: 15px;
   width: 15px;
@@ -6,3 +10,50 @@
   position: relative;
   top: 3px;
 }
+
+/*
+ *  Task Repetition Modal
+ */
+
+.slated-modal input {
+  border-radius: 0.5em;
+  padding: 19px 14px;
+}
+
+#slated-interval-selector {
+  width: 60px;
+}
+
+#slated-frequency-selector {
+  width: 103px;
+}
+
+#slated-onthe-selector {
+  width: 60px;
+}
+
+.slated-months-btn-group button {
+  padding: 6px 8px;
+  margin: 3px 6px 3px 0;
+}
+
+.slated-days-btn-group button {
+  padding: 6px 8px;
+  margin: 3px 6px 3px 0;
+}
+
+#slated-selected-weeks ul {
+  list-style: none;
+}
+
+#slated-repetition-preview {
+  width: 100%;
+}
+
+#slated-save-repetition-config {
+  margin-top: 3px;
+}
+
+/*
+ *  Task Move Modal
+ */
