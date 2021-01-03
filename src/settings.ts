@@ -1,21 +1,17 @@
-const defaults: Partial<ISettings> = {
-  futureRepetitionsCount: 5,
+export const defaultSettings: Partial<ISettings> = {
   tasksHeader: '## Tasks',
   blankLineAfterHeader: true,
 };
 export interface ISettings {
-  futureRepetitionsCount: number;
   tasksHeader: string;
   blankLineAfterHeader: boolean;
 }
 
 export class SettingsInstance implements ISettings {
-  public readonly futureRepetitionsCount: number;
   public readonly tasksHeader: string;
   public readonly blankLineAfterHeader: boolean;
   constructor(loadedData: Partial<ISettings>) {
-    const allFields = { ...defaults, ...loadedData };
-    this.futureRepetitionsCount = allFields.futureRepetitionsCount;
+    const allFields = { ...defaultSettings, ...loadedData };
     this.tasksHeader = allFields.tasksHeader;
     this.blankLineAfterHeader = allFields.blankLineAfterHeader;
   }

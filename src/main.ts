@@ -1,4 +1,4 @@
-import { ISettings, SettingsInstance } from './settings';
+import { defaultSettings, ISettings, SettingsInstance } from './settings';
 import { TaskHandler } from './task-handler';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
@@ -10,6 +10,8 @@ import {
   MarkdownView,
   Modal,
   Plugin,
+  PluginSettingTab,
+  Setting,
   TFile,
 } from 'obsidian';
 import { TaskLine } from './task-line';
@@ -22,7 +24,7 @@ import { MetadataCache } from 'obsidian-calendar-ui';
 export default class SlatedPlugin extends Plugin {
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;
-  private settings: ISettings;
+  public settings: ISettings;
 
   private lastFile: TFile | undefined;
 
@@ -76,11 +78,16 @@ export default class SlatedPlugin extends Plugin {
         });
       },
     });
+
+    this.addSettingTab(new SettingsTab(this.app, this));
   }
 
   private async loadSettings(): Promise<void> {
-    const loadedSettings = await this.loadData();
-    this.settings = new SettingsInstance(loadedSettings);
+    const settingsOptions = Object.assign(
+      defaultSettings,
+      await this.loadData(),
+    );
+    this.settings = new SettingsInstance(settingsOptions);
   }
 
   private taskModalChecker = (): boolean => {
@@ -206,6 +213,104 @@ class TaskRepeatModal extends Modal {
     contentEl.empty();
   };
 }
+
+class SettingsTab extends PluginSettingTab {
+  private readonly plugin: SlatedPlugin;
+
+  constructor(app: App, plugin: SlatedPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  public display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    containerEl.createEl('h2', { text: 'Slated Plugin - Settings' });
+
+    containerEl.createEl('p', {
+      text: 'This plugin is in Alpha testing. Back up your data!',
+    });
+    containerEl.createEl('p', {
+      text:
+        'If you encounter bugs, or have feature requests, please submit them on Github.',
+    });
+    containerEl.createEl('p', { text: 'Thank you.' });
+
+    new Setting(containerEl)
+      .setName('Empty line after headings')
+      .setDesc(
+        'When creating headings or adding tasks, leave an empty line below any headings.',
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.blankLineAfterHeader)
+          .onChange((value) => {
+            this.plugin.settings.blankLineAfterHeader = value;
+            this.plugin.saveData(this.plugin.settings);
+            this.display();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Tasks section header')
+      .setDesc(
+        'Markdown header to use when creating tasks section in a document',
+      )
+      .addText((text) => {
+        text.setValue(this.plugin.settings.tasksHeader).onChange((value) => {
+          this.plugin.settings.tasksHeader = value;
+          this.plugin.saveData(this.plugin.settings);
+          this.display;
+        });
+      });
+
+    const div = containerEl.createEl('div', {
+      cls: 'slated-donation',
+    });
+
+    const donateText = document.createElement('p');
+    donateText.appendText(
+      'If this plugin adds value for you and you would like to help support ' +
+        'continued development, please use the buttons below:',
+    );
+    div.appendChild(donateText);
+
+    div.appendChild(
+      createDonateButton(
+        'https://paypal.me/tgrosinger',
+        'PayPal.Me',
+        'https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_150x38.png',
+      ),
+    );
+
+    div.appendChild(
+      createDonateButton(
+        'https://www.buymeacoffee.com/tgrosinger',
+        'Buy Me a Coffee',
+        'https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png',
+      ),
+    );
+  }
+}
+
+const createDonateButton = (
+  link: string,
+  name: string,
+  imgURL: string,
+): HTMLElement => {
+  const a = document.createElement('a');
+  a.setAttribute('href', link);
+  a.addClass('slated-donate-button');
+
+  const img = document.createElement('img');
+  img.setAttribute('width', '150px');
+  img.setAttribute('src', imgURL);
+  img.setText(name);
+
+  a.appendChild(img);
+  return a;
+};
 
 const Element = (svgText: string): HTMLElement => {
   const parser = new DOMParser();

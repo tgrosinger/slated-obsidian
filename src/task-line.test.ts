@@ -80,7 +80,7 @@ describe('Tasks are parsed correctly', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
     vault = mock<VaultIntermediate>();
-    settings = new SettingsInstance({ futureRepetitionsCount: 1 });
+    settings = new SettingsInstance({});
   });
 
   test('When line is not a ul', () => {
@@ -295,7 +295,7 @@ describe('Tasks are parsed correctly', () => {
 describe('taskLine.move', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    settings = new SettingsInstance({ futureRepetitionsCount: 1 });
+    settings = new SettingsInstance({});
   });
 
   beforeEach(() => {
@@ -351,7 +351,7 @@ describe('taskLine.move', () => {
 describe('taskLine.createNextRepetition', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    settings = new SettingsInstance({ futureRepetitionsCount: 1 });
+    settings = new SettingsInstance({});
   });
 
   beforeEach(() => {

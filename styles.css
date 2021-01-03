@@ -57,3 +57,17 @@
 /*
  *  Task Move Modal
  */
+
+/*
+ *  Donate - in Settings
+ */
+
+.slated-donation {
+  width: 70%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.slated-donate-button {
+  margin: 10px;
+}
