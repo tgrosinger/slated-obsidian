@@ -6,7 +6,10 @@ Move tasks and set up repeating tasks in 100% Obsidian Markdown.
 
 ## Alpha Release
 
-**Note:** This plugin is still in an alpha state. Please backup your vault frequently. If you encounter any bugs or have suggestions, please open a [Github Issue](https://github.com/tgrosinger/slated-obsidian/issues/new/choose). Thank you!
+**Note:** This plugin is still in an alpha state. Please backup your vault frequently.
+If you encounter any bugs or have suggestions, please open a [Github
+Issue](https://github.com/tgrosinger/slated-obsidian/issues/new/choose).
+Thank you!
 
 ## Screenshots
 
