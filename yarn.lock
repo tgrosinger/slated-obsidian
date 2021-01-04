@@ -3560,32 +3560,32 @@ object.values@^1.1.1:
     es-abstract "^1.18.0-next.1"
     has "^1.0.3"
 
-obsidian-calendar-ui@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.0.3.tgz#6dd53d0d4ddf579e88d90e5ba85f149cd8c73484"
-  integrity sha512-EX+yCbaNz58iV1pv+T09MH4GP8Rd8MkfO84RdYsZF4y+LXKg+cb0uUOFMksj4j0n2Qbv23t3dJ0XtDwKs5zmMw==
+obsidian-calendar-ui@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.1.0.tgz#c4a2bfd8c126b27863e6aa77797c8ad035b47e93"
+  integrity sha512-5BT7kceYvi9Oa/3qj5jKACUUQL8FIWIqnnDyUC3WqIT2PUJ2OyZ2zukGAcmvAJ4z0sVSmZ7SktioddAXDttPug==
   dependencies:
-    obsidian-daily-notes-interface "0.4.0"
+    obsidian-daily-notes-interface "0.5.0"
     svelte "3.31.0"
     tslib "2.0.3"
 
-obsidian-daily-notes-interface@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.4.0.tgz#9bbc1813146ebbff60df986fd717f90b2620d309"
-  integrity sha512-CTokiN+6UJ7umihC5equ3sMx5kO9F3X94sSrMN8nrUHjVQYfZiGX/cFhCqh7laeE7MC0g8Kzwzv6/6VLbpmV6w==
+obsidian-daily-notes-interface@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.5.0.tgz#cc815ffe2e38c6777c3a182ddb7e83c9ba146d30"
+  integrity sha512-HkLwgDwKpVOTKxtw4NU18tvK4XuFgmP0k0zwPLao4BiFZaZNJp+5x+wcqmioWjLyThgkEYIyolK7uCkAeTSY+w==
   dependencies:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
 
-"obsidian@https://github.com/obsidianmd/obsidian-api/tarball/master":
-  version "0.10.0"
-  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#740d65fe84a4528e524a69cf48c24369b4261ab9"
+"obsidian@github:obsidianmd/obsidian-api#master":
+  version "0.10.5"
+  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/3b187dd5322c16e5970b17b60bc59daac838723f"
   dependencies:
     "@types/codemirror" "0.0.98"
 
-obsidian@obsidianmd/obsidian-api#master:
-  version "0.10.5"
-  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/3b187dd5322c16e5970b17b60bc59daac838723f"
+"obsidian@https://github.com/obsidianmd/obsidian-api/tarball/master":
+  version "0.10.0"
+  resolved "https://github.com/obsidianmd/obsidian-api/tarball/master#740d65fe84a4528e524a69cf48c24369b4261ab9"
   dependencies:
     "@types/codemirror" "0.0.98"
 

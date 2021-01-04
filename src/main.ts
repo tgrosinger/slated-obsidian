@@ -15,8 +15,6 @@ import {
   TFile,
 } from 'obsidian';
 import { TaskLine } from './task-line';
-import { DummyMetadataSource } from './dummy-metadata-source';
-import { MetadataCache } from 'obsidian-calendar-ui';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -175,7 +173,6 @@ class TaskMoveModal extends Modal {
       props: {
         task: this.task,
         close: () => this.close(),
-        metadata: new MetadataCache(new DummyMetadataSource()),
       },
     });
   };
