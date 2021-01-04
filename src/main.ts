@@ -140,26 +140,23 @@ export default class SlatedPlugin extends Plugin {
     el: HTMLElement,
     ctx: MarkdownPostProcessorContext,
   ): Promise<any> | void => {
-    Object.values(el.getElementsByClassName('contains-task-list')).forEach(
-      (list) => {
-        Object.values(list.getElementsByTagName('li'))
-          .filter(
-            (listItem) =>
-              !listItem.hasClass('task-list-item') &&
-              listItem.getText().trimLeft().startsWith('[>]'),
-          )
-          .forEach((listItem) => {
-            listItem.childNodes.forEach((child) => {
-              if (child.nodeType === 3) {
-                child.textContent = child.textContent.slice(4);
-              }
-            });
+    Object.values(el.getElementsByTagName('li'))
+      .filter(
+        (listItem) =>
+          !listItem.hasClass('task-list-item') &&
+          listItem.getText().trimLeft().startsWith('[>]'),
+      )
+      .forEach((listItem) => {
+        console.log(listItem);
+        listItem.childNodes.forEach((child) => {
+          if (child.nodeType === 3) {
+            child.textContent = child.textContent.slice(4);
+          }
+        });
 
-            listItem.addClass('task-list-item');
-            listItem.insertBefore(Element(movedIconSvg), listItem.firstChild);
-          });
-      },
-    );
+        listItem.addClass('task-list-item');
+        listItem.insertBefore(Element(movedIconSvg), listItem.firstChild);
+      });
   };
 }
 

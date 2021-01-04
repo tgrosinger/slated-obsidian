@@ -9,6 +9,7 @@
   margin-right: 6px;
   position: relative;
   top: 3px;
+  fill: var(--text-muted);
 }
 
 /*
