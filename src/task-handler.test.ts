@@ -122,9 +122,9 @@ describe('taskHandler.processFile', () => {
     expect(vault.writeFile.mock.calls[0][0]).toEqual(file);
     expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
       [
-        escapeRegExp(`- [ ] a test task ; Every Sunday ^task-`) +
+        escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
           '[a-zA-Z0-9]{4}',
-        escapeRegExp(`- [ ] another task; Every Thursday ^task-`) +
+        escapeRegExp('- [ ] another task; Every Thursday ^task-') +
           '[a-zA-Z0-9]{4}',
       ],
       [0, 1],
@@ -161,7 +161,7 @@ describe('taskHandler.processFile', () => {
         '',
         '## Tasks',
         '',
-        escapeRegExp(`- [ ] a test task; Every Monday ^task-`) +
+        escapeRegExp('- [ ] a test task; Every Monday ^task-') +
           '[a-zA-Z0-9]{4}',
         '  - a subtask',
         '',

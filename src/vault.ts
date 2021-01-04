@@ -40,10 +40,4 @@ export class VaultIntermediate {
 
   public writeFile = (file: TFile, data: string): Promise<void> =>
     this.vault.modify(file, data);
-
-  public getFileByName = (fileName: string) => {
-    return this.vault
-      .getMarkdownFiles()
-      .filter(({ basename }) => basename === fileName);
-  };
 }

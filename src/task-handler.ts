@@ -1,8 +1,8 @@
-import { TaskLine } from './task-line';
-import type { TFile } from 'obsidian';
-import type { SettingsInstance } from './settings';
-import type { VaultIntermediate } from './vault';
 import { fileIsDailyNote } from './file-helpers';
+import type { SettingsInstance } from './settings';
+import { TaskLine } from './task-line';
+import type { VaultIntermediate } from './vault';
+import type { TFile } from 'obsidian';
 
 export class TaskHandler {
   private readonly settings: SettingsInstance;

@@ -1,5 +1,4 @@
-import RRule from 'rrule';
-import { Frequency as RFrequency, Weekday, ByWeekday } from 'rrule';
+import RRule, { ByWeekday, Frequency as RFrequency, Weekday } from 'rrule';
 
 export enum Frequency {
   None = 'NONE',
@@ -119,9 +118,8 @@ export class RepeatAdapter {
       return [];
     } else if (Array.isArray(weekdays)) {
       return weekdays.map(this.ByWeekdayToNumber);
-    } else {
-      return [this.ByWeekdayToNumber(weekdays)];
     }
+    return [this.ByWeekdayToNumber(weekdays)];
   }
 
   public get dayOfMonth(): number | null {
@@ -170,9 +168,8 @@ export class RepeatAdapter {
     selected: { week: string; weekDay: string }[],
   ): void => {
     this.rrule.origOptions.byweekday = selected.map(
-      ({ week, weekDay }): Weekday => {
-        return new Weekday(parseInt(weekDay), parseInt(week));
-      },
+      ({ week, weekDay }): Weekday =>
+        new Weekday(parseInt(weekDay, 10), parseInt(week, 10)),
     );
 
     // Incompatible with week days of month
@@ -186,15 +183,15 @@ export class RepeatAdapter {
     const weekdays = this.rrule.origOptions.byweekday;
     if (Array.isArray(weekdays)) {
       return weekdays
-        .filter((day): day is Weekday => {
-          return typeof day !== 'string' && typeof day !== 'number';
-        })
-        .filter((day) => {
-          return day.n !== undefined;
-        })
-        .map((day) => {
-          return { week: day.n.toString(), weekDay: day.weekday.toString() };
-        });
+        .filter(
+          (day): day is Weekday =>
+            typeof day !== 'string' && typeof day !== 'number',
+        )
+        .filter((day) => day.n !== undefined)
+        .map((day) => ({
+          week: day.n.toString(),
+          weekDay: day.weekday.toString(),
+        }));
     }
 
     // TODO: This might be overly restrictive, if people write custom RRule syntax.
@@ -224,8 +221,7 @@ export class RepeatAdapter {
       return wd;
     } else if (typeof wd === 'string') {
       return 0; // TODO
-    } else {
-      return wd.weekday;
     }
+    return wd.weekday;
   }
 }

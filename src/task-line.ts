@@ -1,10 +1,10 @@
+import { addTaskMove, addTaskRepetition } from './file-helpers';
+import { RepeatAdapter } from './repeat';
+import type { SettingsInstance } from './settings';
 import type { VaultIntermediate } from './vault';
+import moment, { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
-import { RepeatAdapter } from './repeat';
-import moment, { Moment } from 'moment';
-import type { SettingsInstance } from './settings';
-import { addTaskMove, addTaskRepetition } from './file-helpers';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
 const repeatScheduleRe = /[;📅]\s*([-a-zA-Z0-9 =;:\,]+)/;
@@ -151,15 +151,6 @@ export class TaskLine {
     return this.repeats && !this.repeatsFrom;
   }
 
-  // Converts the line to be used in places where it was moved to another note.
-  // Something like:
-  // - [>] This is the task >[[2020-12-25]] ^task-abc123
-  private lineAsMovedTo = (date: Moment): string => {
-    const newFileName = this.vault.fileNameForMoment(date);
-    const uncheckedContent = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
-    return `${uncheckedContent}>[[${newFileName}]] ^${this._blockID}`;
-  };
-
   // Converts the line to be used in places where it was moved from another note.
   // Something like:
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
@@ -286,6 +277,15 @@ export class TaskLine {
    */
   public readonly set = (_: any): void => {
     this._modified = true;
+  };
+
+  // Converts the line to be used in places where it was moved to another note.
+  // Something like:
+  // - [>] This is the task >[[2020-12-25]] ^task-abc123
+  private readonly lineAsMovedTo = (date: Moment): string => {
+    const newFileName = this.vault.fileNameForMoment(date);
+    const uncheckedContent = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
+    return `${uncheckedContent}>[[${newFileName}]] ^${this._blockID}`;
   };
 
   private readonly handleRepeaterUpdated = (): void => {

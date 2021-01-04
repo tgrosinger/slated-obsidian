@@ -1,5 +1,6 @@
 import { defaultSettings, ISettings, SettingsInstance } from './settings';
 import { TaskHandler } from './task-handler';
+import { TaskLine } from './task-line';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
@@ -14,15 +15,15 @@ import {
   Setting,
   TFile,
 } from 'obsidian';
-import { TaskLine } from './task-line';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
 
 export default class SlatedPlugin extends Plugin {
+  public settings: ISettings;
+
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;
-  public settings: ISettings;
 
   private lastFile: TFile | undefined;
 
@@ -88,7 +89,7 @@ export default class SlatedPlugin extends Plugin {
     this.settings = new SettingsInstance(settingsOptions);
   }
 
-  private taskModalChecker = (): boolean => {
+  private readonly taskModalChecker = (): boolean => {
     if (
       this.app.workspace.activeLeaf === undefined ||
       !(this.app.workspace.activeLeaf.view instanceof MarkdownView)
@@ -115,7 +116,7 @@ export default class SlatedPlugin extends Plugin {
     return task.isTask();
   };
 
-  private taskModalOpener = (fn: (task: TaskLine) => void): void => {
+  private readonly taskModalOpener = (fn: (task: TaskLine) => void): void => {
     const activeLeaf = this.app.workspace.activeLeaf;
     if (!(activeLeaf.view instanceof MarkdownView)) {
       return;
@@ -134,7 +135,7 @@ export default class SlatedPlugin extends Plugin {
     fn(task);
   };
 
-  private renderMovedTasks = (
+  private readonly renderMovedTasks = (
     el: HTMLElement,
     ctx: MarkdownPostProcessorContext,
   ): Promise<any> | void => {
@@ -255,7 +256,7 @@ class SettingsTab extends PluginSettingTab {
         text.setValue(this.plugin.settings.tasksHeader).onChange((value) => {
           this.plugin.settings.tasksHeader = value;
           this.plugin.saveData(this.plugin.settings);
-          this.display;
+          this.display();
         });
       });
 

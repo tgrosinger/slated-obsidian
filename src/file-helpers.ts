@@ -1,7 +1,7 @@
-import type { TFile } from 'obsidian';
-import type { VaultIntermediate } from './vault';
 import type { SettingsInstance } from './settings';
 import type { TaskLine } from './task-line';
+import type { VaultIntermediate } from './vault';
+import type { TFile } from 'obsidian';
 
 /**
  * Adds a line for the provided task to the specified file in the tasks section.
@@ -62,8 +62,7 @@ export const removeTaskRepetition = async (
   file: TFile,
   task: TaskLine,
   vault: VaultIntermediate,
-): Promise<void> => {
-  return withFileContents(file, vault, (lines: string[]): boolean => {
+): Promise<void> => withFileContents(file, vault, (lines: string[]): boolean => {
     const blockIDIndex = getBlockIDIndex(lines, task.blockID);
     if (blockIDIndex === -1) {
       return false;
@@ -72,15 +71,13 @@ export const removeTaskRepetition = async (
     lines.splice(blockIDIndex, 1);
     return true;
   });
-};
 
 export const updateTaskRepetition = async (
   file: TFile,
   task: TaskLine,
   newLine: string,
   vault: VaultIntermediate,
-): Promise<void> => {
-  return withFileContents(file, vault, (lines: string[]): boolean => {
+): Promise<void> => withFileContents(file, vault, (lines: string[]): boolean => {
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].indexOf(task.blockID) === -1) {
         continue;
@@ -90,7 +87,6 @@ export const updateTaskRepetition = async (
       return;
     }
   });
-};
 
 /**
  * Read the file contents and pass to the provided function as a list of lines.

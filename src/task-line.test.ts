@@ -1,9 +1,9 @@
+import { SettingsInstance } from './settings';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
-import type { TFile } from 'obsidian';
 import moment from 'moment';
-import { SettingsInstance } from './settings';
+import type { TFile } from 'obsidian';
 
 declare global {
   namespace jest {
@@ -389,7 +389,7 @@ describe('taskLine.move', () => {
           '## Tasks',
           '',
           '^' +
-            escapeRegExp(`- [>] a test task >[[2021-01-01]] ^task-`) +
+            escapeRegExp('- [>] a test task >[[2021-01-01]] ^task-') +
             '[-a-zA-Z0-9]{4}$',
           '',
         ],
