@@ -80,7 +80,6 @@ let taskHandler: TaskHandler;
 beforeAll(() => {
   file = getMockFileForMoment(startDate);
   settings = new SettingsInstance({
-    futureRepetitionsCount: 1,
     blankLineAfterHeader: true,
   });
 });

@@ -344,7 +344,58 @@ describe('taskLine.move', () => {
       );
     });
 
-    test('when the task does not repeat', async () => {});
+    test('when the task does not repeat', async () => {
+      vault.readFile.mockImplementation((f, useCache) => {
+        if (f === file) {
+          return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
+        }
+        return p('');
+      });
+      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
+
+      const line = '- [ ] a test task';
+      const tl = new TaskLine(line, 4, file, vault, settings);
+      await tl.move(moment('2021-01-01'));
+
+      expect(futureFiles.length).toEqual(1);
+      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(2);
+
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+        [
+          '## Tasks',
+          '',
+          '^' +
+            escapeRegExp(`${line} <[[${startDateStr}#^task-`) +
+            '[-a-zA-Z0-9]{4}\\]\\]$',
+          '',
+        ],
+        [2],
+      );
+
+      expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
+      expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+        [
+          '# Original File',
+          '',
+          '## Tasks',
+          '',
+          '^' +
+            escapeRegExp(`- [>] a test task >[[2021-01-01]] ^task-`) +
+            '[-a-zA-Z0-9]{4}$',
+          '',
+        ],
+        [4],
+      );
+    });
   });
 });
 

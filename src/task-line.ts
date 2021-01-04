@@ -15,7 +15,6 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
   public readonly lineNum: number;
-  public readonly repeater: RepeatAdapter | undefined;
 
   private readonly file: TFile;
   private readonly vault: VaultIntermediate;
@@ -31,6 +30,7 @@ export class TaskLine {
   private _basetask: string;
 
   private _repeats: boolean;
+  private _repeater: RepeatAdapter | undefined;
   private readonly _repeatConfig: string;
   private _blockID: string;
   private readonly _movedToNoteName: string;
@@ -61,19 +61,12 @@ export class TaskLine {
     if (repeatMatches && repeatMatches.length === 2) {
       this._repeats = true;
       this._repeatConfig = repeatMatches[1];
-      this.repeater = new RepeatAdapter(
+      this._repeater = new RepeatAdapter(
         RRule.fromText(this._repeatConfig),
         this.handleRepeaterUpdated,
       );
     } else {
       this._repeats = false;
-      this.repeater = new RepeatAdapter(
-        new RRule({
-          freq: Frequency.WEEKLY,
-          interval: 1,
-        }),
-        this.handleRepeaterUpdated,
-      );
     }
 
     const blockIDMatches = blockHashRe.exec(line);
@@ -108,7 +101,7 @@ export class TaskLine {
       }
     }
 
-    if (this.repeats && this.repeater.isValid() && !this._blockID) {
+    if (this.repeats && !this._blockID) {
       this.addBlockID();
     }
 
@@ -124,6 +117,22 @@ export class TaskLine {
 
   public get repeats(): boolean {
     return this._repeats;
+  }
+
+  public get repeater(): RepeatAdapter {
+    if (!this._repeater) {
+      console.log('A New repeater requested');
+      this._repeater = new RepeatAdapter(
+        new RRule({
+          freq: Frequency.WEEKLY,
+          interval: 1,
+        }),
+        this.handleRepeaterUpdated,
+      );
+      this._repeats = true;
+      this._modified = true;
+    }
+    return this._repeater;
   }
 
   public get complete(): boolean {
@@ -156,7 +165,7 @@ export class TaskLine {
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
   public lineAsMovedFrom = (): string => {
     const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
-    return `${this.baseTaskContent()}<[[${rootTaskLink}]]`;
+    return `${this.baseTaskContent().trimRight()} <[[${rootTaskLink}]]`;
   };
 
   // Converts the line to be used in places where it was copied to another note
@@ -202,16 +211,10 @@ export class TaskLine {
    */
   public isTask = (): boolean => taskRe.test(this.line);
 
+  /**
+   * Save the contents of this TaskLine back to the file.
+   */
   public save = async (): Promise<void> => {
-    if (!this.repeats) {
-      // A save with no options changed.
-      this.handleRepeaterUpdated();
-
-      if (!this._blockID) {
-        this.addBlockID();
-      }
-    }
-
     if (!this.modfied) {
       return;
     }
@@ -241,6 +244,10 @@ export class TaskLine {
   };
 
   public readonly move = async (date: Moment): Promise<void> => {
+    if (!this._blockID) {
+      this.addBlockID();
+    }
+
     const newFile = await this.vault.getDailyNote(date);
     await addTaskMove(newFile, this, this.settings, this.vault);
 
