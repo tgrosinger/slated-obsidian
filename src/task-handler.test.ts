@@ -199,7 +199,7 @@ describe('taskHandler.processFile', () => {
     expect(vault.writeFile).toHaveBeenCalledTimes(1);
     expect(vault.writeFile).toHaveBeenCalledWith(
       futureFiles[0],
-      '# Another File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday <<[[2020-12-31#^task-abc123]]\n',
+      '# Another File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday [[2020-12-31#^task-abc123|<< Origin]]\n',
     );
   });
 });

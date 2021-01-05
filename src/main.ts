@@ -260,6 +260,19 @@ class SettingsTab extends PluginSettingTab {
         });
       });
 
+    new Setting(containerEl)
+      .setName('Alias backlinks to original tasks')
+      .setDesc(
+        'When a task is moved or repeats, use the "Origin" alias in the backlink',
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.aliasLinks).onChange((value) => {
+          this.plugin.settings.aliasLinks = value;
+          this.plugin.saveData(this.plugin.settings);
+          this.display();
+        });
+      });
+
     const div = containerEl.createEl('div', {
       cls: 'slated-donation',
     });

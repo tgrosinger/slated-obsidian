@@ -255,9 +255,18 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.movedFrom).toEqual('some other note');
       expect(tl.isOriginalInstance).toBeFalsy();
     });
-    test('When the note has been renamed', () => {
+    test('When the note has been aliased', () => {
       const line =
         '- [ ] The task <[[2020-12-25#^task-abc123|some other note]]';
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      expect(tl.line).toEqual(line);
+      expect(tl.repeats).toBeFalsy();
+      expect(tl.blockID).toEqual('task-abc123');
+      expect(tl.movedFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
+    });
+    test('When the moved from link has been aliased', () => {
+      const line = '- [ ] The task [[2020-12-25#^task-abc123|< Origin]]';
       const tl = new TaskLine(line, 1, file, vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
@@ -278,9 +287,31 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeatsFrom).toEqual('2020-12-25');
       expect(tl.isOriginalInstance).toBeFalsy();
     });
+    test('When the note has been aliased', () => {
+      const line =
+        '- [ ] The task;Every Sunday <<[[2020-12-25#^task-abc123|something else]]';
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      expect(tl.line).toEqual(line);
+      expect(tl.blockID).toEqual('task-abc123');
+      expect(tl.repeats).toBeTruthy();
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeatsFrom).toEqual('2020-12-25');
+      expect(tl.isOriginalInstance).toBeFalsy();
+    });
     test('When the note name is not a date', () => {
       const line =
         '- [ ] The task 📅 Every Sunday <<[[some other note#^task-abc123]]';
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      expect(tl.line).toEqual(line);
+      expect(tl.blockID).toEqual('task-abc123');
+      expect(tl.repeats).toBeTruthy();
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeatsFrom).toEqual('some other note');
+      expect(tl.isOriginalInstance).toBeFalsy();
+    });
+    test('When the repeater link is aliased', () => {
+      const line =
+        '- [ ] The task 📅 Every Sunday [[some other note#^task-abc123|<< Origin]]';
       const tl = new TaskLine(line, 1, file, vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
@@ -293,6 +324,201 @@ describe('Tasks are parsed correctly', () => {
 });
 
 describe('taskLine.move', () => {
+  let futureFiles: TFile[];
+
+  beforeAll(() => {
+    file = getMockFileForMoment(startDate);
+  });
+
+  beforeEach(() => {
+    vault = mock<VaultIntermediate>();
+    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
+      const date = moment(dailyNote.basename, format, true);
+      return date.isValid() ? date : undefined;
+    });
+
+    futureFiles = [];
+    vault.getDailyNote.mockImplementation((date) => {
+      const mockFile = getMockFileForMoment(date);
+      futureFiles.push(mockFile);
+      return Promise.resolve(mockFile);
+    });
+  });
+
+  describe('when link aliasing is enabled', () => {
+    beforeAll(() => {
+      settings = new SettingsInstance({ aliasLinks: true });
+    });
+
+    describe('when the destination file does not exist', () => {
+      test('when the task has repeating', async () => {
+        vault.readFile.mockImplementation((f, useCache) => {
+          if (f === file) {
+            return p(
+              '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
+            );
+          }
+          return p('');
+        });
+        vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+        const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+        const tl = new TaskLine(line, 4, file, vault, settings);
+        await tl.move(moment('2021-01-01'));
+
+        expect(futureFiles.length).toEqual(1);
+        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+        expect(vault.writeFile).toHaveBeenCalledTimes(2);
+        expect(vault.writeFile).toHaveBeenNthCalledWith(
+          1,
+          futureFiles[0],
+          `## Tasks\n\n- [ ] a test task ; Every Sunday [[${startDateStr}#^task-abc123|< Origin]]\n`,
+        );
+        expect(vault.writeFile).toHaveBeenNthCalledWith(
+          2,
+          file,
+          '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
+        );
+      });
+
+      test('when the task does not repeat', async () => {
+        vault.readFile.mockImplementation((f, useCache) => {
+          if (f === file) {
+            return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
+          }
+          return p('');
+        });
+        vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+        const line = '- [ ] a test task';
+        const tl = new TaskLine(line, 4, file, vault, settings);
+        await tl.move(moment('2021-01-01'));
+
+        expect(futureFiles.length).toEqual(1);
+        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+        expect(vault.writeFile).toHaveBeenCalledTimes(2);
+
+        expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+        expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+          [
+            '## Tasks',
+            '',
+            '^' +
+              escapeRegExp(`${line} [[${startDateStr}#^task-`) +
+              '[-a-zA-Z0-9]{4}' +
+              escapeRegExp('|< Origin]]') +
+              '$',
+            '',
+          ],
+          [2],
+        );
+
+        expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
+        expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+          [
+            '# Original File',
+            '',
+            '## Tasks',
+            '',
+            '^' +
+              escapeRegExp('- [>] a test task >[[2021-01-01]] ^task-') +
+              '[-a-zA-Z0-9]{4}$',
+            '',
+          ],
+          [4],
+        );
+      });
+    });
+  });
+
+  describe('when link aliasing is disabled', () => {
+    beforeAll(() => {
+      settings = new SettingsInstance({ aliasLinks: false });
+    });
+
+    describe('when the destination file does not exist', () => {
+      test('when the task has repeating', async () => {
+        vault.readFile.mockImplementation((f, useCache) => {
+          if (f === file) {
+            return p(
+              '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
+            );
+          }
+          return p('');
+        });
+        vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+        const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+        const tl = new TaskLine(line, 4, file, vault, settings);
+        await tl.move(moment('2021-01-01'));
+
+        expect(futureFiles.length).toEqual(1);
+        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+        expect(vault.writeFile).toHaveBeenCalledTimes(2);
+        expect(vault.writeFile).toHaveBeenNthCalledWith(
+          1,
+          futureFiles[0],
+          `## Tasks\n\n- [ ] a test task ; Every Sunday <[[${startDateStr}#^task-abc123]]\n`,
+        );
+        expect(vault.writeFile).toHaveBeenNthCalledWith(
+          2,
+          file,
+          '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
+        );
+      });
+
+      test('when the task does not repeat', async () => {
+        vault.readFile.mockImplementation((f, useCache) => {
+          if (f === file) {
+            return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
+          }
+          return p('');
+        });
+        vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+
+        const line = '- [ ] a test task';
+        const tl = new TaskLine(line, 4, file, vault, settings);
+        await tl.move(moment('2021-01-01'));
+
+        expect(futureFiles.length).toEqual(1);
+        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+        expect(vault.writeFile).toHaveBeenCalledTimes(2);
+
+        expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+        expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+          [
+            '## Tasks',
+            '',
+            '^' +
+              escapeRegExp(`${line} <[[${startDateStr}#^task-`) +
+              '[-a-zA-Z0-9]{4}\\]\\]$',
+            '',
+          ],
+          [2],
+        );
+
+        expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
+        expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+          [
+            '# Original File',
+            '',
+            '## Tasks',
+            '',
+            '^' +
+              escapeRegExp('- [>] a test task >[[2021-01-01]] ^task-') +
+              '[-a-zA-Z0-9]{4}$',
+            '',
+          ],
+          [4],
+        );
+      });
+    });
+  });
+});
+
+describe('taskLine.createNextRepetition', () => {
+  let futureFiles: TFile[];
+
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
     settings = new SettingsInstance({});
@@ -304,19 +530,26 @@ describe('taskLine.move', () => {
       const date = moment(dailyNote.basename, format, true);
       return date.isValid() ? date : undefined;
     });
+
+    futureFiles = [];
+    vault.getDailyNote.mockImplementation((date) => {
+      const mockFile = getMockFileForMoment(date);
+      futureFiles.push(mockFile);
+      return Promise.resolve(mockFile);
+    });
   });
 
-  describe('when the destination file does not exist', () => {
-    test('when the task has repeating', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p(
-            '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
-          );
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+  describe('when link aliasing is enabled', () => {
+    beforeAll(() => {
+      settings = new SettingsInstance({ aliasLinks: true });
+    });
+
+    test('if it has a tasks section, the task is appended to existing', async () => {
+      vault.readFile.mockReturnValueOnce(
+        p(
+          '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
+        ),
+      );
 
       const futureFiles: TFile[] = [];
       vault.getDailyNote.mockImplementation((date) => {
@@ -326,32 +559,42 @@ describe('taskLine.move', () => {
       });
 
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 4, file, vault, settings);
-      await tl.move(moment('2021-01-01'));
+      const tl = new TaskLine(line, 0, file, vault, settings);
+      await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
       expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        1,
-        futureFiles[0],
-        `## Tasks\n\n- [ ] a test task ; Every Sunday <[[${startDateStr}#^task-abc123]]\n`,
-      );
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        2,
-        file,
-        '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+        [
+          '# Hello',
+          '',
+          '## Tasks',
+          '',
+          '- [ ] Something',
+          '  - A sub item',
+          `- [ ] a test task ; Every Sunday [[${startDateStr}#^task-abc123|<< Origin]]`,
+          '',
+          '## Another Header',
+          '',
+        ],
+        [],
       );
     });
+  });
 
-    test('when the task does not repeat', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+  describe('when a newline should be inserted after headings', () => {
+    beforeAll(() => {
+      settings = new SettingsInstance({ aliasLinks: false });
+    });
+
+    test('if it has a tasks section, the task is appended to existing', async () => {
+      vault.readFile.mockReturnValueOnce(
+        p(
+          '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
+        ),
+      );
 
       const futureFiles: TFile[] = [];
       vault.getDailyNote.mockImplementation((date) => {
@@ -360,165 +603,93 @@ describe('taskLine.move', () => {
         return Promise.resolve(mockFile);
       });
 
-      const line = '- [ ] a test task';
-      const tl = new TaskLine(line, 4, file, vault, settings);
-      await tl.move(moment('2021-01-01'));
+      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+      const tl = new TaskLine(line, 0, file, vault, settings);
+      await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
       expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
       expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
       expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
         [
+          '# Hello',
+          '',
           '## Tasks',
           '',
-          '^' +
-            escapeRegExp(`${line} <[[${startDateStr}#^task-`) +
-            '[-a-zA-Z0-9]{4}\\]\\]$',
+          '- [ ] Something',
+          '  - A sub item',
+          `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
+          '',
+          '## Another Header',
           '',
         ],
-        [2],
+        [],
       );
+    });
 
-      expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
-      expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+    test('if it has a tasks section, the task is appended', async () => {
+      vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Tasks\n'));
+
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
+      });
+
+      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+      const tl = new TaskLine(line, 0, file, vault, settings);
+      await tl.createNextRepetition();
+
+      expect(futureFiles.length).toEqual(1);
+      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
         [
-          '# Original File',
+          '# Hello',
           '',
           '## Tasks',
           '',
-          '^' +
-            escapeRegExp('- [>] a test task >[[2021-01-01]] ^task-') +
-            '[-a-zA-Z0-9]{4}$',
+          `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
           '',
         ],
-        [4],
+        [],
       );
     });
-  });
-});
 
-describe('taskLine.createNextRepetition', () => {
-  beforeAll(() => {
-    file = getMockFileForMoment(startDate);
-    settings = new SettingsInstance({});
-  });
+    test('if it does not have a tasks section, one is created', async () => {
+      vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Another Section\n'));
 
-  beforeEach(() => {
-    vault = mock<VaultIntermediate>();
-    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
-      const date = moment(dailyNote.basename, format, true);
-      return date.isValid() ? date : undefined;
-    });
-  });
-
-  describe('when the future file exists', () => {
-    describe('when a newline should be inserted after headings', () => {
-      test('if it has a tasks section, the task is appended to existing', async () => {
-        vault.readFile.mockReturnValueOnce(
-          p(
-            '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
-          ),
-        );
-
-        const futureFiles: TFile[] = [];
-        vault.getDailyNote.mockImplementation((date) => {
-          const mockFile = getMockFileForMoment(date);
-          futureFiles.push(mockFile);
-          return Promise.resolve(mockFile);
-        });
-
-        const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-        const tl = new TaskLine(line, 0, file, vault, settings);
-        await tl.createNextRepetition();
-
-        expect(futureFiles.length).toEqual(1);
-        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-        expect(vault.writeFile).toHaveBeenCalledTimes(1);
-        expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-        expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
-          [
-            '# Hello',
-            '',
-            '## Tasks',
-            '',
-            '- [ ] Something',
-            '  - A sub item',
-            `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
-            '',
-            '## Another Header',
-            '',
-          ],
-          [],
-        );
+      const futureFiles: TFile[] = [];
+      vault.getDailyNote.mockImplementation((date) => {
+        const mockFile = getMockFileForMoment(date);
+        futureFiles.push(mockFile);
+        return Promise.resolve(mockFile);
       });
 
-      test('if it has a tasks section, the task is appended', async () => {
-        vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Tasks\n'));
+      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
+      const tl = new TaskLine(line, 0, file, vault, settings);
+      await tl.createNextRepetition();
 
-        const futureFiles: TFile[] = [];
-        vault.getDailyNote.mockImplementation((date) => {
-          const mockFile = getMockFileForMoment(date);
-          futureFiles.push(mockFile);
-          return Promise.resolve(mockFile);
-        });
-
-        const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-        const tl = new TaskLine(line, 0, file, vault, settings);
-        await tl.createNextRepetition();
-
-        expect(futureFiles.length).toEqual(1);
-        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-        expect(vault.writeFile).toHaveBeenCalledTimes(1);
-        expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-        expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
-          [
-            '# Hello',
-            '',
-            '## Tasks',
-            '',
-            `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
-            '',
-          ],
-          [],
-        );
-      });
-
-      test('if it does not have a tasks section, one is created', async () => {
-        vault.readFile.mockReturnValueOnce(
-          p('# Hello\n\n## Another Section\n'),
-        );
-
-        const futureFiles: TFile[] = [];
-        vault.getDailyNote.mockImplementation((date) => {
-          const mockFile = getMockFileForMoment(date);
-          futureFiles.push(mockFile);
-          return Promise.resolve(mockFile);
-        });
-
-        const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-        const tl = new TaskLine(line, 0, file, vault, settings);
-        await tl.createNextRepetition();
-
-        expect(futureFiles.length).toEqual(1);
-        expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-        expect(vault.writeFile).toHaveBeenCalledTimes(1);
-        expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-        expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
-          [
-            '# Hello',
-            '',
-            '## Another Section',
-            '',
-            '## Tasks',
-            '',
-            `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
-            '',
-          ],
-          [],
-        );
-      });
+      expect(futureFiles.length).toEqual(1);
+      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
+      expect(vault.writeFile).toHaveBeenCalledTimes(1);
+      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
+      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+        [
+          '# Hello',
+          '',
+          '## Another Section',
+          '',
+          '## Tasks',
+          '',
+          `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
+          '',
+        ],
+        [],
+      );
     });
   });
 });

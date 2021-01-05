@@ -7,10 +7,37 @@ import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
+
+/**
+ * Matches the text following a semicolon or calendar emoji.
+ * Does not match links or <>
+ */
 const repeatScheduleRe = /[;📅]\s*([-a-zA-Z0-9 =;:\,]+)/;
-const movedFromRe = /<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
+
+/**
+ * Matches the backlink to the original task when a task is moved.
+ *   <[[2020-12-31#^task-abcd]]
+ *   [[2020-12-31#^task-abcd|< Origin]]
+ */
+const movedFromRe = /(?:<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\])|(?:\[\[([^\]]+)#\^[-a-zA-Z0-9]+\|< Origin\]\])/;
+
+/**
+ * Matces the link to where a task was moved.
+ *   >[[2020-12-31]]
+ */
 const movedToRe = />\[\[([^\]]+)\]\]/;
-const repeatsFromRe = /<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\]/;
+
+/**
+ * Matches the backlink to where a task repeated from.
+ *   <<[[22020-12-31#^task-abcd]]
+ *   [[22020-12-31#^task-abcd|<< Origin]]
+ */
+const repeatsFromRe = /(?:<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\])|(?:\[\[([^\]]+)#\^[-a-zA-Z0-9]+\|<< Origin\]\])/;
+
+/**
+ * Matches a block hash.
+ *   ^task-abcd
+ */
 const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
@@ -81,9 +108,11 @@ export class TaskLine {
     }
 
     const movedFromLink = movedFromRe.exec(line);
-    if (movedFromLink) {
-      if (movedFromLink.length > 1 && movedFromLink[1] !== '') {
+    if (movedFromLink && movedFromLink.length >= 4) {
+      if (movedFromLink[1]) {
         this._movedFromNoteName = movedFromLink[1].split('|')[0];
+      } else if (movedFromLink[3]) {
+        this._movedFromNoteName = movedFromLink[3].split('|')[0];
       }
     }
 
@@ -95,9 +124,12 @@ export class TaskLine {
     }
 
     const repeatsFromLink = repeatsFromRe.exec(line);
-    if (repeatsFromLink) {
-      if (repeatsFromLink.length > 1 && repeatsFromLink[1] !== '') {
+    if (repeatsFromLink && repeatsFromLink.length >= 4) {
+      if (repeatsFromLink[1]) {
         this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
+      } else if (repeatsFromLink[3]) {
+        // this is the case for when the link is aliased with Origin
+        this._repeatsFromNoteName = repeatsFromLink[3].split('|')[0];
       }
     }
 
@@ -156,7 +188,9 @@ export class TaskLine {
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
   public lineAsMovedFrom = (): string => {
     const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
-    return `${this.baseTaskContent().trimRight()} <[[${rootTaskLink}]]`;
+    const linkPrefix = this.settings.aliasLinks ? '' : '<';
+    const alias = this.settings.aliasLinks ? '|< Origin' : '';
+    return `${this.baseTaskContent().trimRight()} ${linkPrefix}[[${rootTaskLink}${alias}]]`;
   };
 
   // Converts the line to be used in places where it was copied to another note
@@ -166,7 +200,9 @@ export class TaskLine {
   public lineAsRepeated = (): string => {
     const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
     const uncheckedContent = this.baseTaskContent().replace(/\[[xX]\]/, '[ ]');
-    return `${uncheckedContent}<<[[${rootTaskLink}]]`;
+    const linkPrefix = this.settings.aliasLinks ? '' : '<<';
+    const alias = this.settings.aliasLinks ? '|<< Origin' : '';
+    return `${uncheckedContent}${linkPrefix}[[${rootTaskLink}${alias}]]`;
   };
 
   public get movedTo(): string {
