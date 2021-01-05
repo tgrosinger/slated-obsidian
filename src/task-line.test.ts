@@ -166,6 +166,32 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
       expect(tl.isOriginalInstance).toBeTruthy();
     });
+    test('When there are trailing spaces', () => {
+      const line = '- [ ] The task  📅  Every Sunday  ';
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      expect(tl.line).toMatch(
+        new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
+      );
+      expect(tl.repeater.isValid()).toBeTruthy();
+      expect(tl.repeats).toBeTruthy();
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
+      expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
+      expect(tl.isOriginalInstance).toBeTruthy();
+    });
+    test('When there are trailing spaces on a subtask', () => {
+      const line = '  - [ ] The task  📅  Every Sunday  ';
+      const tl = new TaskLine(line, 1, file, vault, settings);
+      expect(tl.line).toMatch(
+        new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
+      );
+      expect(tl.repeater.isValid()).toBeTruthy();
+      expect(tl.repeats).toBeTruthy();
+      expect(tl.repeater.toText()).toEqual('every week on Sunday');
+      expect(tl.repeater.toString()).toEqual('RRULE:FREQ=WEEKLY;BYDAY=SU');
+      expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
+      expect(tl.isOriginalInstance).toBeTruthy();
+    });
   });
 
   describe('When there is a block ID', () => {

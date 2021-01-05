@@ -333,7 +333,8 @@ export class TaskLine {
 
       // TODO: Make sure the blockID is still at the very end
       // TODO: Add an option for the preferred divider type
-      this._line = this.originalLine + ' 📅 ' + this.repeater.toText();
+      this._line =
+        this.originalLine.trimRight() + ' 📅 ' + this.repeater.toText();
     } else {
       this._line = this.originalLine
         .replace(this._repeatConfig, this.repeater.toText() + ' ')
@@ -353,7 +354,7 @@ export class TaskLine {
     }
 
     this._blockID = createTaskBlockHash();
-    this._line += ' ^' + this._blockID;
+    this._line = this._line.trimRight() + ' ^' + this._blockID;
     this._modified = true;
   };
 
