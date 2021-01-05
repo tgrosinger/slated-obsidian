@@ -98,6 +98,11 @@ export class TaskHandler {
         return false;
       }
 
+      if (!prevTasks) {
+        // it's complete and there were no previous tasks, so must be new
+        return true;
+      }
+
       for (let i = 0; i < prevTasks.length; i++) {
         const prevTask = prevTasks[i];
         if (task.blockID === prevTask.blockID) {
