@@ -42,6 +42,10 @@ export class TaskHandler {
     return this.propogateCompletedTasks(newlyCompletedTasks);
   }
 
+  public getCachedTasksForFile(file: TFile): TaskLine[] {
+    return this.taskCache[file.basename];
+  }
+
   /**
    * Scan the file looking for tasks. Parse the task, and if it is a repeating
    * task, ensure it has a block ID and validate the repeat config. Normalized

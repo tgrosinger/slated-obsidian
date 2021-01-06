@@ -180,14 +180,23 @@ export class TaskLine {
   // isOriginalInstance indicates if this is the task actually annotated with a
   // block ID, or if instead it is referring to another task by blockID.
   public get isOriginalInstance(): boolean {
-    return this.repeats && !this.repeatsFrom;
+    if (this.repeats) {
+      return !this.repeatsFrom;
+    }
+
+    if (this._movedFromNoteName) {
+      return false;
+    }
+
+    return true;
   }
 
   // Converts the line to be used in places where it was moved from another note.
   // Something like:
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
+  // - [ ] This is the task [[2020-12-25^task-abc123|< Origin]]
   public lineAsMovedFrom = (): string => {
-    const rootTaskLink = `${this.file.basename}#^${this._blockID}`;
+    const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
     const linkPrefix = this.settings.aliasLinks ? '' : '<';
     const alias = this.settings.aliasLinks ? '|< Origin' : '';
     return `${this.baseTaskContent().trimRight()} ${linkPrefix}[[${rootTaskLink}${alias}]]`;
@@ -197,6 +206,7 @@ export class TaskLine {
   // because it repeats.
   // Something like:
   // - [ ] This is the task ; Every Sunday <<[[2020-12-25^task-abc123]]
+  // - [ ] This is the task ; Every Sunday [[2020-12-25^task-abc123|<< Origin]]
   public lineAsRepeated = (): string => {
     const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
     const uncheckedContent = this.baseTaskContent().replace(/\[[xX]\]/, '[ ]');
@@ -320,8 +330,24 @@ export class TaskLine {
   // - [>] This is the task >[[2020-12-25]] ^task-abc123
   private readonly lineAsMovedTo = (date: Moment): string => {
     const newFileName = this.vault.fileNameForMoment(date);
-    const uncheckedContent = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
-    return `${uncheckedContent}>[[${newFileName}]] ^${this._blockID}`;
+    const content = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
+
+    // If this task was already moved to this location, then we want to preserve
+    // the link to where it was moved from
+    const movedFrom = this._movedFromNoteName
+      ? (() => {
+          const linkPrefix = this.settings.aliasLinks ? '' : '<';
+          const alias = this.settings.aliasLinks ? '|< Origin' : '';
+          return `${linkPrefix}[[${this._movedFromNoteName}#^${this._blockID}${alias}]] `;
+        })()
+      : '';
+
+    // If this task was already moved to this location, then we should not put
+    // the blockID on this line, instead it is included in the movedFrom
+    // reference.
+    const blockID = movedFrom ? '' : ` ^${this._blockID}`;
+
+    return `${content}${movedFrom}>[[${newFileName}]]${blockID}`;
   };
 
   private readonly handleRepeaterUpdated = (): void => {
@@ -385,11 +411,11 @@ export class TaskLine {
       return this.file.basename;
     }
 
-    if (this._movedFromNoteName !== '') {
+    if (this._movedFromNoteName) {
       return this._movedFromNoteName;
     }
 
-    if (this._repeatsFromNoteName !== '') {
+    if (this._repeatsFromNoteName) {
       return this._repeatsFromNoteName;
     }
 

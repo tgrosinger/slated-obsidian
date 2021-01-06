@@ -4,6 +4,7 @@ import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
+import { TaskHandler } from './task-handler';
 
 declare global {
   namespace jest {
@@ -114,7 +115,7 @@ describe('Tasks are parsed correctly', () => {
     expect(tl.complete).toBeTruthy();
     expect(tl.repeats).toBeFalsy();
     expect(tl.blockID).toEqual('');
-    expect(tl.isOriginalInstance).toBeFalsy();
+    expect(tl.isOriginalInstance).toBeTruthy();
   });
   test('When the checkbox is checked', () => {
     const line = '- [X] This task is done';
@@ -201,7 +202,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task ^task-abc123';
@@ -209,7 +210,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
   });
 
@@ -221,7 +222,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When there are spaces', () => {
       const line = '- [x] The task >[[2020-12-25]] ^task-abc123';
@@ -230,7 +231,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task >[[some other note]] ^task-abc123';
@@ -239,7 +240,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('some other note');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
     test('When the note has been renamed', () => {
       const line =
@@ -249,7 +250,7 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.movedTo).toEqual('2020-12-25');
-      expect(tl.isOriginalInstance).toBeFalsy();
+      expect(tl.isOriginalInstance).toBeTruthy();
     });
   });
 
@@ -453,6 +454,61 @@ describe('taskLine.move', () => {
         [4],
       );
     });
+
+    test('when the task is moved multiple times', async () => {
+      const fileContents: Record<string, string> = {};
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
+
+      vault.readFile.mockImplementation((f, useCache) => {
+        return Promise.resolve(fileContents[f.basename]);
+      });
+
+      vault.writeFile.mockImplementation((f, data) => {
+        fileContents[f.basename] = data;
+        return Promise.resolve();
+      });
+
+      vault.fileNameForMoment.mockImplementation((date) => {
+        return date.format('YYYY-MM-DD');
+      });
+
+      const th = new TaskHandler(vault, settings);
+
+      await th.processFile(file);
+      let tasks = th.getCachedTasksForFile(file);
+      expect(tasks).toHaveLength(1);
+
+      const originalTask = tasks[0];
+      await originalTask.move(moment('2021-01-01'));
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual(
+        '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n',
+      );
+      expect(futureFiles).toHaveLength(1);
+      const file01 = futureFiles[0];
+      expect(file01.basename).toEqual('2021-01-01');
+
+      await th.processFile(file01);
+      tasks = th.getCachedTasksForFile(file01);
+      expect(tasks).toHaveLength(1);
+
+      const movedOnceTask = tasks[0];
+      await movedOnceTask.move(moment('2021-01-02'));
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual(
+        '## Tasks\n\n- [>] a test task [[2020-12-31#^task-abcd|< Origin]] >[[2021-01-02]]\n',
+      );
+      expect(fileContents['2021-01-02']).toEqual(
+        '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n',
+      );
+    });
   });
 
   describe('when link aliasing is disabled', () => {
@@ -533,6 +589,61 @@ describe('taskLine.move', () => {
           '',
         ],
         [4],
+      );
+    });
+
+    test('when the task is moved multiple times', async () => {
+      const fileContents: Record<string, string> = {};
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
+
+      vault.readFile.mockImplementation((f, useCache) => {
+        return Promise.resolve(fileContents[f.basename]);
+      });
+
+      vault.writeFile.mockImplementation((f, data) => {
+        fileContents[f.basename] = data;
+        return Promise.resolve();
+      });
+
+      vault.fileNameForMoment.mockImplementation((date) => {
+        return date.format('YYYY-MM-DD');
+      });
+
+      const th = new TaskHandler(vault, settings);
+
+      await th.processFile(file);
+      let tasks = th.getCachedTasksForFile(file);
+      expect(tasks).toHaveLength(1);
+
+      const originalTask = tasks[0];
+      await originalTask.move(moment('2021-01-01'));
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual(
+        '## Tasks\n\n- [ ] a test task <[[2020-12-31#^task-abcd]]\n',
+      );
+      expect(futureFiles).toHaveLength(1);
+      const file01 = futureFiles[0];
+      expect(file01.basename).toEqual('2021-01-01');
+
+      await th.processFile(file01);
+      tasks = th.getCachedTasksForFile(file01);
+      expect(tasks).toHaveLength(1);
+
+      const movedOnceTask = tasks[0];
+      await movedOnceTask.move(moment('2021-01-02'));
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual(
+        '## Tasks\n\n- [>] a test task <[[2020-12-31#^task-abcd]] >[[2021-01-02]]\n',
+      );
+      expect(fileContents['2021-01-02']).toEqual(
+        '## Tasks\n\n- [ ] a test task <[[2020-12-31#^task-abcd]]\n',
       );
     });
   });
