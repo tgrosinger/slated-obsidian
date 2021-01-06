@@ -2,7 +2,8 @@
   import type { TaskLine } from 'src/task-line';
   import type { Moment } from 'moment';
   import { Calendar } from 'obsidian-calendar-ui';
-  import moment from 'moment';
+
+  const moment = window.moment;
 
   // Creation Parameters
   export let task: TaskLine;

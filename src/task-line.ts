@@ -2,11 +2,12 @@ import { addTaskMove, addTaskRepetition } from './file-helpers';
 import { RepeatAdapter } from './repeat';
 import type { SettingsInstance } from './settings';
 import type { VaultIntermediate } from './vault';
-import moment, { Moment } from 'moment';
+import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
+const moment = window.moment;
 
 /**
  * Matches the text following a semicolon or calendar emoji.

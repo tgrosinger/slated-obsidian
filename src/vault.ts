@@ -1,5 +1,4 @@
 import type { Moment } from 'moment';
-import moment from 'moment';
 import type { TFile, Vault } from 'obsidian';
 import {
   createDailyNote,
@@ -7,6 +6,8 @@ import {
   getDailyNote,
   getDailyNoteSettings,
 } from 'obsidian-daily-notes-interface';
+
+const moment = window.moment;
 
 export class VaultIntermediate {
   private readonly vault: Vault;
