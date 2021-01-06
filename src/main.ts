@@ -146,12 +146,15 @@ export default class SlatedPlugin extends Plugin {
           listItem.getText().trimLeft().startsWith('[>]'),
       )
       .forEach((listItem) => {
-        console.log(listItem);
-        listItem.childNodes.forEach((child) => {
-          if (child.nodeType === 3) {
-            child.textContent = child.textContent.slice(4);
+        for (let i = 0; i < listItem.childNodes.length; i++) {
+          const child = listItem.childNodes[i];
+          if (child.nodeType !== 3) {
+            continue;
           }
-        });
+
+          child.textContent = child.textContent.slice(4);
+          break; // Only perform the replacement on the first textnode in an <li>
+        }
 
         listItem.addClass('task-list-item');
         listItem.insertBefore(Element(movedIconSvg), listItem.firstChild);
