@@ -1,10 +1,10 @@
 import { SettingsInstance } from './settings';
+import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
-import { TaskHandler } from './task-handler';
 
 declare global {
   namespace jest {
@@ -76,6 +76,10 @@ const p = (str: string): Promise<string> => Promise.resolve(str);
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
 let settings: SettingsInstance;
+
+beforeEach(() => {
+  window.moment = moment;
+});
 
 describe('Tasks are parsed correctly', () => {
   beforeAll(() => {
@@ -352,6 +356,7 @@ describe('Tasks are parsed correctly', () => {
 
 describe('taskLine.move', () => {
   let futureFiles: TFile[];
+  let fileContents: Record<string, string>;
 
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
@@ -370,6 +375,20 @@ describe('taskLine.move', () => {
       futureFiles.push(mockFile);
       return Promise.resolve(mockFile);
     });
+
+    fileContents = {};
+    vault.readFile.mockImplementation((f, useCache) =>
+      Promise.resolve(fileContents[f.basename]),
+    );
+
+    vault.writeFile.mockImplementation((f, data) => {
+      fileContents[f.basename] = data;
+      return Promise.resolve();
+    });
+
+    vault.fileNameForMoment.mockImplementation((date) =>
+      date.format('YYYY-MM-DD'),
+    );
   });
 
   describe('when link aliasing is enabled', () => {
@@ -378,15 +397,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task has repeating', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p(
-            '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
-          );
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n';
 
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 4, file, vault, settings);
@@ -408,13 +420,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task does not repeat', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task\n';
 
       const line = '- [ ] a test task';
       const tl = new TaskLine(line, 4, file, vault, settings);
@@ -456,22 +463,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved multiple times', async () => {
-      const fileContents: Record<string, string> = {};
       fileContents[file.basename] =
         '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
-
-      vault.readFile.mockImplementation((f, useCache) => {
-        return Promise.resolve(fileContents[f.basename]);
-      });
-
-      vault.writeFile.mockImplementation((f, data) => {
-        fileContents[f.basename] = data;
-        return Promise.resolve();
-      });
-
-      vault.fileNameForMoment.mockImplementation((date) => {
-        return date.format('YYYY-MM-DD');
-      });
 
       const th = new TaskHandler(vault, settings);
 
@@ -509,6 +502,28 @@ describe('taskLine.move', () => {
         '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n',
       );
     });
+
+    test('when the task is moved back to the original location', async () => {
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n';
+      fileContents['2021-01-01'] =
+        '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n';
+
+      const th = new TaskHandler(vault, settings);
+
+      const file01 = getMockFileWithBasename('2021-01-01');
+      await th.processFile(file01);
+      const tasks = th.getCachedTasksForFile(file01);
+      expect(tasks).toHaveLength(1);
+
+      const movedOnceTask = tasks[0];
+      await movedOnceTask.move(startDate);
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual('## Tasks\n\n');
+    });
   });
 
   describe('when link aliasing is disabled', () => {
@@ -517,15 +532,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task has repeating', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p(
-            '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
-          );
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n';
 
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 4, file, vault, settings);
@@ -547,13 +555,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task does not repeat', async () => {
-      vault.readFile.mockImplementation((f, useCache) => {
-        if (f === file) {
-          return p('# Original File\n\n## Tasks\n\n- [ ] a test task\n');
-        }
-        return p('');
-      });
-      vault.fileNameForMoment.mockReturnValueOnce('2021-01-01');
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [ ] a test task\n';
 
       const line = '- [ ] a test task';
       const tl = new TaskLine(line, 4, file, vault, settings);
@@ -593,22 +596,8 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved multiple times', async () => {
-      const fileContents: Record<string, string> = {};
       fileContents[file.basename] =
         '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
-
-      vault.readFile.mockImplementation((f, useCache) => {
-        return Promise.resolve(fileContents[f.basename]);
-      });
-
-      vault.writeFile.mockImplementation((f, data) => {
-        fileContents[f.basename] = data;
-        return Promise.resolve();
-      });
-
-      vault.fileNameForMoment.mockImplementation((date) => {
-        return date.format('YYYY-MM-DD');
-      });
 
       const th = new TaskHandler(vault, settings);
 
@@ -645,6 +634,28 @@ describe('taskLine.move', () => {
       expect(fileContents['2021-01-02']).toEqual(
         '## Tasks\n\n- [ ] a test task <[[2020-12-31#^task-abcd]]\n',
       );
+    });
+
+    test('when the task is moved back to the original location', async () => {
+      fileContents[file.basename] =
+        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n';
+      fileContents['2021-01-01'] =
+        '## Tasks\n\n- [ ] a test task <[[2020-12-31#^task-abcd]]\n';
+
+      const th = new TaskHandler(vault, settings);
+
+      const file01 = getMockFileWithBasename('2021-01-01');
+      await th.processFile(file01);
+      const tasks = th.getCachedTasksForFile(file01);
+      expect(tasks).toHaveLength(1);
+
+      const movedOnceTask = tasks[0];
+      await movedOnceTask.move(startDate);
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n',
+      );
+      expect(fileContents['2021-01-01']).toEqual('## Tasks\n\n');
     });
   });
 });
@@ -684,13 +695,6 @@ describe('taskLine.createNextRepetition', () => {
         ),
       );
 
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = getMockFileForMoment(date);
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
-
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 0, file, vault, settings);
       await tl.createNextRepetition();
@@ -729,13 +733,6 @@ describe('taskLine.createNextRepetition', () => {
         ),
       );
 
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = getMockFileForMoment(date);
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
-
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 0, file, vault, settings);
       await tl.createNextRepetition();
@@ -764,13 +761,6 @@ describe('taskLine.createNextRepetition', () => {
     test('if it has a tasks section, the task is appended', async () => {
       vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Tasks\n'));
 
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = getMockFileForMoment(date);
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
-
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 0, file, vault, settings);
       await tl.createNextRepetition();
@@ -794,13 +784,6 @@ describe('taskLine.createNextRepetition', () => {
 
     test('if it does not have a tasks section, one is created', async () => {
       vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Another Section\n'));
-
-      const futureFiles: TFile[] = [];
-      vault.getDailyNote.mockImplementation((date) => {
-        const mockFile = getMockFileForMoment(date);
-        futureFiles.push(mockFile);
-        return Promise.resolve(mockFile);
-      });
 
       const line = '- [ ] a test task ; Every Sunday ^task-abc123';
       const tl = new TaskLine(line, 0, file, vault, settings);

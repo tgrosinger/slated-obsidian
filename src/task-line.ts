@@ -1,4 +1,9 @@
-import { addTaskMove, addTaskRepetition } from './file-helpers';
+import {
+  addTaskMove,
+  addTaskRepetition,
+  removeTask,
+  updateTask,
+} from './file-helpers';
 import { RepeatAdapter } from './repeat';
 import type { SettingsInstance } from './settings';
 import type { VaultIntermediate } from './vault';
@@ -7,7 +12,6 @@ import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
-const moment = window.moment;
 
 /**
  * Matches the text following a semicolon or calendar emoji.
@@ -272,7 +276,9 @@ export class TaskLine {
       .asRRule()
       .after(currentNoteDate.endOf('day').toDate());
 
-    const nextOccurenceFile = await this.vault.getDailyNote(moment(nextDate));
+    const nextOccurenceFile = await this.vault.getDailyNote(
+      window.moment(nextDate),
+    );
     return addTaskRepetition(
       nextOccurenceFile,
       this,
@@ -287,6 +293,18 @@ export class TaskLine {
     }
 
     const newFile = await this.vault.getDailyNote(date);
+
+    if (newFile.basename === this.originalFileName()) {
+      // We are essentially "un-defering" the task
+      // Rather than a normal move, delete the line in this file and
+      // reset the original line
+
+      const undeferredLine = `${this.baseTaskContent()}^${this._blockID}`;
+      await updateTask(newFile, this, undeferredLine, this.vault);
+      await removeTask(this.file, this, this.vault);
+      return;
+    }
+
     await addTaskMove(newFile, this, this.settings, this.vault);
 
     this._line = this.lineAsMovedTo(date);

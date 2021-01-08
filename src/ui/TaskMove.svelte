@@ -3,14 +3,12 @@
   import type { Moment } from 'moment';
   import { Calendar } from 'obsidian-calendar-ui';
 
-  const moment = window.moment;
-
   // Creation Parameters
   export let task: TaskLine;
   export let close: () => void;
 
   // Internal Properties
-  const today = moment();
+  const today = window.moment();
 
   const onClickDay = async (
     date: Moment,

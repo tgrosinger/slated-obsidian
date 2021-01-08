@@ -7,8 +7,6 @@ import {
   getDailyNoteSettings,
 } from 'obsidian-daily-notes-interface';
 
-const moment = window.moment;
-
 export class VaultIntermediate {
   private readonly vault: Vault;
 
@@ -29,7 +27,7 @@ export class VaultIntermediate {
 
   public findMomentForDailyNote = (file: TFile): Moment | undefined => {
     const { format } = getDailyNoteSettings();
-    const date = moment(file.basename, format, true);
+    const date = window.moment(file.basename, format, true);
     return date.isValid() ? date : null;
   };
 

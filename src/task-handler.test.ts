@@ -85,6 +85,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  window.moment = moment;
   vault = mock<VaultIntermediate>();
   taskHandler = new TaskHandler(vault, settings);
 

@@ -4,6 +4,7 @@ import { TaskLine } from './task-line';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
+import type { Moment } from 'moment';
 import {
   App,
   MarkdownPostProcessorContext,
@@ -18,6 +19,12 @@ import {
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
+
+declare global {
+  interface Window {
+    moment: () => Moment;
+  }
+}
 
 export default class SlatedPlugin extends Plugin {
   public settings: ISettings;

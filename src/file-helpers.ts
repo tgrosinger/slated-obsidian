@@ -58,11 +58,12 @@ export const addTaskMove = async (
   });
 };
 
-export const removeTaskRepetition = async (
+export const removeTask = async (
   file: TFile,
   task: TaskLine,
   vault: VaultIntermediate,
-): Promise<void> => withFileContents(file, vault, (lines: string[]): boolean => {
+): Promise<void> =>
+  withFileContents(file, vault, (lines: string[]): boolean => {
     const blockIDIndex = getBlockIDIndex(lines, task.blockID);
     if (blockIDIndex === -1) {
       return false;
@@ -72,20 +73,22 @@ export const removeTaskRepetition = async (
     return true;
   });
 
-export const updateTaskRepetition = async (
+export const updateTask = async (
   file: TFile,
   task: TaskLine,
   newLine: string,
   vault: VaultIntermediate,
-): Promise<void> => withFileContents(file, vault, (lines: string[]): boolean => {
+): Promise<void> =>
+  withFileContents(file, vault, (lines: string[]): boolean => {
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].indexOf(task.blockID) === -1) {
         continue;
       }
 
       lines.splice(i, 1, newLine);
-      return;
+      return true;
     }
+    return false;
   });
 
 /**
