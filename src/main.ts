@@ -44,6 +44,10 @@ export default class SlatedPlugin extends Plugin {
 
     this.registerEvent(
       this.app.workspace.on('file-open', (file: TFile) => {
+        if (!file || !file.basename) {
+          return;
+        }
+
         // This callback is fired whenever a file receives focus
         // not just when the file is first opened.
         console.debug('Slated: File opened: ' + file.basename);
