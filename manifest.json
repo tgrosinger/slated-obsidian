@@ -1,6 +1,8 @@
 {
   "id": "slated-obsidian",
   "name": "Slated",
+  "author": "Tony Grosinger",
+  "authorUrl": "https://grosinger.net",
   "description": "Task Management - schdule, move, and repeat tasks",
   "isDesktopOnly": false,
   "version": "0.0.5",
