@@ -1,5 +1,6 @@
 import {
   buyMeACoffee,
+  checkboxIcon,
   Element,
   movedIconSvg,
   paypal,
@@ -13,6 +14,7 @@ import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
 import {
+  addIcon,
   App,
   MarkdownPostProcessorContext,
   MarkdownPreviewRenderer,
@@ -24,6 +26,7 @@ import {
   Setting,
   TFile,
 } from 'obsidian';
+import { TaskView, TaskViewType } from './task-view';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -38,6 +41,7 @@ declare global {
 
 export default class SlatedPlugin extends Plugin {
   public settings: ISettings;
+  private taskView: TaskView;
 
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;
@@ -51,6 +55,14 @@ export default class SlatedPlugin extends Plugin {
     this.taskHandler = new TaskHandler(this.vault, this.settings);
 
     MarkdownPreviewRenderer.registerPostProcessor(this.renderMovedTasks);
+
+    this.registerView(
+      TaskViewType,
+      (leaf) => (this.taskView = new TaskView(leaf, this.vault, this.settings)),
+    );
+
+    addIcon('slated', checkboxIcon);
+    this.addRibbonIcon('slated', 'Slated', this.initSlatedView);
 
     this.registerEvent(
       this.app.workspace.on('file-open', (file: TFile) => {
@@ -117,6 +129,20 @@ export default class SlatedPlugin extends Plugin {
   private async loadSettings(): Promise<void> {
     this.settings = settingsWithDefaults(await this.loadData());
   }
+
+  private readonly initSlatedView = (): void => {
+    const existing = this.app.workspace.getLeavesOfType(TaskViewType);
+    if (existing.length) {
+      this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
+
+    const newLeaf = this.app.workspace.splitActiveLeaf('vertical');
+    newLeaf.setViewState({
+      type: TaskViewType,
+      active: true,
+    });
+  };
 
   private readonly taskChecker = (): boolean => {
     if (

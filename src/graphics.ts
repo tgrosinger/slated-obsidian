@@ -3,21 +3,27 @@ export const Element = (svgText: string): HTMLElement => {
   return parser.parseFromString(svgText, 'text/xml').documentElement;
 };
 
+export const checkboxIcon = `
+<svg fill="currentColor" stroke="currentColor" clip-rule="evenodd" version="1.1" viewBox="0 0 293 291" xmlns="http://www.w3.org/2000/svg">
+ <path d="m266 146c0-7 6-13 13-13s12 6 12 13v90c0 30-25 55-55 55h-181c-30 0-55-25-55-55v-181c0-30 25-55 55-55h91c7 0 12 6 12 13s-5 12-12 12h-91c-16 0-30 14-30 30v181c0 16 14 30 30 30h181c16 0 30-14 30-30v-90z"/>
+ <path d="m81 108c-5-5-5-13 0-18s13-5 18 0l47 46 125-125c5-5 13-5 18 0s5 13 0 18l-134 134c-5 5-13 5-18 0l-56-55z" stroke-width="1.0001"/>
+</svg`;
+
 export const movedIconSvg = `
-    <svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path transform="scale(.26458)" d="m165.26 45.489v-19.196c0-9.7004-7.8093-17.51-17.51-17.51h-122.18c-9.7004 0-17.51 7.8093-17.51 17.51v139.45c0 9.7004 7.8093 17.51 17.51 17.51h122.18c9.7004 0 17.51-7.8093 17.51-17.51v-17.186" stroke-miterlimit="31.5" stroke-width="16"/>
-    <path d="m54.542 15.083 11.35 10.512-11.274 10.131m-26.509-10.055 37.783-0.076176" stroke-width="4.2333"/>
-    </g>
-    </svg>`;
+<svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path transform="scale(.26458)" d="m165.26 45.489v-19.196c0-9.7004-7.8093-17.51-17.51-17.51h-122.18c-9.7004 0-17.51 7.8093-17.51 17.51v139.45c0 9.7004 7.8093 17.51 17.51 17.51h122.18c9.7004 0 17.51-7.8093 17.51-17.51v-17.186" stroke-miterlimit="31.5" stroke-width="16"/>
+  <path d="m54.542 15.083 11.35 10.512-11.274 10.131m-26.509-10.055 37.783-0.076176" stroke-width="4.2333"/>
+ </g>
+</svg>`;
 
 export const skippedIconSvg = `
-    <svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="2.1126" y="2.4062" width="41.592" height="46.163" ry="4.6328" stroke-miterlimit="31.5" stroke-width="4.2333"/>
-    <path d="m13.818 25.488h18.182" stroke-width="3.9308"/>
-    </g>
-    </svg>`;
+<svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="2.1126" y="2.4062" width="41.592" height="46.163" ry="4.6328" stroke-miterlimit="31.5" stroke-width="4.2333"/>
+  <path d="m13.818 25.488h18.182" stroke-width="3.9308"/>
+ </g>
+</svg>`;
 
 const skippedIconSvgOld = `
 <svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
