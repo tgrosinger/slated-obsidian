@@ -11,6 +11,7 @@ import {
   MarkdownPreviewRenderer,
   MarkdownView,
   Modal,
+  Notice,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -238,7 +239,7 @@ class SettingsTab extends PluginSettingTab {
     containerEl.createEl('h2', { text: 'Slated Plugin - Settings' });
 
     containerEl.createEl('p', {
-      text: 'This plugin is in Alpha testing. Back up your data!',
+      text: 'This plugin is in beta testing. Back up your data!',
     });
     containerEl.createEl('p', {
       text:
@@ -257,7 +258,6 @@ class SettingsTab extends PluginSettingTab {
           .onChange((value) => {
             this.plugin.settings.blankLineAfterHeader = value;
             this.plugin.saveData(this.plugin.settings);
-            this.display();
           });
       });
 
@@ -268,9 +268,12 @@ class SettingsTab extends PluginSettingTab {
       )
       .addText((text) => {
         text.setValue(this.plugin.settings.tasksHeader).onChange((value) => {
+          if (!value.startsWith('#')) {
+            new Notice('Tasks section header must start with "#"');
+          }
+
           this.plugin.settings.tasksHeader = value;
           this.plugin.saveData(this.plugin.settings);
-          this.display();
         });
       });
 
@@ -283,7 +286,6 @@ class SettingsTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.aliasLinks).onChange((value) => {
           this.plugin.settings.aliasLinks = value;
           this.plugin.saveData(this.plugin.settings);
-          this.display();
         });
       });
 
