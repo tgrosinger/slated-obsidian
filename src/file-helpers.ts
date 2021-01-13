@@ -9,6 +9,7 @@ import type { TFile } from 'obsidian';
 export const addTaskRepetition = async (
   file: TFile,
   task: TaskLine,
+  subLines: string[],
   settings: SettingsInstance,
   vault: VaultIntermediate,
 ): Promise<void> => {
@@ -28,7 +29,10 @@ export const addTaskRepetition = async (
       taskSectionIndex,
     );
 
-    insertLine(lines, task.lineAsRepeated(), taskSectionEndIndex + 1, settings);
+    const linesToInsert = subLines.slice();
+    linesToInsert.unshift(task.lineAsRepeated());
+
+    insertLines(lines, linesToInsert, taskSectionEndIndex + 1, settings);
     return true;
   });
 };
@@ -36,10 +40,14 @@ export const addTaskRepetition = async (
 export const addTaskMove = async (
   file: TFile,
   task: TaskLine,
+  subLines: string[],
   settings: SettingsInstance,
   vault: VaultIntermediate,
 ): Promise<void> => {
   console.debug('Slated: Moving task exists to file: ' + file.basename);
+
+  const linesToInsert = subLines.slice();
+  linesToInsert.unshift(task.lineAsMovedFrom());
 
   return withFileContents(file, vault, (lines: string[]): boolean => {
     const taskSectionIndex = getIndexTasksHeading(lines, settings);
@@ -48,12 +56,7 @@ export const addTaskMove = async (
       taskSectionIndex,
     );
 
-    insertLine(
-      lines,
-      task.lineAsMovedFrom(),
-      taskSectionEndIndex + 1,
-      settings,
-    );
+    insertLines(lines, linesToInsert, taskSectionEndIndex + 1, settings);
     return true;
   });
 };
@@ -73,6 +76,18 @@ export const removeTask = async (
     return true;
   });
 
+export const removeLines = async (
+  file: TFile,
+  start: number,
+  count: number,
+  vault: VaultIntermediate,
+) => {
+  withFileContents(file, vault, (lines: string[]): boolean => {
+    lines.splice(start, count);
+    return true;
+  });
+};
+
 export const updateTask = async (
   file: TFile,
   task: TaskLine,
@@ -90,6 +105,30 @@ export const updateTask = async (
     }
     return false;
   });
+
+export const getTaskSubContent = async (
+  file: TFile,
+  task: TaskLine,
+  vault: VaultIntermediate,
+): Promise<string[]> => {
+  const results: string[] = [];
+  const taskIndentLevel = getLineIndentLevel(task.line);
+
+  await withFileContents(file, vault, (fileLines: string[]): boolean => {
+    // Starting on the line after task, look for sub lines
+    for (let i = task.lineNum + 1; i < fileLines.length; i++) {
+      const currentLine = fileLines[i];
+      if (getLineIndentLevel(currentLine) > taskIndentLevel) {
+        results.push(currentLine);
+      } else {
+        break;
+      }
+    }
+    return false;
+  });
+
+  return results;
+};
 
 /**
  * Read the file contents and pass to the provided function as a list of lines.
@@ -177,32 +216,30 @@ export const getIndexSectionLastContent = (
  * Insert the provided line before the provided index. If the settings call
  * for a blank line around headings, insert blank lines as necessary.
  */
-export const insertLine = (
-  lines: string[],
-  line: string,
+export const insertLines = (
+  fileLines: string[],
+  linesToAdd: string[],
   i: number,
   settings: SettingsInstance,
 ): void => {
   if (!settings.blankLineAfterHeader) {
-    lines.splice(i, 0, line);
+    fileLines.splice(i, 0, ...linesToAdd);
     return;
   }
 
-  const toInsert: string[] = [];
-  if (i > 0 && lines[i - 1].startsWith('#')) {
+  if (i > 0 && fileLines[i - 1].startsWith('#')) {
     // Line before is a heading, leave a space
-    toInsert.push('');
+    linesToAdd.unshift('');
   }
-  toInsert.push(line);
-  if (i < lines.length && lines[i].startsWith('#')) {
+  if (i < fileLines.length && fileLines[i].startsWith('#')) {
     // Next line is a heading, leave a space
-    toInsert.push('');
-  } else if (i === lines.length) {
+    linesToAdd.push('');
+  } else if (i === fileLines.length) {
     // Last line of the file, leave a space
-    toInsert.push('');
+    linesToAdd.push('');
   }
 
-  lines.splice(i, 0, ...toInsert);
+  fileLines.splice(i, 0, ...linesToAdd);
 };
 
 /**
@@ -221,4 +258,8 @@ export const getBlockIDIndex = (lines: string[], blockID: string): number => {
     }
   }
   return -1;
+};
+
+const getLineIndentLevel = (line: string): number => {
+  return line.length - line.trimLeft().length;
 };

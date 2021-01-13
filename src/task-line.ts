@@ -1,6 +1,8 @@
 import {
   addTaskMove,
   addTaskRepetition,
+  getTaskSubContent,
+  removeLines,
   removeTask,
   updateTask,
 } from './file-helpers';
@@ -10,6 +12,7 @@ import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
+import { removeAllListeners } from 'process';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
 
@@ -196,6 +199,10 @@ export class TaskLine {
     return true;
   }
 
+  public readonly getSubContent = async (): Promise<string[]> => {
+    return getTaskSubContent(this.file, this, this.vault);
+  };
+
   // Converts the line to be used in places where it was moved from another note.
   // Something like:
   // - [ ] This is the task <[[2020-12-25^task-abc123]]
@@ -251,12 +258,12 @@ export class TaskLine {
    * Return whether the line stored is actually a valid Markdown task. NOTE:
    * This uses regex and is not quite as performant as TaskHandler.isLineTask()
    */
-  public isTask = (): boolean => taskRe.test(this.line);
+  public readonly isTask = (): boolean => taskRe.test(this.line);
 
   /**
    * Save the contents of this TaskLine back to the file.
    */
-  public save = async (): Promise<void> => {
+  public readonly save = async (): Promise<void> => {
     if (!this.modfied) {
       return;
     }
@@ -282,6 +289,7 @@ export class TaskLine {
     return addTaskRepetition(
       nextOccurenceFile,
       this,
+      await this.getSubContent(),
       this.settings,
       this.vault,
     );
@@ -305,7 +313,9 @@ export class TaskLine {
       return;
     }
 
-    await addTaskMove(newFile, this, this.settings, this.vault);
+    const subLines = await this.getSubContent();
+    await addTaskMove(newFile, this, subLines, this.settings, this.vault);
+    await removeLines(this.file, this.lineNum, subLines.length, this.vault);
 
     this._line = this.lineAsMovedTo(date);
     this._modified = true;
