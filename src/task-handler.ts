@@ -47,6 +47,24 @@ export class TaskHandler {
   }
 
   /**
+   * Test if this line is a task. This is called for every line in a file after
+   * every save, so performance is essential.
+   */
+  public readonly isLineTask = (line: string): boolean => {
+    // We can rule out anything that is not a list by testing a single char
+    if (line.trimStart()[0] !== '-') {
+      return false;
+    }
+
+    return (
+      line.startsWith('- [ ] ') ||
+      line.startsWith('- [x] ') ||
+      line.startsWith('- [X] ') ||
+      line.startsWith('- [>] ')
+    );
+  };
+
+  /**
    * Scan the file looking for tasks. Parse the task, and if it is a repeating
    * task, ensure it has a block ID and validate the repeat config. Normalized
    * file is saved, then returns a list of all the TaskItems.
@@ -66,8 +84,14 @@ export class TaskHandler {
       .map((line, index) => ({ line, lineNum: index }))
       .filter(({ line }) => this.isLineTask(line))
       .map(
-        ({ line, lineNum }) =>
-          new TaskLine(line, lineNum, file, this.vault, this.settings),
+        ({ lineNum }) =>
+          new TaskLine(
+            lineNum,
+            file,
+            splitFileContents,
+            this.vault,
+            this.settings,
+          ),
       );
     const repeatingTaskLines = taskLines.filter((taskLine) => taskLine.repeats);
 
@@ -127,23 +151,5 @@ export class TaskHandler {
     tasks: TaskLine[],
   ): Promise<void> => {
     await Promise.all(tasks.map((task) => task.createNextRepetition()));
-  };
-
-  /**
-   * Test if this line is a task. This is called for every line in a file after
-   * every save, so performance is essential.
-   */
-  private readonly isLineTask = (line: string): boolean => {
-    // We can rule out anything that is not a list by testing a single char
-    if (line.trimStart()[0] !== '-') {
-      return false;
-    }
-
-    return (
-      line.startsWith('- [ ] ') ||
-      line.startsWith('- [x] ') ||
-      line.startsWith('- [X] ') ||
-      line.startsWith('- [>] ')
-    );
   };
 }

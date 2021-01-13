@@ -1,7 +1,6 @@
 import {
   addTaskMove,
   addTaskRepetition,
-  getTaskSubContent,
   removeLines,
   removeTask,
   updateTask,
@@ -12,7 +11,6 @@ import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
-import { removeAllListeners } from 'process';
 
 const taskRe = /^\s*- \[[ xX>]\] /;
 
@@ -56,6 +54,7 @@ export class TaskLine {
   private readonly settings: SettingsInstance;
 
   private readonly originalLine: string;
+  private readonly subContent: string[];
   private _line: string;
   private _modified: boolean;
 
@@ -75,14 +74,14 @@ export class TaskLine {
   private subscriptions: { id: number; hook: (val: any) => void }[];
 
   constructor(
-    line: string,
     lineNum: number,
     file: TFile,
+    fileLines: string[], // Can not use async in a constructor
     vault: VaultIntermediate,
     settings: SettingsInstance,
   ) {
-    this.originalLine = line;
-    this._line = line;
+    this.originalLine = fileLines[lineNum];
+    this._line = this.originalLine;
     this.lineNum = lineNum;
     this.file = file;
     this.vault = vault;
@@ -92,7 +91,9 @@ export class TaskLine {
       return;
     }
 
-    const repeatMatches = repeatScheduleRe.exec(line);
+    this.subContent = this.getSubContent(fileLines);
+
+    const repeatMatches = repeatScheduleRe.exec(this.originalLine);
     if (repeatMatches && repeatMatches.length === 2) {
       this._repeats = true;
       this._repeatConfig = repeatMatches[1];
@@ -104,7 +105,7 @@ export class TaskLine {
       this._repeats = false;
     }
 
-    const blockIDMatches = blockHashRe.exec(line);
+    const blockIDMatches = blockHashRe.exec(this.originalLine);
     if (
       blockIDMatches &&
       blockIDMatches.length === 2 &&
@@ -115,7 +116,7 @@ export class TaskLine {
       this._blockID = '';
     }
 
-    const movedFromLink = movedFromRe.exec(line);
+    const movedFromLink = movedFromRe.exec(this.originalLine);
     if (movedFromLink && movedFromLink.length >= 4) {
       if (movedFromLink[1]) {
         this._movedFromNoteName = movedFromLink[1].split('|')[0];
@@ -124,14 +125,14 @@ export class TaskLine {
       }
     }
 
-    const movedToLink = movedToRe.exec(line);
+    const movedToLink = movedToRe.exec(this.originalLine);
     if (movedToLink) {
       if (movedToLink.length > 1 && movedToLink[1] !== '') {
         this._movedToNoteName = movedToLink[1].split('|')[0];
       }
     }
 
-    const repeatsFromLink = repeatsFromRe.exec(line);
+    const repeatsFromLink = repeatsFromRe.exec(this.originalLine);
     if (repeatsFromLink && repeatsFromLink.length >= 4) {
       if (repeatsFromLink[1]) {
         this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
@@ -198,10 +199,6 @@ export class TaskLine {
 
     return true;
   }
-
-  public readonly getSubContent = async (): Promise<string[]> => {
-    return getTaskSubContent(this.file, this, this.vault);
-  };
 
   // Converts the line to be used in places where it was moved from another note.
   // Something like:
@@ -289,7 +286,7 @@ export class TaskLine {
     return addTaskRepetition(
       nextOccurenceFile,
       this,
-      await this.getSubContent(),
+      this.subContent,
       this.settings,
       this.vault,
     );
@@ -313,9 +310,19 @@ export class TaskLine {
       return;
     }
 
-    const subLines = await this.getSubContent();
-    await addTaskMove(newFile, this, subLines, this.settings, this.vault);
-    await removeLines(this.file, this.lineNum, subLines.length, this.vault);
+    await addTaskMove(
+      newFile,
+      this,
+      this.subContent,
+      this.settings,
+      this.vault,
+    );
+    await removeLines(
+      this.file,
+      this.lineNum,
+      this.subContent.length,
+      this.vault,
+    );
 
     this._line = this.lineAsMovedTo(date);
     this._modified = true;
@@ -452,6 +459,21 @@ export class TaskLine {
       `Slated: Unable to find original file name for task: ${this._line}`,
     );
   };
+
+  private readonly getSubContent = (lines: string[]): string[] => {
+    const toReturn: string[] = [];
+    const taskIndentLevel = getLineIndentLevel(this.originalLine);
+    // Starting on the line after task, look for sub lines
+    for (let i = this.lineNum + 1; i < lines.length; i++) {
+      const currentLine = lines[i];
+      if (getLineIndentLevel(currentLine) > taskIndentLevel) {
+        toReturn.push(currentLine);
+      } else {
+        break;
+      }
+    }
+    return toReturn;
+  };
 }
 
 const createTaskBlockHash = (): string => {
@@ -464,4 +486,8 @@ const createTaskBlockHash = (): string => {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+};
+
+const getLineIndentLevel = (line: string): number => {
+  return line.length - line.trimLeft().length;
 };

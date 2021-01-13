@@ -115,20 +115,13 @@ export default class SlatedPlugin extends Plugin {
     }
 
     const editor = activeLeaf.view.sourceMode.cmEditor;
-    const cursorPos = editor.getCursor();
-    const currentLine = editor.getLine(cursorPos.line);
-    const task = new TaskLine(
-      currentLine,
-      cursorPos.line,
-      activeLeaf.view.file,
-      this.vault,
-      this.settings,
-    );
-
-    return task.isTask();
+    const currentLine = editor.getLine(editor.getCursor().line);
+    return this.taskHandler.isLineTask(currentLine);
   };
 
-  private readonly taskModalOpener = (fn: (task: TaskLine) => void): void => {
+  private readonly taskModalOpener = async (
+    fn: (task: TaskLine) => void,
+  ): Promise<void> => {
     const activeLeaf = this.app.workspace.activeLeaf;
     if (!(activeLeaf.view instanceof MarkdownView)) {
       return;
@@ -136,11 +129,10 @@ export default class SlatedPlugin extends Plugin {
 
     const editor = activeLeaf.view.sourceMode.cmEditor;
     const cursorPos = editor.getCursor();
-    const currentLine = editor.getLine(cursorPos.line);
     const task = new TaskLine(
-      currentLine,
       cursorPos.line,
       activeLeaf.view.file,
+      (await this.vault.readFile(activeLeaf.view.file, true)).split('\n'),
       this.vault,
       this.settings,
     );

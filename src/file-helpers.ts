@@ -106,44 +106,22 @@ export const updateTask = async (
     return false;
   });
 
-export const getTaskSubContent = async (
-  file: TFile,
-  task: TaskLine,
-  vault: VaultIntermediate,
-): Promise<string[]> => {
-  const results: string[] = [];
-  const taskIndentLevel = getLineIndentLevel(task.line);
-
-  await withFileContents(file, vault, (fileLines: string[]): boolean => {
-    // Starting on the line after task, look for sub lines
-    for (let i = task.lineNum + 1; i < fileLines.length; i++) {
-      const currentLine = fileLines[i];
-      if (getLineIndentLevel(currentLine) > taskIndentLevel) {
-        results.push(currentLine);
-      } else {
-        break;
-      }
-    }
-    return false;
-  });
-
-  return results;
-};
-
 /**
  * Read the file contents and pass to the provided function as a list of lines.
  * If the provided function returns true, write the array back to the file.
+ * NOTE: If useCache is true, the fn is not allowed to update the file!
  */
 const withFileContents = async (
   file: TFile,
   vault: VaultIntermediate,
   fn: (lines: string[]) => boolean,
+  useCache = false,
 ): Promise<void> => {
-  const fileContents = (await vault.readFile(file, false)) || '';
+  const fileContents = (await vault.readFile(file, useCache)) || '';
   const lines = fileContents.split('\n');
 
   const updated = fn(lines);
-  if (updated) {
+  if (!useCache && updated) {
     return vault.writeFile(file, lines.join('\n'));
   }
 };
@@ -258,8 +236,4 @@ export const getBlockIDIndex = (lines: string[], blockID: string): number => {
     }
   }
   return -1;
-};
-
-const getLineIndentLevel = (line: string): number => {
-  return line.length - line.trimLeft().length;
 };

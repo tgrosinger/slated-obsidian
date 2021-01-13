@@ -90,30 +90,30 @@ describe('Tasks are parsed correctly', () => {
 
   test('When line is not a ul', () => {
     const line = '1. This is not a task';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
   });
   test('When the line is indented', () => {
     const line = '  - [ ] This is a simple task';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is invalid', () => {
     const line = '- [y] This is not a task';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
     expect(tl.isTask()).toBeFalsy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is the moved symbol', () => {
     const line = '- [>] This is not a task';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is checked', () => {
     const line = '- [x] This task is done';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeTruthy();
@@ -123,7 +123,7 @@ describe('Tasks are parsed correctly', () => {
   });
   test('When the checkbox is checked', () => {
     const line = '- [X] This task is done';
-    const tl = new TaskLine(line, 1, file, vault, settings);
+    const tl = new TaskLine(0, file, [line], vault, settings);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeTruthy();
@@ -134,7 +134,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When there is a repeat config', () => {
     test('When there are no spaces', () => {
       const line = '- [ ] The task;Every Sunday';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -147,7 +147,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task  ;  Every Sunday';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -160,7 +160,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the calendar emoji is used', () => {
       const line = '- [ ] The task  📅  Every Sunday';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -173,7 +173,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are trailing spaces', () => {
       const line = '- [ ] The task  📅  Every Sunday  ';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -186,7 +186,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are trailing spaces on a subtask', () => {
       const line = '  - [ ] The task  📅  Every Sunday  ';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -202,7 +202,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When there is a block ID', () => {
     test('When there are no spaces', () => {
       const line = '- [ ] The task^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -210,7 +210,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task ^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -221,7 +221,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task has been moved to another location', () => {
     test('When there are no spaces', () => {
       const line = '- [x] The task>[[2020-12-25]]^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -230,7 +230,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [x] The task >[[2020-12-25]] ^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -239,7 +239,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task >[[some other note]] ^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -249,7 +249,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been renamed', () => {
       const line =
         '- [x] The task >[[2020-12-25|some other note]] ^task-abc123';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -261,7 +261,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task has been moved from another location', () => {
     test('When there are no spaces', () => {
       const line = '- [x] The task<[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -270,7 +270,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task <[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -279,7 +279,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task <[[some other note#^task-abc123]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -289,7 +289,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been aliased', () => {
       const line =
         '- [ ] The task <[[2020-12-25#^task-abc123|some other note]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -298,7 +298,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the moved from link has been aliased', () => {
       const line = '- [ ] The task [[2020-12-25#^task-abc123|< Origin]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -310,7 +310,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task is a repetition of a task', () => {
     test('When there are no spaces', () => {
       const line = '- [ ] The task;Every Sunday <<[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -321,7 +321,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been aliased', () => {
       const line =
         '- [ ] The task;Every Sunday <<[[2020-12-25#^task-abc123|something else]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -332,7 +332,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note name is not a date', () => {
       const line =
         '- [ ] The task 📅 Every Sunday <<[[some other note#^task-abc123]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -343,7 +343,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the repeater link is aliased', () => {
       const line =
         '- [ ] The task 📅 Every Sunday [[some other note#^task-abc123|<< Origin]]';
-      const tl = new TaskLine(line, 1, file, vault, settings);
+      const tl = new TaskLine(0, file, [line], vault, settings);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -397,47 +397,55 @@ describe('taskLine.move', () => {
     });
 
     test('when the task has repeating', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n';
+      fileContents[file.basename] = `# Original File
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+## Tasks
+
+- [ ] a test task ; Every Sunday ^task-abc123
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        1,
-        futureFiles[0],
+      expect(fileContents[futureFiles[0].basename]).toEqual(
         `## Tasks\n\n- [ ] a test task ; Every Sunday [[${startDateStr}#^task-abc123|< Origin]]\n`,
       );
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        2,
-        file,
+      expect(fileContents[file.basename]).toEqual(
         '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
       );
     });
 
     test('when the task does not repeat', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task\n';
+      fileContents[file.basename] = `# Original File
 
-      const line = '- [ ] a test task';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+## Tasks
+
+- [ ] a test task
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',
           '^' +
-            escapeRegExp(`${line} [[${startDateStr}#^task-`) +
+            escapeRegExp(`- [ ] a test task [[${startDateStr}#^task-`) +
             '[-a-zA-Z0-9]{4}' +
             escapeRegExp('|< Origin]]') +
             '$',
@@ -445,9 +453,7 @@ describe('taskLine.move', () => {
         ],
         [2],
       );
-
-      expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
-      expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+      expect(fileContents[file.basename]).toHaveLines(
         [
           '# Original File',
           '',
@@ -473,21 +479,22 @@ describe('taskLine.move', () => {
 - [ ] another task
 `;
 
-      const line = '- [ ] a test task';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(3);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',
           '^' +
-            escapeRegExp(`${line} [[${startDateStr}#^task-`) +
+            escapeRegExp(`- [ ] a test task [[${startDateStr}#^task-`) +
             '[-a-zA-Z0-9]{4}' +
             escapeRegExp('|< Origin]]') +
             '$',
@@ -497,9 +504,7 @@ describe('taskLine.move', () => {
         ],
         [2],
       );
-
-      expect(vault.writeFile.mock.calls[2][0]).toEqual(file);
-      expect(vault.writeFile.mock.calls[2][1]).toHaveLines(
+      expect(fileContents[file.basename]).toHaveLines(
         [
           '# Original File',
           '',
@@ -526,21 +531,22 @@ describe('taskLine.move', () => {
 - [ ] another task
 `;
 
-      const line = '- [ ] a test task';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(3);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',
           '^' +
-            escapeRegExp(`${line} [[${startDateStr}#^task-`) +
+            escapeRegExp(`- [ ] a test task [[${startDateStr}#^task-`) +
             '[-a-zA-Z0-9]{4}' +
             escapeRegExp('|< Origin]]') +
             '$',
@@ -550,9 +556,7 @@ describe('taskLine.move', () => {
         ],
         [2],
       );
-
-      expect(vault.writeFile.mock.calls[2][0]).toEqual(file);
-      expect(vault.writeFile.mock.calls[2][1]).toHaveLines(
+      expect(fileContents[file.basename]).toHaveLines(
         [
           '# Original File',
           '',
@@ -569,8 +573,12 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved multiple times', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [ ] a test task ^task-abcd
+`;
 
       const th = new TaskHandler(vault, settings);
 
@@ -579,17 +587,18 @@ describe('taskLine.move', () => {
       expect(tasks).toHaveLength(1);
 
       const originalTask = tasks[0];
-      await originalTask.move(moment('2021-01-01'));
+      const nextDateStr = '2021-01-01';
+      await originalTask.move(moment(nextDateStr));
 
       expect(fileContents[startDateStr]).toEqual(
         '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
       );
-      expect(fileContents['2021-01-01']).toEqual(
+      expect(fileContents[nextDateStr]).toEqual(
         '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n',
       );
       expect(futureFiles).toHaveLength(1);
       const file01 = futureFiles[0];
-      expect(file01.basename).toEqual('2021-01-01');
+      expect(file01.basename).toEqual(nextDateStr);
 
       await th.processFile(file01);
       tasks = th.getCachedTasksForFile(file01);
@@ -601,7 +610,7 @@ describe('taskLine.move', () => {
       expect(fileContents[startDateStr]).toEqual(
         '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n',
       );
-      expect(fileContents['2021-01-01']).toEqual(
+      expect(fileContents[nextDateStr]).toEqual(
         '## Tasks\n\n- [>] a test task [[2020-12-31#^task-abcd|< Origin]] >[[2021-01-02]]\n',
       );
       expect(fileContents['2021-01-02']).toEqual(
@@ -610,14 +619,22 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved back to the original location', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n';
-      fileContents['2021-01-01'] =
-        '## Tasks\n\n- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]\n';
+      const nextDateStr = '2021-01-01';
+
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [>] a test task >[[2021-01-01]] ^task-abcd
+`;
+      fileContents[nextDateStr] = `## Tasks
+
+- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]
+`;
 
       const th = new TaskHandler(vault, settings);
 
-      const file01 = getMockFileWithBasename('2021-01-01');
+      const file01 = getMockFileWithBasename(nextDateStr);
       await th.processFile(file01);
       const tasks = th.getCachedTasksForFile(file01);
       expect(tasks).toHaveLength(1);
@@ -628,7 +645,7 @@ describe('taskLine.move', () => {
       expect(fileContents[startDateStr]).toEqual(
         '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n',
       );
-      expect(fileContents['2021-01-01']).toEqual('## Tasks\n\n');
+      expect(fileContents[nextDateStr]).toEqual('## Tasks\n\n');
     });
   });
 
@@ -638,55 +655,61 @@ describe('taskLine.move', () => {
     });
 
     test('when the task has repeating', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n';
+      fileContents[file.basename] = `# Original File
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+## Tasks
+
+- [ ] a test task ; Every Sunday ^task-abc123
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        1,
-        futureFiles[0],
+      expect(fileContents[futureFiles[0].basename]).toEqual(
         `## Tasks\n\n- [ ] a test task ; Every Sunday <[[${startDateStr}#^task-abc123]]\n`,
       );
-      expect(vault.writeFile).toHaveBeenNthCalledWith(
-        2,
-        file,
+      expect(fileContents[file.basename]).toEqual(
         '# Original File\n\n## Tasks\n\n- [>] a test task ; Every Sunday >[[2021-01-01]] ^task-abc123\n',
       );
     });
 
     test('when the task does not repeat', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task\n';
+      fileContents[file.basename] = `# Original File
 
-      const line = '- [ ] a test task';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+## Tasks
+
+- [ ] a test task
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.move(moment('2021-01-01'));
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(2);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',
           '^' +
-            escapeRegExp(`${line} <[[${startDateStr}#^task-`) +
+            escapeRegExp(`- [ ] a test task <[[${startDateStr}#^task-`) +
             '[-a-zA-Z0-9]{4}\\]\\]$',
           '',
         ],
         [2],
       );
-
-      expect(vault.writeFile.mock.calls[1][0]).toEqual(file);
-      expect(vault.writeFile.mock.calls[1][1]).toHaveLines(
+      expect(fileContents[file.basename]).toHaveLines(
         [
           '# Original File',
           '',
@@ -702,8 +725,12 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved multiple times', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n';
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [ ] a test task ^task-abcd
+`;
 
       const th = new TaskHandler(vault, settings);
 
@@ -743,10 +770,16 @@ describe('taskLine.move', () => {
     });
 
     test('when the task is moved back to the original location', async () => {
-      fileContents[file.basename] =
-        '# Original File\n\n## Tasks\n\n- [>] a test task >[[2021-01-01]] ^task-abcd\n';
-      fileContents['2021-01-01'] =
-        '## Tasks\n\n- [ ] a test task <[[2020-12-31#^task-abcd]]\n';
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [>] a test task >[[2021-01-01]] ^task-abcd
+`;
+      fileContents['2021-01-01'] = `## Tasks
+
+- [ ] a test task <[[2020-12-31#^task-abcd]]
+`;
 
       const th = new TaskHandler(vault, settings);
 
@@ -810,14 +843,22 @@ describe('taskLine.createNextRepetition', () => {
     });
 
     test('if it has a tasks section, the task is appended to existing', async () => {
+      fileContents[file.basename] =
+        '- [ ] a test task ; Every Sunday ^task-abc123';
+
       vault.readFile.mockReturnValueOnce(
         p(
           '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
         ),
       );
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 0, file, vault, settings);
+      const tl = new TaskLine(
+        0,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
@@ -848,14 +889,22 @@ describe('taskLine.createNextRepetition', () => {
     });
 
     test('if it has a tasks section, the task is appended to existing', async () => {
+      fileContents[file.basename] =
+        '- [ ] a test task ; Every Sunday ^task-abc123';
+
       vault.readFile.mockReturnValueOnce(
         p(
           '# Hello\n\n## Tasks\n\n- [ ] Something\n  - A sub item\n\n## Another Header\n',
         ),
       );
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 0, file, vault, settings);
+      const tl = new TaskLine(
+        0,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
@@ -880,10 +929,17 @@ describe('taskLine.createNextRepetition', () => {
     });
 
     test('if it has a tasks section, the task is appended', async () => {
+      fileContents[file.basename] =
+        '- [ ] a test task ; Every Sunday ^task-abc123';
       vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Tasks\n'));
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 0, file, vault, settings);
+      const tl = new TaskLine(
+        0,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
@@ -904,10 +960,17 @@ describe('taskLine.createNextRepetition', () => {
     });
 
     test('if it does not have a tasks section, one is created', async () => {
+      fileContents[file.basename] =
+        '- [ ] a test task ; Every Sunday ^task-abc123';
       vault.readFile.mockReturnValueOnce(p('# Hello\n\n## Another Section\n'));
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 0, file, vault, settings);
+      const tl = new TaskLine(
+        0,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
@@ -940,8 +1003,13 @@ describe('taskLine.createNextRepetition', () => {
 - [ ] another task
 `;
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
@@ -973,8 +1041,13 @@ describe('taskLine.createNextRepetition', () => {
 - [ ] another task
 `;
 
-      const line = '- [ ] a test task ; Every Sunday ^task-abc123';
-      const tl = new TaskLine(line, 4, file, vault, settings);
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
