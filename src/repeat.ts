@@ -10,12 +10,47 @@ export enum Frequency {
 
 export class RepeatAdapter {
   private readonly rrule: RRule;
-  private readonly modifiedHook: () => void;
+  private subscriptions: { id: number; hook: (val: any) => void }[];
 
-  constructor(rrule: RRule, modifiedHook: () => void) {
+  constructor(rrule: RRule) {
     this.rrule = rrule;
-    this.modifiedHook = modifiedHook;
+    this.subscriptions = [];
   }
+
+  /**
+   * The subscribe function implements the Store interface in Svelte. The
+   * subscribers must be called any time there is a change to the task.
+   */
+  public readonly subscribe = (
+    subscription: (value: any) => void,
+  ): (() => void) => {
+    const maxID = this.subscriptions.reduce(
+      (prev, { id }): number => Math.max(prev, id),
+      0,
+    );
+    const newID = maxID + 1;
+
+    this.subscriptions.push({ id: newID, hook: subscription });
+    subscription(this);
+
+    // Return an unsubscribe function
+    return () => {
+      this.subscriptions = this.subscriptions.filter(({ id }) => id !== newID);
+      console.log(`Removing subscription ${newID}`);
+    };
+  };
+
+  /**
+   * The set function implements the Store interface in Svelte. We are not
+   * actually using it to store new values, but it is needed when binding to
+   * properties.
+   */
+  public readonly set = (_: any): void => {};
+
+  private readonly notify = () => {
+    // Notify subscriptions of the change
+    this.subscriptions.forEach(({ hook }) => hook(this));
+  };
 
   public isValid = (): boolean => this.rrule.toString() !== '';
 
@@ -80,7 +115,7 @@ export class RepeatAdapter {
     this.rrule.options.byweekday = undefined;
     this.rrule.origOptions.byweekday = undefined;
 
-    this.modifiedHook();
+    this.notify();
   }
 
   public get interval(): number {
@@ -93,7 +128,7 @@ export class RepeatAdapter {
 
     if (newVal !== this.rrule.options.interval) {
       this.rrule.options.interval = n ? n : 1;
-      this.modifiedHook();
+      this.notify();
     }
   }
 
@@ -109,7 +144,7 @@ export class RepeatAdapter {
     this.rrule.origOptions.byweekday = weekdayList;
     this.rrule.options.byweekday = numberList;
 
-    this.modifiedHook();
+    this.notify();
   };
 
   public get daysOfWeek(): number[] {
@@ -141,7 +176,7 @@ export class RepeatAdapter {
     // Incompatible with day of month
     this.rrule.origOptions.byweekday = [];
 
-    this.modifiedHook();
+    this.notify();
   }
 
   public set lastDayOfMonth(val: boolean) {
@@ -153,7 +188,7 @@ export class RepeatAdapter {
       this.rrule.options.bymonthday = [];
     }
 
-    this.modifiedHook();
+    this.notify();
   }
 
   public get lastDayOfMonth(): boolean {
@@ -176,7 +211,7 @@ export class RepeatAdapter {
     this.rrule.origOptions.bymonthday = undefined;
     this.rrule.options.bymonthday = [];
 
-    this.modifiedHook();
+    this.notify();
   };
 
   public getWeekDaysOfMonth = (): { week: string; weekDay: string }[] => {
@@ -213,7 +248,7 @@ export class RepeatAdapter {
     this.rrule.origOptions.bymonth = ids;
     this.rrule.options.bymonth = this.rrule.origOptions.bymonth;
 
-    this.modifiedHook();
+    this.notify();
   };
 
   private ByWeekdayToNumber(wd: ByWeekday): number {

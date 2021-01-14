@@ -93,25 +93,13 @@ export class TaskHandler {
             this.settings,
           ),
       );
-    const repeatingTaskLines = taskLines.filter((taskLine) => taskLine.repeats);
 
-    const modifiedLines = repeatingTaskLines.filter(
-      (taskLine) => taskLine.modfied,
-    );
-
-    // NOTE: We must not write the file if no changes were made because we hook
-    // on file-modified. If we always write, then it will infinitely update.
-
-    if (modifiedLines.length === 0) {
-      return taskLines;
+    // XXX: This will cause a file write for each task which needs to be modified.
+    // Hopefully there aren't so many tasks modified at once that it's problematic,
+    // but it may be necessary to change this to batch writes.
+    for (let i = 0; i < taskLines.length; i++) {
+      await taskLines[i].addBlockIDIfMissing();
     }
-
-    modifiedLines.map(
-      (taskLine) => (splitFileContents[taskLine.lineNum] = taskLine.line),
-    );
-    this.vault.writeFile(file, splitFileContents.join('\n'));
-
-    // TODO: Notify on invalid repeating configs
 
     return taskLines;
   };

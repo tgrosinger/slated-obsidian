@@ -53,10 +53,8 @@ export class TaskLine {
   private readonly vault: VaultIntermediate;
   private readonly settings: SettingsInstance;
 
-  private readonly originalLine: string;
   private readonly subContent: string[];
   private _line: string;
-  private _modified: boolean;
 
   /**
    * Do not use directly, instead use baseTaskContent() which memoizes.
@@ -64,14 +62,11 @@ export class TaskLine {
   private _basetask: string;
 
   private _repeats: boolean;
-  private _repeater: RepeatAdapter | undefined;
-  private readonly _repeatConfig: string;
+  private _repeatConfig: string;
   private _blockID: string;
   private readonly _movedToNoteName: string;
   private readonly _movedFromNoteName: string;
   private readonly _repeatsFromNoteName: string;
-
-  private subscriptions: { id: number; hook: (val: any) => void }[];
 
   constructor(
     lineNum: number,
@@ -80,8 +75,7 @@ export class TaskLine {
     vault: VaultIntermediate,
     settings: SettingsInstance,
   ) {
-    this.originalLine = fileLines[lineNum];
-    this._line = this.originalLine;
+    this._line = fileLines[lineNum];
     this.lineNum = lineNum;
     this.file = file;
     this.vault = vault;
@@ -93,19 +87,15 @@ export class TaskLine {
 
     this.subContent = this.getSubContent(fileLines);
 
-    const repeatMatches = repeatScheduleRe.exec(this.originalLine);
+    const repeatMatches = repeatScheduleRe.exec(this._line);
     if (repeatMatches && repeatMatches.length === 2) {
       this._repeats = true;
       this._repeatConfig = repeatMatches[1];
-      this._repeater = new RepeatAdapter(
-        RRule.fromText(this._repeatConfig),
-        this.handleRepeaterUpdated,
-      );
     } else {
       this._repeats = false;
     }
 
-    const blockIDMatches = blockHashRe.exec(this.originalLine);
+    const blockIDMatches = blockHashRe.exec(this._line);
     if (
       blockIDMatches &&
       blockIDMatches.length === 2 &&
@@ -116,7 +106,7 @@ export class TaskLine {
       this._blockID = '';
     }
 
-    const movedFromLink = movedFromRe.exec(this.originalLine);
+    const movedFromLink = movedFromRe.exec(this._line);
     if (movedFromLink && movedFromLink.length >= 4) {
       if (movedFromLink[1]) {
         this._movedFromNoteName = movedFromLink[1].split('|')[0];
@@ -125,14 +115,14 @@ export class TaskLine {
       }
     }
 
-    const movedToLink = movedToRe.exec(this.originalLine);
+    const movedToLink = movedToRe.exec(this._line);
     if (movedToLink) {
       if (movedToLink.length > 1 && movedToLink[1] !== '') {
         this._movedToNoteName = movedToLink[1].split('|')[0];
       }
     }
 
-    const repeatsFromLink = repeatsFromRe.exec(this.originalLine);
+    const repeatsFromLink = repeatsFromRe.exec(this._line);
     if (repeatsFromLink && repeatsFromLink.length >= 4) {
       if (repeatsFromLink[1]) {
         this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
@@ -141,12 +131,6 @@ export class TaskLine {
         this._repeatsFromNoteName = repeatsFromLink[3].split('|')[0];
       }
     }
-
-    if (this.repeats && !this._blockID) {
-      this.addBlockID();
-    }
-
-    this.subscriptions = [];
   }
 
   /**
@@ -161,19 +145,13 @@ export class TaskLine {
   }
 
   public get repeater(): RepeatAdapter {
-    if (!this._repeater) {
-      console.log('A New repeater requested');
-      this._repeater = new RepeatAdapter(
-        new RRule({
-          freq: Frequency.WEEKLY,
-          interval: 1,
-        }),
-        this.handleRepeaterUpdated,
-      );
-      this._repeats = true;
-      this._modified = true;
+    if (this._repeatConfig) {
+      return new RepeatAdapter(RRule.fromText(this._repeatConfig));
     }
-    return this._repeater;
+
+    return new RepeatAdapter(
+      new RRule({ freq: Frequency.WEEKLY, interval: 1 }),
+    );
   }
 
   public get complete(): boolean {
@@ -236,17 +214,6 @@ export class TaskLine {
     return this._repeatsFromNoteName || '';
   }
 
-  /**
-   * modified indicates if the line has been updated from the original value.
-   * Modifications may include:
-   * - Adding a block ID
-   * - Adding a date that this task was moved to
-   * - Checking or unchecking this task
-   */
-  public get modfied(): boolean {
-    return this._modified;
-  }
-
   public get blockID(): string {
     return this._blockID;
   }
@@ -261,17 +228,12 @@ export class TaskLine {
    * Save the contents of this TaskLine back to the file.
    */
   public readonly save = async (): Promise<void> => {
-    if (!this.modfied) {
-      return;
-    }
-
     const fileContents = await this.vault.readFile(this.file, false);
     const lines = fileContents.split('\n');
     lines[this.lineNum] = this._line;
     const newFileContents = lines.join('\n');
 
     await this.vault.writeFile(this.file, newFileContents);
-    this._modified = false;
   };
 
   public readonly createNextRepetition = async (): Promise<void> => {
@@ -325,40 +287,7 @@ export class TaskLine {
     );
 
     this._line = this.lineAsMovedTo(date);
-    this._modified = true;
     return this.save();
-  };
-
-  /**
-   * The subscribe function implements the Store interface in Svelte. The
-   * subscribers must be called any time there is a change to the task.
-   */
-  public readonly subscribe = (
-    subscription: (value: any) => void,
-  ): (() => void) => {
-    const maxID = this.subscriptions.reduce(
-      (prev, { id }): number => Math.max(prev, id),
-      0,
-    );
-    const newID = maxID + 1;
-
-    this.subscriptions.push({ id: newID, hook: subscription });
-    subscription(this);
-
-    // Return an unsubscribe function
-    return () => {
-      this.subscriptions = this.subscriptions.filter(({ id }) => id !== newID);
-      console.log(`Removing subscription ${newID}`);
-    };
-  };
-
-  /**
-   * The set function implements the Store interface in Svelte. We are not
-   * actually using it to store new values, but it is needed when binding to
-   * task properties.
-   */
-  public readonly set = (_: any): void => {
-    this._modified = true;
   };
 
   // Converts the line to be used in places where it was moved to another note.
@@ -386,25 +315,22 @@ export class TaskLine {
     return `${content}${movedFrom}>[[${newFileName}]]${blockID}`;
   };
 
-  private readonly handleRepeaterUpdated = (): void => {
-    this._modified = true;
-    this._repeats = this.repeater.isValid();
-
+  public readonly handleRepeaterUpdated = (
+    repeater: RepeatAdapter,
+  ): Promise<void> => {
     if (!this._repeatConfig) {
       // Adding a repeat config to a task that previously did not have one
-
-      // TODO: Make sure the blockID is still at the very end
-      // TODO: Add an option for the preferred divider type
-      this._line =
-        this.originalLine.trimRight() + ' 📅 ' + this.repeater.toText();
+      this._line = this._line.trimRight() + ' 📅 ' + repeater.toText();
+      this.addBlockID();
     } else {
-      this._line = this.originalLine
+      this._line = this._line
         .replace(this._repeatConfig, this.repeater.toText() + ' ')
         .trim();
     }
 
-    // Notify subscriptions of the change
-    this.subscriptions.forEach(({ hook }) => hook(this));
+    this._repeatConfig = repeater.toText();
+    this._repeats = repeater.isValid();
+    return this.save();
   };
 
   /**
@@ -417,7 +343,13 @@ export class TaskLine {
 
     this._blockID = createTaskBlockHash();
     this._line = this._line.trimRight() + ' ^' + this._blockID;
-    this._modified = true;
+  };
+
+  public readonly addBlockIDIfMissing = (): Promise<void> => {
+    if (this.repeats && !this.blockID) {
+      this.addBlockID();
+      return this.save();
+    }
   };
 
   /**
@@ -462,7 +394,7 @@ export class TaskLine {
 
   private readonly getSubContent = (lines: string[]): string[] => {
     const toReturn: string[] = [];
-    const taskIndentLevel = getLineIndentLevel(this.originalLine);
+    const taskIndentLevel = getLineIndentLevel(this._line);
     // Starting on the line after task, look for sub lines
     for (let i = this.lineNum + 1; i < lines.length; i++) {
       const currentLine = lines[i];

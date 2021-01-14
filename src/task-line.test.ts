@@ -76,6 +76,12 @@ const p = (str: string): Promise<string> => Promise.resolve(str);
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
 let settings: SettingsInstance;
+let fileContents: Record<string, string>;
+
+const simpleTestSetup = (line: string): TaskLine => {
+  fileContents[file.basename] = line;
+  return new TaskLine(0, file, [line], vault, settings);
+};
 
 beforeEach(() => {
   window.moment = moment;
@@ -88,32 +94,44 @@ describe('Tasks are parsed correctly', () => {
     settings = new SettingsInstance({});
   });
 
+  beforeEach(() => {
+    fileContents = {};
+    vault.readFile.mockImplementation((f, useCache) =>
+      Promise.resolve(fileContents[f.basename]),
+    );
+
+    vault.writeFile.mockImplementation((f, data) => {
+      fileContents[f.basename] = data;
+      return Promise.resolve();
+    });
+  });
+
   test('When line is not a ul', () => {
     const line = '1. This is not a task';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
   });
   test('When the line is indented', () => {
     const line = '  - [ ] This is a simple task';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is invalid', () => {
     const line = '- [y] This is not a task';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
     expect(tl.isTask()).toBeFalsy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is the moved symbol', () => {
     const line = '- [>] This is not a task';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeFalsy();
   });
   test('When the checkbox is checked', () => {
     const line = '- [x] This task is done';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeTruthy();
@@ -123,7 +141,7 @@ describe('Tasks are parsed correctly', () => {
   });
   test('When the checkbox is checked', () => {
     const line = '- [X] This task is done';
-    const tl = new TaskLine(0, file, [line], vault, settings);
+    const tl = simpleTestSetup(line);
     expect(tl.line).toEqual(line);
     expect(tl.isTask()).toBeTruthy();
     expect(tl.complete).toBeTruthy();
@@ -132,9 +150,10 @@ describe('Tasks are parsed correctly', () => {
   });
 
   describe('When there is a repeat config', () => {
-    test('When there are no spaces', () => {
+    test('When there are no spaces', async () => {
       const line = '- [ ] The task;Every Sunday';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
+      await tl.addBlockIDIfMissing();
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -145,9 +164,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
       expect(tl.isOriginalInstance).toBeTruthy();
     });
-    test('When there are spaces', () => {
+    test('When there are spaces', async () => {
       const line = '- [ ] The task  ;  Every Sunday';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
+      await tl.addBlockIDIfMissing();
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -158,9 +178,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
       expect(tl.isOriginalInstance).toBeTruthy();
     });
-    test('When the calendar emoji is used', () => {
+    test('When the calendar emoji is used', async () => {
       const line = '- [ ] The task  📅  Every Sunday';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
+      await tl.addBlockIDIfMissing();
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line)} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -171,9 +192,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
       expect(tl.isOriginalInstance).toBeTruthy();
     });
-    test('When there are trailing spaces', () => {
+    test('When there are trailing spaces', async () => {
       const line = '- [ ] The task  📅  Every Sunday  ';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
+      await tl.addBlockIDIfMissing();
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -184,9 +206,10 @@ describe('Tasks are parsed correctly', () => {
       expect(tl.blockID).toMatch(/task-[a-z0-9]{4}/);
       expect(tl.isOriginalInstance).toBeTruthy();
     });
-    test('When there are trailing spaces on a subtask', () => {
+    test('When there are trailing spaces on a subtask', async () => {
       const line = '  - [ ] The task  📅  Every Sunday  ';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
+      await tl.addBlockIDIfMissing();
       expect(tl.line).toMatch(
         new RegExp(`^${escapeRegExp(line.trimRight())} \\^task-[-a-zA-Z0-9]+$`),
       );
@@ -202,7 +225,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When there is a block ID', () => {
     test('When there are no spaces', () => {
       const line = '- [ ] The task^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -210,7 +233,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task ^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -221,7 +244,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task has been moved to another location', () => {
     test('When there are no spaces', () => {
       const line = '- [x] The task>[[2020-12-25]]^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -230,7 +253,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [x] The task >[[2020-12-25]] ^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -239,7 +262,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task >[[some other note]] ^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -249,7 +272,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been renamed', () => {
       const line =
         '- [x] The task >[[2020-12-25|some other note]] ^task-abc123';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -261,7 +284,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task has been moved from another location', () => {
     test('When there are no spaces', () => {
       const line = '- [x] The task<[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -270,7 +293,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When there are spaces', () => {
       const line = '- [ ] The task <[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -279,7 +302,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the note name is not a date', () => {
       const line = '- [x] The task <[[some other note#^task-abc123]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -289,7 +312,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been aliased', () => {
       const line =
         '- [ ] The task <[[2020-12-25#^task-abc123|some other note]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -298,7 +321,7 @@ describe('Tasks are parsed correctly', () => {
     });
     test('When the moved from link has been aliased', () => {
       const line = '- [ ] The task [[2020-12-25#^task-abc123|< Origin]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.repeats).toBeFalsy();
       expect(tl.blockID).toEqual('task-abc123');
@@ -310,7 +333,7 @@ describe('Tasks are parsed correctly', () => {
   describe('When the task is a repetition of a task', () => {
     test('When there are no spaces', () => {
       const line = '- [ ] The task;Every Sunday <<[[2020-12-25#^task-abc123]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -321,7 +344,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note has been aliased', () => {
       const line =
         '- [ ] The task;Every Sunday <<[[2020-12-25#^task-abc123|something else]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -332,7 +355,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the note name is not a date', () => {
       const line =
         '- [ ] The task 📅 Every Sunday <<[[some other note#^task-abc123]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();
@@ -343,7 +366,7 @@ describe('Tasks are parsed correctly', () => {
     test('When the repeater link is aliased', () => {
       const line =
         '- [ ] The task 📅 Every Sunday [[some other note#^task-abc123|<< Origin]]';
-      const tl = new TaskLine(0, file, [line], vault, settings);
+      const tl = simpleTestSetup(line);
       expect(tl.line).toEqual(line);
       expect(tl.blockID).toEqual('task-abc123');
       expect(tl.repeats).toBeTruthy();

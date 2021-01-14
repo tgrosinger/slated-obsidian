@@ -50,9 +50,11 @@
     { id: 12, text: 'Dec' },
   ];
 
+  const repeater = task.repeater;
+
   const save = () => {
     console.debug('Updating task...');
-    $task.save();
+    task.handleRepeaterUpdated(repeater);
     close();
   };
 
@@ -69,7 +71,7 @@
     <span>Every</span>
     <input
       id="slated-interval-selector"
-      bind:value={$task.repeater.interval}
+      bind:value={$repeater.interval}
       type="number"
       min="1" />
 
@@ -77,40 +79,40 @@
     <select
       id="slated-frequency-selector"
       class="dropdown"
-      bind:value={$task.repeater.frequency}>
+      bind:value={$repeater.frequency}>
       <option value={Frequency.Daily}>
-        {$task.repeater.interval > 1 ? 'Days' : 'Day'}
+        {$repeater.interval > 1 ? 'Days' : 'Day'}
       </option>
       <option value={Frequency.Weekly}>
-        {$task.repeater.interval > 1 ? 'Weeks' : 'Week'}
+        {$repeater.interval > 1 ? 'Weeks' : 'Week'}
       </option>
       <option value={Frequency.Monthly}>
-        {$task.repeater.interval > 1 ? 'Months' : 'Month'}
+        {$repeater.interval > 1 ? 'Months' : 'Month'}
       </option>
       <option value={Frequency.Yearly}>
-        {$task.repeater.interval > 1 ? 'Years' : 'Year'}
+        {$repeater.interval > 1 ? 'Years' : 'Year'}
       </option>
     </select>
 
-    {#if $task.repeater.frequency === Frequency.Weekly}
+    {#if $repeater.frequency === Frequency.Weekly}
       <div class="slated-days-btn-group">
         <ButtonGroup
           buttons={weekdays}
-          activeButtonIDs={task.repeater.daysOfWeek}
-          onUpdate={task.repeater.setDaysOfWeek} />
+          activeButtonIDs={repeater.daysOfWeek}
+          onUpdate={repeater.setDaysOfWeek} />
       </div>
     {/if}
 
-    {#if $task.repeater.frequency === Frequency.Yearly}
+    {#if $repeater.frequency === Frequency.Yearly}
       <div class="slated-months-btn-group">
         <ButtonGroup
           buttons={months}
-          activeButtonIDs={task.repeater.monthsOfYear}
-          onUpdate={task.repeater.setMonthsOfYear} />
+          activeButtonIDs={repeater.monthsOfYear}
+          onUpdate={repeater.setMonthsOfYear} />
       </div>
     {/if}
 
-    {#if $task.repeater.frequency === Frequency.Monthly || $task.repeater.frequency === Frequency.Yearly}
+    {#if $repeater.frequency === Frequency.Monthly || $repeater.frequency === Frequency.Yearly}
       <div>
         <select class="dropdown" bind:value={monthlyRepeatType}>
           <option value={'onThe'}>on the</option>
@@ -120,21 +122,19 @@
         {#if monthlyRepeatType == 'onThe'}
           <input
             id="slated-onthe-selector"
-            bind:value={$task.repeater.dayOfMonth}
-            disabled={$task.repeater.dayOfMonth === -1}
+            bind:value={$repeater.dayOfMonth}
+            disabled={$repeater.dayOfMonth === -1}
             placeholder="1"
             type="number" />
           <label>
-            <input
-              bind:checked={$task.repeater.lastDayOfMonth}
-              type="checkbox" />
+            <input bind:checked={$repeater.lastDayOfMonth} type="checkbox" />
             Last Day
           </label>
         {:else}
           <span>
             <WeekDaysOfMonthSelector
-              initialSelected={task.repeater.getWeekDaysOfMonth()}
-              onUpdate={task.repeater.setWeekDaysOfMonth} />
+              initialSelected={repeater.getWeekDaysOfMonth()}
+              onUpdate={repeater.setWeekDaysOfMonth} />
           </span>
         {/if}
       </div>
@@ -147,7 +147,7 @@
     id="slated-repetition-preview"
     disabled
     type="text"
-    value={$task.repeater.toText()} />
+    value={$repeater.toText()} />
 
   <button id="slated-save-repetition-config" on:click={save}> Save </button>
 </div>
