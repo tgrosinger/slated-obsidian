@@ -85,25 +85,32 @@ const simpleTestSetup = (line: string): TaskLine => {
 
 beforeEach(() => {
   window.moment = moment;
+  vault = mock<VaultIntermediate>();
+
+  fileContents = {};
+  vault.readFile.mockImplementation((f, useCache) =>
+    Promise.resolve(fileContents[f.basename]),
+  );
+
+  vault.writeFile.mockImplementation((f, data) => {
+    fileContents[f.basename] = data;
+    return Promise.resolve();
+  });
+
+  vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
+    const date = moment(dailyNote.basename, format, true);
+    return date.isValid() ? date : undefined;
+  });
+
+  vault.fileNameForMoment.mockImplementation((date) =>
+    date.format('YYYY-MM-DD'),
+  );
 });
 
 describe('Tasks are parsed correctly', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    vault = mock<VaultIntermediate>();
     settings = new SettingsInstance({});
-  });
-
-  beforeEach(() => {
-    fileContents = {};
-    vault.readFile.mockImplementation((f, useCache) =>
-      Promise.resolve(fileContents[f.basename]),
-    );
-
-    vault.writeFile.mockImplementation((f, data) => {
-      fileContents[f.basename] = data;
-      return Promise.resolve();
-    });
   });
 
   test('When line is not a ul', () => {
@@ -379,39 +386,18 @@ describe('Tasks are parsed correctly', () => {
 
 describe('taskLine.move', () => {
   let futureFiles: TFile[];
-  let fileContents: Record<string, string>;
 
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
   });
 
   beforeEach(() => {
-    vault = mock<VaultIntermediate>();
-    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
-      const date = moment(dailyNote.basename, format, true);
-      return date.isValid() ? date : undefined;
-    });
-
     futureFiles = [];
     vault.getDailyNote.mockImplementation((date) => {
       const mockFile = getMockFileForMoment(date);
       futureFiles.push(mockFile);
       return Promise.resolve(mockFile);
     });
-
-    fileContents = {};
-    vault.readFile.mockImplementation((f, useCache) =>
-      Promise.resolve(fileContents[f.basename]),
-    );
-
-    vault.writeFile.mockImplementation((f, data) => {
-      fileContents[f.basename] = data;
-      return Promise.resolve();
-    });
-
-    vault.fileNameForMoment.mockImplementation((date) =>
-      date.format('YYYY-MM-DD'),
-    );
   });
 
   describe('when link aliasing is enabled', () => {
@@ -824,7 +810,6 @@ describe('taskLine.move', () => {
 
 describe('taskLine.createNextRepetition', () => {
   let futureFiles: TFile[];
-  let fileContents: Record<string, string>;
 
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
@@ -832,32 +817,12 @@ describe('taskLine.createNextRepetition', () => {
   });
 
   beforeEach(() => {
-    vault = mock<VaultIntermediate>();
-    vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
-      const date = moment(dailyNote.basename, format, true);
-      return date.isValid() ? date : undefined;
-    });
-
     futureFiles = [];
     vault.getDailyNote.mockImplementation((date) => {
       const mockFile = getMockFileForMoment(date);
       futureFiles.push(mockFile);
       return Promise.resolve(mockFile);
     });
-
-    fileContents = {};
-    vault.readFile.mockImplementation((f, useCache) =>
-      Promise.resolve(fileContents[f.basename]),
-    );
-
-    vault.writeFile.mockImplementation((f, data) => {
-      fileContents[f.basename] = data;
-      return Promise.resolve();
-    });
-
-    vault.fileNameForMoment.mockImplementation((date) =>
-      date.format('YYYY-MM-DD'),
-    );
   });
 
   describe('when link aliasing is enabled', () => {

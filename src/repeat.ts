@@ -47,11 +47,6 @@ export class RepeatAdapter {
    */
   public readonly set = (_: any): void => {};
 
-  private readonly notify = () => {
-    // Notify subscriptions of the change
-    this.subscriptions.forEach(({ hook }) => hook(this));
-  };
-
   public isValid = (): boolean => this.rrule.toString() !== '';
 
   public next = (count: number): Date[] =>
@@ -250,6 +245,12 @@ export class RepeatAdapter {
 
     this.notify();
   };
+
+  /**
+   * Notify subscriptions of a change.
+   */
+  private readonly notify = (): void =>
+    this.subscriptions.forEach(({ hook }) => hook(this));
 
   private ByWeekdayToNumber(wd: ByWeekday): number {
     if (typeof wd === 'number') {

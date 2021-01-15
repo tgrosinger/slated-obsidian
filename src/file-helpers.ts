@@ -66,27 +66,18 @@ export const removeTask = async (
   task: TaskLine,
   vault: VaultIntermediate,
 ): Promise<void> =>
-  withFileContents(file, vault, (lines: string[]): boolean => {
-    const blockIDIndex = getBlockIDIndex(lines, task.blockID);
-    if (blockIDIndex === -1) {
-      return false;
-    }
-
-    lines.splice(blockIDIndex, 1);
-    return true;
-  });
+  removeLines(file, task.lineNum, 1 + task.subContent.length, vault);
 
 export const removeLines = async (
   file: TFile,
   start: number,
   count: number,
   vault: VaultIntermediate,
-) => {
+): Promise<void> =>
   withFileContents(file, vault, (lines: string[]): boolean => {
     lines.splice(start, count);
     return true;
   });
-};
 
 export const updateTask = async (
   file: TFile,

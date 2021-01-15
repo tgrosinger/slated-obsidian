@@ -48,12 +48,12 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 
 export class TaskLine {
   public readonly lineNum: number;
+  public readonly subContent: string[];
 
   private readonly file: TFile;
   private readonly vault: VaultIntermediate;
   private readonly settings: SettingsInstance;
 
-  private readonly subContent: string[];
   private _line: string;
 
   /**
@@ -290,6 +290,31 @@ export class TaskLine {
     return this.save();
   };
 
+  public readonly handleRepeaterUpdated = (
+    repeater: RepeatAdapter,
+  ): Promise<void> => {
+    if (!this._repeatConfig) {
+      // Adding a repeat config to a task that previously did not have one
+      this._line = this._line.trimRight() + ' 📅 ' + repeater.toText();
+      this.addBlockID();
+    } else {
+      this._line = this._line
+        .replace(this._repeatConfig, this.repeater.toText() + ' ')
+        .trim();
+    }
+
+    this._repeatConfig = repeater.toText();
+    this._repeats = repeater.isValid();
+    return this.save();
+  };
+
+  public readonly addBlockIDIfMissing = (): Promise<void> => {
+    if (this.repeats && !this.blockID) {
+      this.addBlockID();
+      return this.save();
+    }
+  };
+
   // Converts the line to be used in places where it was moved to another note.
   // Something like:
   // - [>] This is the task >[[2020-12-25]] ^task-abc123
@@ -315,24 +340,6 @@ export class TaskLine {
     return `${content}${movedFrom}>[[${newFileName}]]${blockID}`;
   };
 
-  public readonly handleRepeaterUpdated = (
-    repeater: RepeatAdapter,
-  ): Promise<void> => {
-    if (!this._repeatConfig) {
-      // Adding a repeat config to a task that previously did not have one
-      this._line = this._line.trimRight() + ' 📅 ' + repeater.toText();
-      this.addBlockID();
-    } else {
-      this._line = this._line
-        .replace(this._repeatConfig, this.repeater.toText() + ' ')
-        .trim();
-    }
-
-    this._repeatConfig = repeater.toText();
-    this._repeats = repeater.isValid();
-    return this.save();
-  };
-
   /**
    * Create a blockID and append to the line.
    */
@@ -343,13 +350,6 @@ export class TaskLine {
 
     this._blockID = createTaskBlockHash();
     this._line = this._line.trimRight() + ' ^' + this._blockID;
-  };
-
-  public readonly addBlockIDIfMissing = (): Promise<void> => {
-    if (this.repeats && !this.blockID) {
-      this.addBlockID();
-      return this.save();
-    }
   };
 
   /**
@@ -420,6 +420,5 @@ const createTaskBlockHash = (): string => {
   return result;
 };
 
-const getLineIndentLevel = (line: string): number => {
-  return line.length - line.trimLeft().length;
-};
+const getLineIndentLevel = (line: string): number =>
+  line.length - line.trimLeft().length;

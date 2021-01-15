@@ -21,6 +21,8 @@ import {
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
 
+// TODO: Add an option for the preferred divider type
+
 declare global {
   interface Window {
     moment: () => Moment;
