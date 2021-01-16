@@ -805,6 +805,78 @@ describe('taskLine.move', () => {
       );
       expect(fileContents['2021-01-01']).toEqual('## Tasks\n\n');
     });
+
+    test('when the task has additional headers', async () => {
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+### Work Tasks
+
+- [ ] The task to move
+
+### Personal Tasks
+
+- [ ] Mow the lawn
+`;
+
+      fileContents['2021-01-01'] = `# Another File
+
+## Tasks
+
+### Personal Tasks
+
+- [ ] Buy milk
+`;
+
+      const tl = new TaskLine(
+        6,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
+      await tl.move(moment('2021-01-01'));
+
+      expect(fileContents[file.basename]).toHaveLines(
+        [
+          '# Original File',
+          '',
+          '## Tasks',
+          '',
+          '### Work Tasks',
+          '',
+          '^' +
+            escapeRegExp('- [>] The task to move >[[2021-01-01]] ^task-') +
+            '[-a-zA-Z0-9]{4}$',
+          '',
+          '### Personal Tasks',
+          '',
+          '- [ ] Mow the lawn',
+          '',
+        ],
+        [6],
+      );
+      expect(fileContents['2021-01-01']).toHaveLines(
+        [
+          '# Another File',
+          '',
+          '## Tasks',
+          '',
+          '### Personal Tasks',
+          '',
+          '- [ ] Buy milk',
+          '',
+          '### Work Tasks',
+          '',
+          '^' +
+            escapeRegExp(`- [ ] The task to move <[[${startDateStr}#^task-`) +
+            '[-a-zA-Z0-9]{4}\\]\\]$',
+          '',
+        ],
+        [9],
+      );
+    });
   });
 });
 
@@ -1030,6 +1102,60 @@ describe('taskLine.createNextRepetition', () => {
           `- [ ] a test task ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
           '  - this is a nested item',
           '    - so is this',
+          '',
+        ],
+        [],
+      );
+    });
+
+    test('when the task has additional headers', async () => {
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+### Work Tasks
+
+- [x] The task to move ; Every Sunday ^task-abc123
+
+### Personal Tasks
+
+- [ ] Mow the lawn
+`;
+
+      vault.readFile.mockReturnValueOnce(
+        p(`# Another File
+
+## Tasks
+
+### Personal Tasks
+
+- [ ] Buy milk
+`),
+      );
+
+      const tl = new TaskLine(
+        6,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
+      await tl.createNextRepetition();
+
+      expect(futureFiles.length).toEqual(1);
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
+        [
+          '# Another File',
+          '',
+          '## Tasks',
+          '',
+          '### Personal Tasks',
+          '',
+          '- [ ] Buy milk',
+          '',
+          '### Work Tasks',
+          '',
+          `- [ ] The task to move <<[[${startDateStr}#^task-abc123]]`,
           '',
         ],
         [],
