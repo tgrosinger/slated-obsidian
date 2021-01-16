@@ -850,10 +850,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '# Hello',
           '',
@@ -896,10 +893,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '# Hello',
           '',
@@ -931,10 +925,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '# Hello',
           '',
@@ -962,10 +953,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '# Hello',
           '',
@@ -1001,11 +989,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',
@@ -1039,11 +1023,7 @@ describe('taskLine.createNextRepetition', () => {
       await tl.createNextRepetition();
 
       expect(futureFiles.length).toEqual(1);
-      expect(vault.readFile).toHaveBeenCalledWith(futureFiles[0], false);
-      expect(vault.writeFile).toHaveBeenCalledTimes(1);
-
-      expect(vault.writeFile.mock.calls[0][0]).toEqual(futureFiles[0]);
-      expect(vault.writeFile.mock.calls[0][1]).toHaveLines(
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
         [
           '## Tasks',
           '',

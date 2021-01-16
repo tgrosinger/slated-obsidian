@@ -1,3 +1,4 @@
+import { ISettings, settingsWithDefaults } from './settings';
 import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
 import TaskMove from './ui/TaskMove.svelte';
@@ -16,7 +17,6 @@ import {
   Setting,
   TFile,
 } from 'obsidian';
-import { ISettings, settingsWithDefaults } from './settings';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
