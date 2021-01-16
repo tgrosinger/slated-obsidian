@@ -1,4 +1,4 @@
-import { SettingsInstance } from './settings';
+import { ISettings, settingsWithDefaults } from './settings';
 import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
@@ -75,7 +75,7 @@ const p = (str: string): Promise<string> => Promise.resolve(str);
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
-let settings: SettingsInstance;
+let settings: ISettings;
 let fileContents: Record<string, string>;
 
 const simpleTestSetup = (line: string): TaskLine => {
@@ -110,7 +110,7 @@ beforeEach(() => {
 describe('Tasks are parsed correctly', () => {
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    settings = new SettingsInstance({});
+    settings = settingsWithDefaults({});
   });
 
   test('When line is not a ul', () => {
@@ -402,7 +402,7 @@ describe('taskLine.move', () => {
 
   describe('when link aliasing is enabled', () => {
     beforeAll(() => {
-      settings = new SettingsInstance({ aliasLinks: true });
+      settings = settingsWithDefaults({ aliasLinks: true });
     });
 
     test('when the task has repeating', async () => {
@@ -660,7 +660,7 @@ describe('taskLine.move', () => {
 
   describe('when link aliasing is disabled', () => {
     beforeAll(() => {
-      settings = new SettingsInstance({ aliasLinks: false });
+      settings = settingsWithDefaults({ aliasLinks: false });
     });
 
     test('when the task has repeating', async () => {
@@ -813,7 +813,7 @@ describe('taskLine.createNextRepetition', () => {
 
   beforeAll(() => {
     file = getMockFileForMoment(startDate);
-    settings = new SettingsInstance({});
+    settings = settingsWithDefaults({});
   });
 
   beforeEach(() => {
@@ -827,7 +827,7 @@ describe('taskLine.createNextRepetition', () => {
 
   describe('when link aliasing is enabled', () => {
     beforeAll(() => {
-      settings = new SettingsInstance({ aliasLinks: true });
+      settings = settingsWithDefaults({ aliasLinks: true });
     });
 
     test('if it has a tasks section, the task is appended to existing', async () => {
@@ -873,7 +873,7 @@ describe('taskLine.createNextRepetition', () => {
 
   describe('when a newline should be inserted after headings', () => {
     beforeAll(() => {
-      settings = new SettingsInstance({ aliasLinks: false });
+      settings = settingsWithDefaults({ aliasLinks: false });
     });
 
     test('if it has a tasks section, the task is appended to existing', async () => {

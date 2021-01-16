@@ -1,4 +1,4 @@
-import { SettingsInstance } from './settings';
+import { ISettings, settingsWithDefaults } from './settings';
 import { TaskHandler } from './task-handler';
 import type { VaultIntermediate } from './vault';
 import { mock, MockProxy } from 'jest-mock-extended';
@@ -74,13 +74,13 @@ const p = (str: string): Promise<string> => Promise.resolve(str);
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
-let settings: jest.Mocked<SettingsInstance>;
+let settings: jest.Mocked<ISettings>;
 let taskHandler: TaskHandler;
 let fileContents: Record<string, string>;
 
 beforeAll(() => {
   file = getMockFileForMoment(startDate);
-  settings = new SettingsInstance({
+  settings = settingsWithDefaults({
     blankLineAfterHeader: true,
   });
 });

@@ -6,7 +6,7 @@ import {
   updateTask,
 } from './file-helpers';
 import { RepeatAdapter } from './repeat';
-import type { SettingsInstance } from './settings';
+import type { ISettings } from './settings';
 import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
@@ -52,7 +52,7 @@ export class TaskLine {
 
   private readonly file: TFile;
   private readonly vault: VaultIntermediate;
-  private readonly settings: SettingsInstance;
+  private readonly settings: ISettings;
 
   private _line: string;
 
@@ -73,7 +73,7 @@ export class TaskLine {
     file: TFile,
     fileLines: string[], // Can not use async in a constructor
     vault: VaultIntermediate,
-    settings: SettingsInstance,
+    settings: ISettings,
   ) {
     this._line = fileLines[lineNum];
     this.lineNum = lineNum;

@@ -1,4 +1,4 @@
-import type { SettingsInstance } from './settings';
+import type { ISettings } from './settings';
 import type { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
@@ -10,7 +10,7 @@ export const addTaskRepetition = async (
   file: TFile,
   task: TaskLine,
   subLines: string[],
-  settings: SettingsInstance,
+  settings: ISettings,
   vault: VaultIntermediate,
 ): Promise<void> => {
   console.debug(
@@ -41,7 +41,7 @@ export const addTaskMove = async (
   file: TFile,
   task: TaskLine,
   subLines: string[],
-  settings: SettingsInstance,
+  settings: ISettings,
   vault: VaultIntermediate,
 ): Promise<void> => {
   console.debug('Slated: Moving task exists to file: ' + file.basename);
@@ -123,7 +123,7 @@ const withFileContents = async (
  */
 export const getIndexTasksHeading = (
   lines: string[],
-  settings: SettingsInstance,
+  settings: ISettings,
 ): number => {
   for (let i = 0; i < lines.length; i++) {
     if (lines[i] === settings.tasksHeader) {
@@ -189,7 +189,7 @@ export const insertLines = (
   fileLines: string[],
   linesToAdd: string[],
   i: number,
-  settings: SettingsInstance,
+  settings: ISettings,
 ): void => {
   if (!settings.blankLineAfterHeader) {
     fileLines.splice(i, 0, ...linesToAdd);

@@ -1,15 +1,15 @@
 import { fileIsDailyNote } from './file-helpers';
-import type { SettingsInstance } from './settings';
+import type { ISettings } from './settings';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 
 export class TaskHandler {
-  private readonly settings: SettingsInstance;
+  private readonly settings: ISettings;
   private readonly vault: VaultIntermediate;
   private taskCache: Record<string, TaskLine[]>;
 
-  constructor(vault: VaultIntermediate, settings: SettingsInstance) {
+  constructor(vault: VaultIntermediate, settings: ISettings) {
     this.vault = vault;
     this.settings = settings;
     this.taskCache = {};

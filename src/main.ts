@@ -1,4 +1,3 @@
-import { defaultSettings, ISettings, SettingsInstance } from './settings';
 import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
 import TaskMove from './ui/TaskMove.svelte';
@@ -17,6 +16,7 @@ import {
   Setting,
   TFile,
 } from 'obsidian';
+import { ISettings, settingsWithDefaults } from './settings';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -96,11 +96,7 @@ export default class SlatedPlugin extends Plugin {
   }
 
   private async loadSettings(): Promise<void> {
-    const settingsOptions = Object.assign(
-      defaultSettings,
-      await this.loadData(),
-    );
-    this.settings = new SettingsInstance(settingsOptions);
+    this.settings = settingsWithDefaults(await this.loadData());
   }
 
   private readonly taskModalChecker = (): boolean => {
