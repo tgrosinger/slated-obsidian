@@ -1,6 +1,6 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
-  "include": [ "src/**/*" ],
+  "include": [ "src/**/*", "tests/**/*" ],
   "exclude": [ "node_modules/*" ],
   "compilerOptions": {
     "baseUrl": ".",
@@ -22,7 +22,7 @@
       "es2019"
     ],
     "paths": {
-      "src": ["src/*"]
+      "src": ["src/*", "tests/*"]
     }
   },
 }

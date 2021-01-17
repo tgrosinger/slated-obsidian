@@ -1,7 +1,7 @@
-import { ISettings, settingsWithDefaults } from './settings';
-import { TaskHandler } from './task-handler';
-import { TaskLine } from './task-line';
-import type { VaultIntermediate } from './vault';
+import { ISettings, settingsWithDefaults } from '../src/settings';
+import { TaskHandler } from '../src/task-handler';
+import { TaskLine } from '../src/task-line';
+import type { VaultIntermediate } from '../src/vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
