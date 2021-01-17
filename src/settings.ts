@@ -10,4 +10,4 @@ export interface ISettings {
 }
 
 export const settingsWithDefaults = (settings: Partial<ISettings>): ISettings =>
-  Object.assign(defaultSettings, settings);
+  Object.assign({}, defaultSettings, settings);
