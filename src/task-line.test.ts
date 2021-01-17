@@ -874,7 +874,93 @@ describe('taskLine.move', () => {
             '[-a-zA-Z0-9]{4}\\]\\]$',
           '',
         ],
-        [9],
+        [10],
+      );
+    });
+
+    test('when the task has multiple additional headers', async () => {
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+### Work Tasks
+
+#### Section 1
+
+- [ ] A task
+
+#### Section 2
+
+- [ ] The task to move
+
+### Personal Tasks
+
+- [ ] Mow the lawn
+`;
+
+      fileContents['2021-01-01'] = `# Another File
+
+## Tasks
+
+### Personal Tasks
+
+- [ ] Buy milk
+`;
+
+      const tl = new TaskLine(
+        12,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
+      await tl.move(moment('2021-01-01'));
+
+      expect(fileContents[file.basename]).toHaveLines(
+        [
+          '# Original File',
+          '',
+          '## Tasks',
+          '',
+          '### Work Tasks',
+          '',
+          '#### Section 1',
+          '',
+          '- [ ] A task',
+          '',
+          '#### Section 2',
+          '',
+          '^' +
+            escapeRegExp('- [>] The task to move >[[2021-01-01]] ^task-') +
+            '[-a-zA-Z0-9]{4}$',
+          '',
+          '### Personal Tasks',
+          '',
+          '- [ ] Mow the lawn',
+          '',
+        ],
+        [12],
+      );
+      expect(fileContents['2021-01-01']).toHaveLines(
+        [
+          '# Another File',
+          '',
+          '## Tasks',
+          '',
+          '### Personal Tasks',
+          '',
+          '- [ ] Buy milk',
+          '',
+          '### Work Tasks',
+          '',
+          '#### Section 2',
+          '',
+          '^' +
+            escapeRegExp(`- [ ] The task to move <[[${startDateStr}#^task-`) +
+            '[-a-zA-Z0-9]{4}\\]\\]$',
+          '',
+        ],
+        [12],
       );
     });
   });
@@ -1155,7 +1241,7 @@ describe('taskLine.createNextRepetition', () => {
           '',
           '### Work Tasks',
           '',
-          `- [ ] The task to move <<[[${startDateStr}#^task-abc123]]`,
+          `- [ ] The task to move ; Every Sunday <<[[${startDateStr}#^task-abc123]]`,
           '',
         ],
         [],

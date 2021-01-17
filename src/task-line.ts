@@ -1,6 +1,7 @@
 import {
   addTaskMove,
   addTaskRepetition,
+  getHeaderDepth,
   removeLines,
   removeTask,
   updateTask,
@@ -49,6 +50,7 @@ const blockHashRe = /\^([-a-zA-Z0-9]+)/;
 export class TaskLine {
   public readonly lineNum: number;
   public readonly subContent: string[];
+  public readonly headings: string[];
 
   private readonly file: TFile;
   private readonly vault: VaultIntermediate;
@@ -86,6 +88,7 @@ export class TaskLine {
     }
 
     this.subContent = this.getSubContent(fileLines);
+    this.headings = this.getHeadings(fileLines);
 
     const repeatMatches = repeatScheduleRe.exec(this._line);
     if (repeatMatches && repeatMatches.length === 2) {
@@ -248,7 +251,6 @@ export class TaskLine {
     return addTaskRepetition(
       nextOccurenceFile,
       this,
-      this.subContent,
       this.settings,
       this.vault,
     );
@@ -272,13 +274,7 @@ export class TaskLine {
       return;
     }
 
-    await addTaskMove(
-      newFile,
-      this,
-      this.subContent,
-      this.settings,
-      this.vault,
-    );
+    await addTaskMove(newFile, this, this.settings, this.vault);
     await removeLines(
       this.file,
       this.lineNum,
@@ -290,6 +286,11 @@ export class TaskLine {
     return this.save();
   };
 
+  /**
+   * Apply the provided repeater to this task, updating the current value if
+   * there is already a repeat config, or creating one if not. A blockID will
+   * be generated if one does not already exist.
+   */
   public readonly handleRepeaterUpdated = (
     repeater: RepeatAdapter,
   ): Promise<void> => {
@@ -392,6 +393,12 @@ export class TaskLine {
     );
   };
 
+  /**
+   * getSubContent checks for lines which are nested under this task. They may
+   * start with any character, they just must be indented more than this line.
+   *
+   * No blank lines are allowed between this line and the nested content.
+   */
   private readonly getSubContent = (lines: string[]): string[] => {
     const toReturn: string[] = [];
     const taskIndentLevel = getLineIndentLevel(this._line);
@@ -406,11 +413,58 @@ export class TaskLine {
     }
     return toReturn;
   };
+
+  /**
+   * getHeadings returns all headings this task is under up to and including
+   * the settings.tasksHeader. If the task is not nested under
+   * settings.tasksHeader, no headings will be returned.
+   */
+  private readonly getHeadings = (lines: string[]): string[] => {
+    const headings: string[] = [];
+    // Search up through the file from this task, looking for the first heading
+    let nextHeading = -1;
+    for (let i = this.lineNum - 1; i >= 0; i--) {
+      if (getHeaderDepth(lines[i]) > 0) {
+        nextHeading = i;
+        break;
+      }
+    }
+
+    if (nextHeading === -1) {
+      // found no headings above this task line
+      return [];
+    }
+
+    do {
+      headings.push(lines[nextHeading]);
+      if (lines[nextHeading] === this.settings.tasksHeader) {
+        // This is the top level that we care about, so stop searching
+        break;
+      }
+
+      nextHeading = getParentHeaderIndex(nextHeading, lines);
+    } while (nextHeading > -1);
+
+    return headings.reverse();
+  };
 }
 
+const getParentHeaderIndex = (
+  startingHeaderIdx: number,
+  lines: string[],
+): number => {
+  const startingHeaderDepth = getHeaderDepth(lines[startingHeaderIdx]);
+
+  for (let i = startingHeaderIdx - 1; i >= 0; i--) {
+    const currentHeaderDepth = getHeaderDepth(lines[i]);
+    if (currentHeaderDepth > 0 && currentHeaderDepth < startingHeaderDepth) {
+      return i;
+    }
+  }
+  return -1;
+};
+
 const createTaskBlockHash = (): string => {
-  // TODO: Should this be task-<timestamp> instead?
-  //       Or make it user configurable?
   let result = 'task-';
   const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;

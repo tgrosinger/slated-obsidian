@@ -1,7 +1,9 @@
 import type { ISettings } from './settings';
 import type { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
+import { head } from 'lodash';
 import type { TFile } from 'obsidian';
+import { setContext } from 'svelte';
 
 /**
  * Adds a line for the provided task to the specified file in the tasks section.
@@ -9,7 +11,6 @@ import type { TFile } from 'obsidian';
 export const addTaskRepetition = async (
   file: TFile,
   task: TaskLine,
-  subLines: string[],
   settings: ISettings,
   vault: VaultIntermediate,
 ): Promise<void> => {
@@ -23,13 +24,17 @@ export const addTaskRepetition = async (
       return false; // TODO: Verify it is actually the correct format and such
     }
 
-    const taskSectionIndex = getIndexTasksHeading(lines, settings);
+    const taskSectionIndex = getIndexTasksHeading(
+      lines,
+      task.headings,
+      settings,
+    );
     const taskSectionEndIndex = getIndexSectionLastContent(
       lines,
       taskSectionIndex,
     );
 
-    const linesToInsert = subLines.slice();
+    const linesToInsert = task.subContent.slice();
     linesToInsert.unshift(task.lineAsRepeated());
 
     insertLines(lines, linesToInsert, taskSectionEndIndex + 1, settings);
@@ -40,17 +45,20 @@ export const addTaskRepetition = async (
 export const addTaskMove = async (
   file: TFile,
   task: TaskLine,
-  subLines: string[],
   settings: ISettings,
   vault: VaultIntermediate,
 ): Promise<void> => {
-  console.debug('Slated: Moving task exists to file: ' + file.basename);
+  console.debug('Slated: Moving task to file: ' + file.basename);
 
-  const linesToInsert = subLines.slice();
+  const linesToInsert = task.subContent.slice();
   linesToInsert.unshift(task.lineAsMovedFrom());
 
   return withFileContents(file, vault, (lines: string[]): boolean => {
-    const taskSectionIndex = getIndexTasksHeading(lines, settings);
+    const taskSectionIndex = getIndexTasksHeading(
+      lines,
+      task.headings,
+      settings,
+    );
     const taskSectionEndIndex = getIndexSectionLastContent(
       lines,
       taskSectionIndex,
@@ -123,10 +131,39 @@ const withFileContents = async (
  */
 export const getIndexTasksHeading = (
   lines: string[],
+  headings: string[],
   settings: ISettings,
 ): number => {
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === settings.tasksHeader) {
+  if (headings.length === 0) {
+    headings.push(settings.tasksHeader);
+  }
+
+  let startIdx = 0;
+  let endIdx = lines.length;
+  headings.forEach((heading) => {
+    startIdx = getIndexHeadingHelper(
+      lines,
+      startIdx,
+      endIdx,
+      heading,
+      settings,
+    );
+    endIdx = getIndexSectionNextSibling(lines, startIdx);
+  });
+
+  return startIdx;
+};
+
+const getIndexHeadingHelper = (
+  lines: string[],
+  startIdx: number,
+  endIdx: number,
+  heading: string,
+  settings: ISettings,
+): number => {
+  const actualEndIdx = Math.min(endIdx, lines.length);
+  for (let i = startIdx; i < actualEndIdx; i++) {
+    if (lines[i] === heading) {
       return i;
     }
   }
@@ -135,16 +172,34 @@ export const getIndexTasksHeading = (
 
   if (lines.length === 1 && lines[0] === '') {
     // Empty file, just replace the first line
-    lines[0] = settings.tasksHeader;
+    lines[0] = heading;
     return 0;
   }
 
-  if (settings.blankLineAfterHeader && lines[lines.length - 1] !== '') {
-    lines.push('');
+  if (settings.blankLineAfterHeader && lines[endIdx - 1] !== '') {
+    lines.splice(endIdx, 0, '', heading);
+    return endIdx + 1;
   }
 
-  lines.push(settings.tasksHeader);
-  return lines.length - 1;
+  lines.splice(endIdx, 0, heading);
+  return endIdx;
+};
+
+export const getIndexSectionNextSibling = (
+  lines: string[],
+  sectionHeader: number,
+): number => {
+  const desiredHeaderDepth = getHeaderDepth(lines[sectionHeader]);
+
+  // Start on the line after the header.
+  // NOTE: That could be the end of the file!
+  for (let i = sectionHeader + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith('#') && getHeaderDepth(line) <= desiredHeaderDepth) {
+      return i;
+    }
+  }
+  return lines.length;
 };
 
 /**
@@ -227,4 +282,17 @@ export const getBlockIDIndex = (lines: string[], blockID: string): number => {
     }
   }
   return -1;
+};
+
+export const getHeaderDepth = (line: string): number => {
+  const trimmedLine = line.trimLeft();
+  for (let i = 0; i < trimmedLine.length; i++) {
+    if (trimmedLine[i] === '#') {
+      continue;
+    }
+
+    return i;
+  }
+
+  return trimmedLine.length;
 };
