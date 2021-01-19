@@ -60,6 +60,7 @@ export class TaskHandler {
       line.startsWith('- [ ] ') ||
       line.startsWith('- [x] ') ||
       line.startsWith('- [X] ') ||
+      line.startsWith('- [-] ') ||
       line.startsWith('- [>] ')
     );
   };

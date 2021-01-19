@@ -10,10 +10,10 @@ import { RepeatAdapter } from './repeat';
 import type { ISettings } from './settings';
 import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
-import type { TFile } from 'obsidian';
+import { Notice, TFile } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 
-const taskRe = /^\s*- \[[ xX>]\] /;
+const taskRe = /^\s*- \[[ xX>\-]\] /;
 
 /**
  * Matches the text following a semicolon or calendar emoji.
@@ -167,6 +167,36 @@ export class TaskLine {
     return innerChar === 'x' || innerChar === 'X';
   }
 
+  public get incomplete(): boolean {
+    const matches = taskRe.exec(this._line);
+    if (!matches) {
+      return false;
+    }
+
+    const innerChar = matches[0].trimLeft()[3];
+    return innerChar === ' ';
+  }
+
+  public get moved(): boolean {
+    const matches = taskRe.exec(this._line);
+    if (!matches) {
+      return false;
+    }
+
+    const innerChar = matches[0].trimLeft()[3];
+    return innerChar === '>';
+  }
+
+  public get skipped(): boolean {
+    const matches = taskRe.exec(this._line);
+    if (!matches) {
+      return false;
+    }
+
+    const innerChar = matches[0].trimLeft()[3];
+    return innerChar === '-';
+  }
+
   // isOriginalInstance indicates if this is the task actually annotated with a
   // block ID, or if instead it is referring to another task by blockID.
   public get isOriginalInstance(): boolean {
@@ -306,6 +336,26 @@ export class TaskLine {
 
     this._repeatConfig = repeater.toText();
     this._repeats = repeater.isValid();
+    return this.save();
+  };
+
+  public readonly skipOccurence = async (): Promise<void> => {
+    if (!this._repeatConfig) {
+      new Notice('Cannot skip an occurence of a non-repeating task');
+      return;
+    }
+
+    if (!this.incomplete) {
+      new Notice(
+        'Cannot skip a task which has already been checked, moved, or skipped',
+      );
+      return;
+    }
+
+    await this.addBlockIDIfMissing();
+    await this.createNextRepetition();
+
+    this._line = this._line.replace(/\[ \]/, '[-]');
     return this.save();
   };
 

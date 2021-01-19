@@ -2,14 +2,15 @@
  *  Custom preview-mode rendering
  */
 
-.slated-moved-icon {
-  height: 15px;
-  width: 15px;
-  margin-left: 4px;
+.slated-task-icon {
+  height: 17px;
+  width: 17px;
+  margin-left: 5px;
   margin-right: 6px;
   position: relative;
   top: 3px;
   fill: var(--text-muted);
+  stroke: var(--text-muted);
 }
 
 /*
