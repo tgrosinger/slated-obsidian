@@ -656,6 +656,37 @@ describe('taskLine.move', () => {
       );
       expect(fileContents[nextDateStr]).toEqual('## Tasks\n\n');
     });
+
+    test('when the task is moved back to the original location and has sub-items', async () => {
+      const nextDateStr = '2021-01-01';
+
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [>] a test task >[[2021-01-01]] ^task-abcd
+`;
+      fileContents[nextDateStr] = `## Tasks
+
+- [ ] a test task [[2020-12-31#^task-abcd|< Origin]]
+  - This is a sub item
+`;
+
+      const th = new TaskHandler(vault, settings);
+
+      const file01 = getMockFileWithBasename(nextDateStr);
+      await th.processFile(file01);
+      const tasks = th.getCachedTasksForFile(file01);
+      expect(tasks).toHaveLength(1);
+
+      const movedOnceTask = tasks[0];
+      await movedOnceTask.move(startDate);
+
+      expect(fileContents[startDateStr]).toEqual(
+        '# Original File\n\n## Tasks\n\n- [ ] a test task ^task-abcd\n  - This is a sub item\n',
+      );
+      expect(fileContents[nextDateStr]).toEqual('## Tasks\n\n');
+    });
   });
 
   describe('when link aliasing is disabled', () => {
