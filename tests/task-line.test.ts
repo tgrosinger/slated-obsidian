@@ -6,6 +6,8 @@ import { mock, MockProxy } from 'jest-mock-extended';
 import moment from 'moment';
 import type { TFile } from 'obsidian';
 
+jest.mock('obsidian');
+
 declare global {
   namespace jest {
     interface Matchers<R> {

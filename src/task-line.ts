@@ -10,7 +10,8 @@ import { RepeatAdapter } from './repeat';
 import type { ISettings } from './settings';
 import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
-import { Notice, TFile } from 'obsidian';
+import type { TFile } from 'obsidian';
+import { Notice } from 'obsidian';
 import RRule, { Frequency } from 'rrule';
 
 const taskRe = /^\s*- \[[ xX>\-]\] /;
@@ -299,19 +300,22 @@ export class TaskLine {
       // reset the original line
 
       const undeferredLine = `${this.baseTaskContent()}^${this._blockID}`;
-      await updateTask(newFile, this, undeferredLine, this.vault);
+      await updateTask(newFile, this, undeferredLine, true, this.vault);
       await removeTask(this.file, this, this.vault);
       return;
     }
 
     await addTaskMove(newFile, this, this.settings, this.vault);
-    await removeLines(
-      this.file,
-      this.lineNum,
-      this.subContent.length,
-      this.vault,
-    );
+    if (this.subContent.length > 0) {
+      await removeLines(
+        this.file,
+        this.lineNum + 1, // Leave the main line, remove subcontent
+        this.subContent.length,
+        this.vault,
+      );
+    }
 
+    // Update the main task line to indicate moved
     this._line = this.lineAsMovedTo(date);
     return this.save();
   };

@@ -91,6 +91,7 @@ export const updateTask = async (
   file: TFile,
   task: TaskLine,
   newLine: string,
+  addSubContent: boolean,
   vault: VaultIntermediate,
 ): Promise<void> =>
   withFileContents(file, vault, (lines: string[]): boolean => {
@@ -99,7 +100,9 @@ export const updateTask = async (
         continue;
       }
 
-      lines.splice(i, 1, newLine);
+      const linesToInsert = addSubContent ? task.subContent.slice() : [];
+      linesToInsert.unshift(newLine);
+      lines.splice(i, 1, ...linesToInsert);
       return true;
     }
     return false;
