@@ -56,13 +56,16 @@ export default class SlatedPlugin extends Plugin {
 
     MarkdownPreviewRenderer.registerPostProcessor(this.renderMovedTasks);
 
-    this.registerView(
-      TaskViewType,
-      (leaf) => (this.taskView = new TaskView(leaf, this.vault, this.settings)),
-    );
+    if (this.settings.enableTaskView) {
+      this.registerView(
+        TaskViewType,
+        (leaf) =>
+          (this.taskView = new TaskView(leaf, this.vault, this.settings)),
+      );
 
-    addIcon('slated', checkboxIcon);
-    this.addRibbonIcon('slated', 'Slated', this.initSlatedView);
+      addIcon('slated', checkboxIcon);
+      this.addRibbonIcon('slated', 'Slated', this.initSlatedView);
+    }
 
     this.registerEvent(
       this.app.workspace.on('file-open', (file: TFile) => {
