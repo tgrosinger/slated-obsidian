@@ -9,12 +9,13 @@
 
   // Internal Properties
   const today = window.moment();
+  let createLinks = true;
 
   const onClickDay = async (
     date: Moment,
     isMetaPressed: boolean,
   ): Promise<void> => {
-    await task.move(date.startOf('day'));
+    await task.move(date.startOf('day'), createLinks);
     close();
   };
 </script>
@@ -22,3 +23,8 @@
 <p>Select a day for the task to be moved to:</p>
 
 <Calendar {onClickDay} {today} />
+
+<label>
+  <input type="checkbox" bind:checked={createLinks} />
+  Create bi-directional links
+</label>

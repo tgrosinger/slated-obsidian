@@ -287,8 +287,11 @@ export class TaskLine {
     );
   };
 
-  public readonly move = async (date: Moment): Promise<void> => {
-    if (!this._blockID) {
+  public readonly move = async (
+    date: Moment,
+    createLinks = true,
+  ): Promise<void> => {
+    if (!this._blockID && createLinks) {
       this.addBlockID();
     }
 
@@ -305,19 +308,30 @@ export class TaskLine {
       return;
     }
 
-    await addTaskMove(newFile, this, this.settings, this.vault);
-    if (this.subContent.length > 0) {
-      await removeLines(
-        this.file,
-        this.lineNum + 1, // Leave the main line, remove subcontent
-        this.subContent.length,
-        this.vault,
-      );
+    await addTaskMove(newFile, this, this.settings, this.vault, createLinks);
+
+    if (createLinks) {
+      if (this.subContent.length > 0) {
+        await removeLines(
+          this.file,
+          this.lineNum + 1, // Leave the main line, remove subcontent
+          this.subContent.length,
+          this.vault,
+        );
+      }
+
+      // Update the main task line to indicate moved
+      this._line = this.lineAsMovedTo(date);
+      return this.save();
     }
 
-    // Update the main task line to indicate moved
-    this._line = this.lineAsMovedTo(date);
-    return this.save();
+    // Else, remove this task and subcontent
+    return removeLines(
+      this.file,
+      this.lineNum,
+      this.subContent.length + 1,
+      this.vault,
+    );
   };
 
   /**

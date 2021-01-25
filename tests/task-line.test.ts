@@ -402,6 +402,72 @@ describe('taskLine.move', () => {
     });
   });
 
+  describe('when bi-directional links are disabled', () => {
+    test('when the task has sub-items', async () => {
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [ ] a test task
+  - this is a nested item
+    - so is this
+- [ ] another task
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
+      await tl.move(moment('2021-01-01'), false);
+
+      expect(futureFiles.length).toEqual(1);
+      expect(fileContents[futureFiles[0].basename]).toHaveLines(
+        [
+          '## Tasks',
+          '',
+          '- [ ] a test task',
+          '  - this is a nested item',
+          '    - so is this',
+          '',
+        ],
+        [0],
+      );
+      expect(fileContents[file.basename]).toHaveLines(
+        ['# Original File', '', '## Tasks', '', '- [ ] another task', ''],
+        [],
+      );
+    });
+
+    test('when the task has repeating', async () => {
+      fileContents[file.basename] = `# Original File
+
+## Tasks
+
+- [ ] a test task ; Every Sunday ^task-abc123
+`;
+
+      const tl = new TaskLine(
+        4,
+        file,
+        fileContents[file.basename].split('\n'),
+        vault,
+        settings,
+      );
+      await tl.move(moment('2021-01-01'), false);
+
+      expect(futureFiles.length).toEqual(1);
+      expect(fileContents[futureFiles[0].basename]).toEqual(
+        '## Tasks\n\n- [ ] a test task ; Every Sunday ^task-abc123\n',
+      );
+      expect(fileContents[file.basename]).toEqual(
+        '# Original File\n\n## Tasks\n\n',
+      );
+    });
+  });
+
   describe('when link aliasing is enabled', () => {
     beforeAll(() => {
       settings = settingsWithDefaults({ aliasLinks: true });
