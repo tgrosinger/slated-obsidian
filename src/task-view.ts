@@ -1,6 +1,6 @@
-import { ItemView, WorkspaceLeaf } from 'obsidian';
 import type { ISettings } from './settings';
 import type { VaultIntermediate } from './vault';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
 
 export const TaskViewType = 'slated-tasks';
 
@@ -13,10 +13,10 @@ export class TaskView extends ItemView {
     super(leaf);
   }
 
-  getViewType(): string {
+  public readonly getIcon = (): string => 'slated';
+  public readonly getDisplayText = (): string => 'Slated - Task List';
+
+  public getViewType(): string {
     return TaskViewType;
-  }
-  getDisplayText(): string {
-    return 'This is a test';
   }
 }
