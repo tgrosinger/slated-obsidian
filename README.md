@@ -2,16 +2,16 @@
 
 Advanced task management in the Obsidian knowledgebase.
 
-Move tasks and set up repeating tasks in 100% Obsidian Markdown.
+- Setup repeating tasks
+- Defer tasks to another daily note
+- Move all incomplete tasks to today's daily note
+- All in 100% Obsidian Markdown!
 
-## Alpha Release
-
-**Note:** This plugin is still in an alpha state. Please backup your vault frequently.
-If you encounter any bugs or have suggestions, please open a [Github
-Issue](https://github.com/tgrosinger/slated-obsidian/issues/new/choose).
-Thank you!
+Coming Soon: View, filter, and modify tasks across daily, weekly, and monthly notes from a single interface.
 
 ## Screenshots
+
+![move-incomplete-tasks](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/move-incomplete-tasks.gif)
 
 ![task-repeat-config-1](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-repeat-config-1.png)
 
@@ -34,14 +34,27 @@ task will link bidirectionally.
 
 ![task-move](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-move.png)
 
-## Example tasks
+## Task Format
+
+- [ ] This task is incomplete and repeats ; Every Monday and Tuesday ^task-1234
+- [-] This repeating task occurence was skipped ; Every Sunday ^task-5678
+- [>] This task was moved to >[[2021-05-01]] ^task-9101
+- [x] This task was completed
+- [ ] This task was moved here from [[2020-12-31|< Origin]]
+- [ ] This task has sub-items that will move with it
+  - [ ] Sub items can be a task
+  - Or not
+- [ ] Tasks can have non-list subcontent too
+      Such as this line
+
+### More Examples
 
 - [ ] Go to the dentist ;8:30am ^jzzz3f4
-- [ ] Make ferry reservation 📅 7:00am ^0sd238l
+- [x] Make ferry reservation 📅 7:00am ^0sd238l
 - [ ] (A) Vacuum the stairs
 - [ ] Make bread ;Every Sunday ^ze6w5od
-- [ ] Bring dog to the vet <[[2020-11-22^3k2codg]]
-- [x] ~~Wash the car~~ >[[2021-05-01]] ^task-9sdy
+- [ ] Bring dog to the vet [[2020-11-22^3k2codg|< Origin]]
+- [>] Wash the car >[[2021-05-01]] ^task-9sdy
 - [ ] Do the dishes 📅 Every weekday at 5pm ^task-3ddx
 
 ## Pricing
