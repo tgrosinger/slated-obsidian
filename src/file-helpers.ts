@@ -289,7 +289,7 @@ export const getBlockIDIndex = (lines: string[], blockID: string): number => {
 };
 
 export const getHeaderDepth = (line: string): number => {
-  const trimmedLine = line.trimLeft();
+  const trimmedLine = line.trimStart();
   for (let i = 0; i < trimmedLine.length; i++) {
     if (trimmedLine[i] === '#') {
       continue;

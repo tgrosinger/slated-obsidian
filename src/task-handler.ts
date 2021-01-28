@@ -2,6 +2,7 @@ import { fileIsDailyNote } from './file-helpers';
 import type { ISettings } from './settings';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
+import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 
 export class TaskHandler {
@@ -25,7 +26,7 @@ export class TaskHandler {
    * - Insert all occurences of a finite repeating task
    * - Insert a configurable number of infinite repeating tasks
    */
-  public async processFile(file: TFile): Promise<void> {
+  public readonly processFile = async (file: TFile): Promise<void> => {
     if (!fileIsDailyNote(file, this.vault)) {
       console.debug(
         'Slated: Not in a daily note, not processing contained tasks',
@@ -40,28 +41,48 @@ export class TaskHandler {
     );
     this.taskCache[file.basename] = tasks;
     return this.propogateCompletedTasks(newlyCompletedTasks);
-  }
+  };
 
-  public getCachedTasksForFile(file: TFile): TaskLine[] {
-    return this.taskCache[file.basename];
-  }
+  /**
+   * moveIncompleted moves all tasks in a file which are not complete to the
+   * daily note for the provided moment.
+   */
+  public readonly moveIncompleted = async (
+    file: TFile,
+    to: Moment,
+  ): Promise<void> => {
+    const tasks = await this.normalizeFileTasks(file);
+    const incompleteTasks = tasks.filter((task) => task.incomplete);
+
+    // Moving tasks is not thread safe since they read and write to files
+    // Move in reverse order to get around line number changing issue caused by
+    // moving tasks with subitems.
+    for (let i = incompleteTasks.length - 1; i >= 0; i--) {
+      await incompleteTasks[i].move(to);
+    }
+  };
+
+  public readonly getCachedTasksForFile = (file: TFile): TaskLine[] =>
+    this.taskCache[file.basename];
 
   /**
    * Test if this line is a task. This is called for every line in a file after
    * every save, so performance is essential.
    */
   public readonly isLineTask = (line: string): boolean => {
+    const trimmed = line.trimStart();
+
     // We can rule out anything that is not a list by testing a single char
-    if (line.trimStart()[0] !== '-') {
+    if (trimmed[0] !== '-') {
       return false;
     }
 
     return (
-      line.startsWith('- [ ] ') ||
-      line.startsWith('- [x] ') ||
-      line.startsWith('- [X] ') ||
-      line.startsWith('- [-] ') ||
-      line.startsWith('- [>] ')
+      trimmed.startsWith('- [ ] ') ||
+      trimmed.startsWith('- [x] ') ||
+      trimmed.startsWith('- [X] ') ||
+      trimmed.startsWith('- [-] ') ||
+      trimmed.startsWith('- [>] ')
     );
   };
 

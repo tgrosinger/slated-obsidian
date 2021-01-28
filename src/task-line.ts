@@ -164,7 +164,7 @@ export class TaskLine {
       return false;
     }
 
-    const innerChar = matches[0].trimLeft()[3];
+    const innerChar = matches[0].trimStart()[3];
     return innerChar === 'x' || innerChar === 'X';
   }
 
@@ -174,7 +174,7 @@ export class TaskLine {
       return false;
     }
 
-    const innerChar = matches[0].trimLeft()[3];
+    const innerChar = matches[0].trimStart()[3];
     return innerChar === ' ';
   }
 
@@ -184,7 +184,7 @@ export class TaskLine {
       return false;
     }
 
-    const innerChar = matches[0].trimLeft()[3];
+    const innerChar = matches[0].trimStart()[3];
     return innerChar === '>';
   }
 
@@ -194,7 +194,7 @@ export class TaskLine {
       return false;
     }
 
-    const innerChar = matches[0].trimLeft()[3];
+    const innerChar = matches[0].trimStart()[3];
     return innerChar === '-';
   }
 
@@ -543,4 +543,4 @@ const createTaskBlockHash = (): string => {
 };
 
 const getLineIndentLevel = (line: string): number =>
-  line.length - line.trimLeft().length;
+  line.length - line.trimStart().length;

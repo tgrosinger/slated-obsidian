@@ -126,6 +126,21 @@ export default class SlatedPlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: 'move-incompleted-today',
+      name: 'Move all incompleted tasks to today',
+      callback: () => {
+        const activeLeaf = this.app.workspace.activeLeaf;
+        if (!(activeLeaf.view instanceof MarkdownView)) {
+          return;
+        }
+        this.taskHandler.moveIncompleted(
+          activeLeaf.view.file,
+          window.moment().startOf('day'),
+        );
+      },
+    });
+
     this.addSettingTab(new SettingsTab(this.app, this));
   }
 
@@ -196,8 +211,8 @@ export default class SlatedPlugin extends Plugin {
       .filter(
         (listItem) =>
           !listItem.hasClass('task-list-item') &&
-          (listItem.getText().trimLeft().startsWith('[>]') ||
-            listItem.getText().trimLeft().startsWith('[-]')),
+          (listItem.getText().trimStart().startsWith('[>]') ||
+            listItem.getText().trimStart().startsWith('[-]')),
       )
       .forEach((listItem) => {
         let removedPrefix = '';
