@@ -4067,8 +4067,10 @@ rollup@2.35.1:
   optionalDependencies:
     fsevents "~2.1.2"
 
-"rrule@file:../rrule":
+"rrule@npm:@tgrosinger/rrule":
   version "2.6.6"
+  resolved "https://registry.yarnpkg.com/@tgrosinger/rrule/-/rrule-2.6.6.tgz#6795b2d2ab9fd8d3920b51ae7a2dbd416a000a35"
+  integrity sha512-letdYwMn5LRMsjSgFCSmpbUaHOqngsYA9Boz+R5PsbEJvFNZOYuMWlXovuEHlU6qAUG5IpUZBvZ4FC41jAO+ag==
   dependencies:
     tslib "^1.10.0"
   optionalDependencies:
