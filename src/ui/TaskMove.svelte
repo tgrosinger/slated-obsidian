@@ -1,7 +1,8 @@
 <script lang="ts">
-  import type { TaskLine } from 'src/task-line';
   import type { Moment } from 'moment';
   import { Calendar } from 'obsidian-calendar-ui';
+
+  import type { TaskLine } from 'src/task-line';
 
   // Creation Parameters
   export let task: TaskLine;
@@ -22,7 +23,12 @@
 
 <p>Select a day for the task to be moved to:</p>
 
-<Calendar {onClickDay} {today} />
+<Calendar
+  {onClickDay}
+  {today}
+  showWeekNums={false}
+  localeData={today.localeData()}
+/>
 
 <label>
   <input type="checkbox" bind:checked={createLinks} />
