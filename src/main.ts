@@ -1,19 +1,5 @@
-import {
-  buyMeACoffee,
-  checkboxIcon,
-  Element,
-  movedIconSvg,
-  paypal,
-  skippedIconSvg,
-} from './graphics';
-import { ISettings, settingsWithDefaults } from './settings';
-import { TaskHandler } from './task-handler';
-import { TaskLine } from './task-line';
-import { TaskView, TaskViewType } from './task-view';
-import TaskMove from './ui/TaskMove.svelte';
-import TaskRepeat from './ui/TaskRepeat.svelte';
-import { VaultIntermediate } from './vault';
-import type { Moment } from 'moment';
+import type { WeekSpec } from 'moment';
+import type moment from 'moment';
 import {
   addIcon,
   App,
@@ -27,6 +13,27 @@ import {
   Setting,
   TFile,
 } from 'obsidian';
+import type { IWeekStartOption } from 'obsidian-calendar-ui';
+
+import {
+  buyMeACoffee,
+  checkboxIcon,
+  Element,
+  movedIconSvg,
+  paypal,
+  skippedIconSvg,
+} from './graphics';
+import {
+  shouldConfigureGlobalMoment,
+  tryToConfigureGlobalMoment,
+} from './localization';
+import { ISettings, settingsWithDefaults } from './settings';
+import { TaskHandler } from './task-handler';
+import { TaskLine } from './task-line';
+import { TaskView, TaskViewType } from './task-view';
+import TaskMove from './ui/TaskMove.svelte';
+import TaskRepeat from './ui/TaskRepeat.svelte';
+import { VaultIntermediate } from './vault';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -35,7 +42,8 @@ import {
 
 declare global {
   interface Window {
-    moment: () => Moment;
+    moment: typeof moment;
+    _bundledLocaleWeekSpec: WeekSpec;
   }
 }
 
@@ -359,6 +367,61 @@ class SettingsTab extends PluginSettingTab {
           this.plugin.saveData(this.plugin.settings);
         });
       });
+
+    if (shouldConfigureGlobalMoment(this.app)) {
+      const { moment } = window;
+
+      const sysLocale = navigator.language?.toLowerCase();
+
+      const localizedWeekdays = moment.weekdays();
+      const localeWeekStartNum = window._bundledLocaleWeekSpec.dow;
+      const localeWeekStart = moment.weekdays()[localeWeekStartNum];
+      const weekdays = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ];
+
+      new Setting(this.containerEl)
+        .setName('Start week on:')
+        .setDesc(
+          "Choose what day of the week to start. Select 'Locale default' to use the default specified by moment.js",
+        )
+        .addDropdown((dropdown) => {
+          dropdown.addOption('locale', `Locale default (${localeWeekStart})`);
+          localizedWeekdays.forEach((day, i) => {
+            dropdown.addOption(weekdays[i], day);
+          });
+          dropdown.setValue(this.plugin.settings.weekStart);
+          dropdown.onChange(async (value) => {
+            this.plugin.settings.weekStart = value as IWeekStartOption;
+            this.plugin.saveData(this.plugin.settings);
+            tryToConfigureGlobalMoment(this.app, this.plugin.settings);
+          });
+        });
+
+      new Setting(containerEl)
+        .setName('Override locale:')
+        .setDesc(
+          'Set this if you want to use a locale different from the default',
+        )
+        .addDropdown((dropdown) => {
+          dropdown.addOption('system-default', `Same as system (${sysLocale})`);
+          moment.locales().forEach((locale) => {
+            dropdown.addOption(locale, locale);
+          });
+          dropdown.setValue(this.plugin.settings.localeOverride);
+          dropdown.onChange(async (value) => {
+            this.plugin.settings.localeOverride = value;
+            this.plugin.saveData(this.plugin.settings);
+            tryToConfigureGlobalMoment(this.app, this.plugin.settings);
+          });
+        });
+    }
 
     const div = containerEl.createEl('div', {
       cls: 'slated-donation',

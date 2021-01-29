@@ -3560,10 +3560,10 @@ object.values@^1.1.1:
     es-abstract "^1.18.0-next.1"
     has "^1.0.3"
 
-obsidian-calendar-ui@0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.2.1.tgz#f0645add7e6ef71f3a589a375e411a67ab6b8b3d"
-  integrity sha512-2ZVbJW50VT1cXnQvIIZCIs17uKPaSWCUIlLOCi2e7Ylh8fPyAU90TkCVJuDOi5wVFRS8YzIseBV2osXo92h6sQ==
+obsidian-calendar-ui@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.3.0.tgz#3c3af76a6995d2b17e7185d19b1fdf180e9106ce"
+  integrity sha512-C07BIq04m+jKF0foZOB6dzxRXHRDFJs2vDYEH97qV2iKC00TOYHwwFg8PgRNQARs+TZGRGI3Tn05xIzy9c7Jdg==
   dependencies:
     obsidian-daily-notes-interface "0.5.1"
     svelte "3.31.0"

@@ -1,8 +1,14 @@
+import type { ILocaleOverride, IWeekStartOption } from 'obsidian-calendar-ui';
+
 export interface ISettings {
   tasksHeader: string;
   blankLineAfterHeader: boolean;
   aliasLinks: boolean;
   enableTaskView: boolean;
+
+  // Calendar view
+  localeOverride: ILocaleOverride;
+  weekStart: IWeekStartOption;
 }
 
 const defaultSettings: ISettings = {
@@ -10,6 +16,9 @@ const defaultSettings: ISettings = {
   blankLineAfterHeader: true,
   aliasLinks: true,
   enableTaskView: false,
+
+  localeOverride: 'system-default',
+  weekStart: 'locale',
 };
 
 export const settingsWithDefaults = (
