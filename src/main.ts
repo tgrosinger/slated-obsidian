@@ -1,19 +1,7 @@
-import type { WeekSpec } from 'moment';
+/* eslint-disable */
 import type moment from 'moment';
-import {
-  addIcon,
-  App,
-  MarkdownPostProcessorContext,
-  MarkdownPreviewRenderer,
-  MarkdownView,
-  Modal,
-  Notice,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-  TFile,
-} from 'obsidian';
-import type { IWeekStartOption } from 'obsidian-calendar-ui';
+import type { WeekSpec } from 'moment';
+/* eslint-enable */
 
 import {
   buyMeACoffee,
@@ -34,6 +22,21 @@ import { TaskView, TaskViewType } from './task-view';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
+
+import {
+  addIcon,
+  App,
+  MarkdownPostProcessorContext,
+  MarkdownPreviewRenderer,
+  MarkdownView,
+  Modal,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+} from 'obsidian';
+import type { IWeekStartOption } from 'obsidian-calendar-ui';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -369,13 +372,11 @@ class SettingsTab extends PluginSettingTab {
       });
 
     if (shouldConfigureGlobalMoment(this.app)) {
-      const { moment } = window;
-
       const sysLocale = navigator.language?.toLowerCase();
 
-      const localizedWeekdays = moment.weekdays();
+      const localizedWeekdays = window.moment.weekdays();
       const localeWeekStartNum = window._bundledLocaleWeekSpec.dow;
-      const localeWeekStart = moment.weekdays()[localeWeekStartNum];
+      const localeWeekStart = window.moment.weekdays()[localeWeekStartNum];
       const weekdays = [
         'sunday',
         'monday',
@@ -411,7 +412,7 @@ class SettingsTab extends PluginSettingTab {
         )
         .addDropdown((dropdown) => {
           dropdown.addOption('system-default', `Same as system (${sysLocale})`);
-          moment.locales().forEach((locale) => {
+          window.moment.locales().forEach((locale) => {
             dropdown.addOption(locale, locale);
           });
           dropdown.setValue(this.plugin.settings.localeOverride);
