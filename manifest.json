@@ -3,7 +3,7 @@
   "name": "Slated",
   "author": "Tony Grosinger",
   "authorUrl": "https://grosinger.net",
-  "description": "Task Management - schdule, move, and repeat tasks",
+  "description": "Task Management - schedule, move, and repeat tasks",
   "isDesktopOnly": false,
   "version": "0.1.0",
   "minAppVersion": "0.10.2",
