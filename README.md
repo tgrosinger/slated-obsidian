@@ -15,7 +15,7 @@ Coming Soon: View, filter, and modify tasks across daily, weekly, and monthly no
 
 ![task-repeat-config-1](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-repeat-config-1.png)
 
-![task-repeat-config-2](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-repeat-config-2.png)
+![configure-repetition](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/configure-repetition.gif)
 
 ## How to use
 
