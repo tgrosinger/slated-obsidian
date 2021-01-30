@@ -1,8 +1,3 @@
-/* eslint-disable */
-import type moment from 'moment';
-import type { WeekSpec } from 'moment';
-/* eslint-enable */
-
 import {
   buyMeACoffee,
   checkboxIcon,
@@ -22,7 +17,7 @@ import { TaskView, TaskViewType } from './task-view';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
-
+import type { default as MomentType, WeekSpec } from 'moment';
 import {
   addIcon,
   App,
@@ -45,7 +40,7 @@ import type { IWeekStartOption } from 'obsidian-calendar-ui';
 
 declare global {
   interface Window {
-    moment: typeof moment;
+    moment: typeof MomentType;
     _bundledLocaleWeekSpec: WeekSpec;
   }
 }
