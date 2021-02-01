@@ -1,9 +1,7 @@
 import type { ISettings } from './settings';
 import type { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
-import { head } from 'lodash';
 import type { TFile } from 'obsidian';
-import { setContext } from 'svelte';
 
 /**
  * Adds a line for the provided task to the specified file in the tasks section.
