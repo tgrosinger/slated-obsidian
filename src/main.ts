@@ -152,6 +152,10 @@ export default class SlatedPlugin extends Plugin {
 
   private async loadSettings(): Promise<void> {
     this.settings = settingsWithDefaults(await this.loadData());
+
+    if (shouldConfigureGlobalMoment(this.app)) {
+      tryToConfigureGlobalMoment(this.app, this.settings);
+    }
   }
 
   private readonly initSlatedView = (): void => {
@@ -370,7 +374,7 @@ class SettingsTab extends PluginSettingTab {
       const sysLocale = navigator.language?.toLowerCase();
 
       const localizedWeekdays = window.moment.weekdays();
-      const localeWeekStartNum = window._bundledLocaleWeekSpec.dow;
+      const localeWeekStartNum = window._bundledLocaleWeekSpec?.dow;
       const localeWeekStart = window.moment.weekdays()[localeWeekStartNum];
       const weekdays = [
         'sunday',
