@@ -33,7 +33,7 @@
     "jest": "26.6.3",
     "jest-mock-extended": "1.0.10",
     "moment": "2.29.1",
-    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/7f3927722e1bdd791119727236a12bb10763dd04.tar.gz",
+    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/b06b55f1b3a673a4b8bf10e8ca6b823981b9cc8b.tar.gz",
     "rollup": "2.35.1",
     "rollup-plugin-svelte": "7.0.0",
     "svelte-check": "1.1.22",
@@ -47,7 +47,7 @@
     "lodash": "4.17.20",
     "neverthrow": "3.0.0",
     "obsidian-calendar-ui": "0.3.0",
-    "obsidian-daily-notes-interface": "0.5.1",
+    "obsidian-daily-notes-interface": "0.6.1",
     "rrule": "npm:@tgrosinger/rrule",
     "svelte": "3.31.0"
   }

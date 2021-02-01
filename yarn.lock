@@ -3577,9 +3577,17 @@ obsidian-daily-notes-interface@0.5.1:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
 
-"obsidian@https://github.com/obsidianmd/obsidian-api/archive/7f3927722e1bdd791119727236a12bb10763dd04.tar.gz":
+obsidian-daily-notes-interface@0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.6.1.tgz#1c476e0711b804e7fc05a1530efc4e2ac7940a7a"
+  integrity sha512-eAHKxUZg06Z3ZZHX3o3F4LIGLXqkGpnr/GtS1sidi9TDCWpVlTEvgMBvFABmO1nMb3oEKVq/IrWwChxfvUl+9Q==
+  dependencies:
+    obsidian obsidianmd/obsidian-api#master
+    tslib "2.0.3"
+
+"obsidian@https://github.com/obsidianmd/obsidian-api/archive/b06b55f1b3a673a4b8bf10e8ca6b823981b9cc8b.tar.gz":
   version "0.10.9"
-  resolved "https://github.com/obsidianmd/obsidian-api/archive/7f3927722e1bdd791119727236a12bb10763dd04.tar.gz#2db949ea51191b31148ea5f4075901c37c41255f"
+  resolved "https://github.com/obsidianmd/obsidian-api/archive/b06b55f1b3a673a4b8bf10e8ca6b823981b9cc8b.tar.gz#99b3056da765f8e0c3703ae13fbcc8e4832f8805"
   dependencies:
     "@types/codemirror" "0.0.98"
 
