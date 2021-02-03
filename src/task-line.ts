@@ -352,7 +352,7 @@ export class TaskLine {
       this.addBlockID();
     } else {
       this._line = this._line
-        .replace(this._repeatConfig, this.repeater.toText() + ' ')
+        .replace(this._repeatConfig, repeater.toText() + ' ')
         .trim();
     }
 
