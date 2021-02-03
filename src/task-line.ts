@@ -271,6 +271,10 @@ export class TaskLine {
   };
 
   public readonly createNextRepetition = async (): Promise<void> => {
+    if (!this._repeats) {
+      return;
+    }
+
     const currentNoteDate = this.vault.findMomentForDailyNote(this.file);
     const nextDate = this.repeater
       .asRRule()

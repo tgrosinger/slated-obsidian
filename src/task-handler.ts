@@ -160,6 +160,10 @@ export class TaskHandler {
   private readonly propogateCompletedTasks = async (
     tasks: TaskLine[],
   ): Promise<void> => {
-    await Promise.all(tasks.map((task) => task.createNextRepetition()));
+    await Promise.all(
+      tasks
+        .filter((task) => task.repeats)
+        .map((task) => task.createNextRepetition()),
+    );
   };
 }
