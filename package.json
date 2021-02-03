@@ -33,7 +33,7 @@
     "jest": "26.6.3",
     "jest-mock-extended": "1.0.10",
     "moment": "2.29.1",
-    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/b06b55f1b3a673a4b8bf10e8ca6b823981b9cc8b.tar.gz",
+    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/9b69506127863102e1102cdeb4d14f523d08583e.tar.gz",
     "rollup": "2.35.1",
     "rollup-plugin-svelte": "7.0.0",
     "svelte-check": "1.1.22",
