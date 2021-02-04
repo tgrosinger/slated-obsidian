@@ -44,6 +44,22 @@ export class TaskHandler {
   };
 
   /**
+   * getAllTasks scans every file in the Vault looking for tasks. Each task
+   * found is converted into a TaskLine and returned.
+   *
+   * This has the potential to be very expensive, so hopefully we only need to
+   * do it once.
+   */
+  public readonly getAllTasks = async (): Promise<TaskLine[]> => {
+    const nestedTasks = await Promise.all(
+      this.vault
+        .getMarkdownFiles()
+        .map((file) => this.normalizeFileTasks(file)),
+    );
+    return nestedTasks.flat();
+  };
+
+  /**
    * moveIncompleted moves all tasks in a file which are not complete to the
    * daily note for the provided moment.
    */

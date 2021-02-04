@@ -39,4 +39,6 @@ export class VaultIntermediate {
 
   public writeFile = (file: TFile, data: string): Promise<void> =>
     this.vault.modify(file, data);
+
+  public getMarkdownFiles = (): TFile[] => this.vault.getMarkdownFiles();
 }
