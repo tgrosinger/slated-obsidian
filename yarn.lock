@@ -4075,10 +4075,10 @@ rollup@2.35.1:
   optionalDependencies:
     fsevents "~2.1.2"
 
-"rrule@npm:@tgrosinger/rrule":
-  version "2.6.6"
-  resolved "https://registry.yarnpkg.com/@tgrosinger/rrule/-/rrule-2.6.6.tgz#6795b2d2ab9fd8d3920b51ae7a2dbd416a000a35"
-  integrity sha512-letdYwMn5LRMsjSgFCSmpbUaHOqngsYA9Boz+R5PsbEJvFNZOYuMWlXovuEHlU6qAUG5IpUZBvZ4FC41jAO+ag==
+rrule@2.6.8:
+  version "2.6.8"
+  resolved "https://registry.yarnpkg.com/rrule/-/rrule-2.6.8.tgz#c61714f246e7676e8efa16c2baabac199f20f6db"
+  integrity sha512-cUaXuUPrz9d1wdyzHsBfT1hptKlGgABeCINFXFvulEPqh9Np9BnF3C3lrv9uO54IIr8VDb58tsSF3LhsW+4VRw==
   dependencies:
     tslib "^1.10.0"
   optionalDependencies:
