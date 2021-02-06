@@ -134,7 +134,7 @@ export default class SlatedPlugin extends Plugin {
 
     this.addCommand({
       id: 'move-incompleted-today',
-      name: 'Move all incompleted tasks to today',
+      name: 'Move incompleted tasks from current file to today',
       callback: () => {
         const activeLeaf = this.app.workspace.activeLeaf;
         if (!(activeLeaf.view instanceof MarkdownView)) {
