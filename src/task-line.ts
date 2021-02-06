@@ -220,7 +220,7 @@ export class TaskLine {
     const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
     const linkPrefix = this.settings.aliasLinks ? '' : '<';
     const alias = this.settings.aliasLinks ? '|< Origin' : '';
-    return `${this.baseTaskContent().trimRight()} ${linkPrefix}[[${rootTaskLink}${alias}]]`;
+    return `${this.taskContentNoLinks().trimRight()} ${linkPrefix}[[${rootTaskLink}${alias}]]`;
   };
 
   // Converts the line to be used in places where it was copied to another note
@@ -230,7 +230,10 @@ export class TaskLine {
   // - [ ] This is the task ; Every Sunday [[2020-12-25^task-abc123|<< Origin]]
   public lineAsRepeated = (): string => {
     const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
-    const uncheckedContent = this.baseTaskContent().replace(/\[[xX]\]/, '[ ]');
+    const uncheckedContent = this.taskContentNoLinks().replace(
+      /\[[xX]\]/,
+      '[ ]',
+    );
     const linkPrefix = this.settings.aliasLinks ? '' : '<<';
     const alias = this.settings.aliasLinks ? '|<< Origin' : '';
     return `${uncheckedContent}${linkPrefix}[[${rootTaskLink}${alias}]]`;
@@ -306,7 +309,7 @@ export class TaskLine {
       // Rather than a normal move, delete the line in this file and
       // reset the original line
 
-      const undeferredLine = `${this.baseTaskContent()}^${this._blockID}`;
+      const undeferredLine = `${this.taskContentNoLinks()}^${this._blockID}`;
       await updateTask(newFile, this, undeferredLine, true, this.vault);
       await removeTask(this.file, this, this.vault);
       return;
@@ -388,12 +391,25 @@ export class TaskLine {
     }
   };
 
-  // Converts the line to be used in places where it was moved to another note.
-  // Something like:
-  // - [>] This is the task >[[2020-12-25]] ^task-abc123
+  /**
+   * Returns the tasks with no repetition config, block ID, links to moved or
+   * repeat locations, or the markdown checkbox. Just the bare task contents.
+   */
+  public readonly baseTaskContent = (): string => {
+    let l = this.taskContentNoLinks();
+    l = l.replace(taskRe, '');
+    l = l.replace('📅', ';').replace(repeatScheduleRe, '');
+    return l;
+  };
+
+  /**
+   * Converts the line to be used in places where it was moved to another note.
+   * Something like:
+   * - [>] This is the task >[[2020-12-25]] ^task-abc123
+   */
   private readonly lineAsMovedTo = (date: Moment): string => {
     const newFileName = this.vault.fileNameForMoment(date);
-    const content = this.baseTaskContent().replace(/\[[ xX]\]/, '[>]');
+    const content = this.taskContentNoLinks().replace(/\[[ xX]\]/, '[>]');
 
     // If this task was already moved to this location, then we want to preserve
     // the link to where it was moved from
@@ -428,7 +444,7 @@ export class TaskLine {
   /**
    * Returns the task line with no repetition or move links.
    */
-  private readonly baseTaskContent = (): string => {
+  private readonly taskContentNoLinks = (): string => {
     if (this._basetask) {
       return this._basetask;
     }

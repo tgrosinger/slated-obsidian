@@ -13,14 +13,14 @@
   {:else if task.complete}
     <input type="checkbox" checked={true} />
   {:else if task.moved}
-    {Element(movedIconSvg)}
+    {@html movedIconSvg}
   {:else if task.skipped}
-    {Element(skippedIconSvg)}
+    {@html skippedIconSvg}
   {:else}
     {console.log('Unexpected task state for task: ' + task.line)}
   {/if}
 
   <span>
-    {task.line}
+    {task.baseTaskContent()}
   </span>
 </div>
