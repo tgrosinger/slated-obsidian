@@ -225,9 +225,18 @@ export default class SlatedPlugin extends Plugin {
             listItem.getText().trimStart().startsWith('[-]')),
       )
       .forEach((listItem) => {
+        let innerEl: HTMLElement = listItem;
+        const pElements = listItem.getElementsByTagName('p');
+        if (pElements.length > 0) {
+          // If there are lines in the list which do not start with a `-` then
+          // the renderer will wrap everything in `p` elements. In this case
+          // look at the first text node in the p element.
+          innerEl = pElements[0];
+        }
+
         let removedPrefix = '';
-        for (let i = 0; i < listItem.childNodes.length; i++) {
-          const child = listItem.childNodes[i];
+        for (let i = 0; i < innerEl.childNodes.length; i++) {
+          const child = innerEl.childNodes[i];
           if (child.nodeType !== 3) {
             continue;
           }
@@ -250,7 +259,7 @@ export default class SlatedPlugin extends Plugin {
         })();
 
         listItem.addClass('task-list-item');
-        listItem.insertBefore(Element(icon), listItem.firstChild);
+        innerEl.insertBefore(Element(icon), innerEl.firstChild);
       });
   };
 }
