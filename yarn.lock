@@ -3577,13 +3577,19 @@ obsidian-daily-notes-interface@0.5.1:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
 
-obsidian-daily-notes-interface@0.6.1:
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.6.1.tgz#1c476e0711b804e7fc05a1530efc4e2ac7940a7a"
-  integrity sha512-eAHKxUZg06Z3ZZHX3o3F4LIGLXqkGpnr/GtS1sidi9TDCWpVlTEvgMBvFABmO1nMb3oEKVq/IrWwChxfvUl+9Q==
+obsidian-daily-notes-interface@0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.7.0.tgz#ad627987583e2dddd8ec911c57f2bc355ef52d1b"
+  integrity sha512-mSck8eMN7z5afeMrtVTLxUpP0GbBfciSZnoo6EyZige8ItknKQKqDRLlEoEZGEy49iExKUdQbOqvNdX7yQifPA==
   dependencies:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
+
+"obsidian@github:obsidianmd/obsidian-api#master":
+  version "0.10.12"
+  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/9b69506127863102e1102cdeb4d14f523d08583e"
+  dependencies:
+    "@types/codemirror" "0.0.98"
 
 "obsidian@https://github.com/obsidianmd/obsidian-api/archive/9b69506127863102e1102cdeb4d14f523d08583e.tar.gz":
   version "0.10.12"

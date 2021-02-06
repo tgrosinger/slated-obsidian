@@ -47,7 +47,7 @@
     "lodash": "4.17.20",
     "neverthrow": "3.0.0",
     "obsidian-calendar-ui": "0.3.0",
-    "obsidian-daily-notes-interface": "0.6.1",
+    "obsidian-daily-notes-interface": "0.7.0",
     "rrule": "2.6.8",
     "svelte": "3.31.0"
   }
