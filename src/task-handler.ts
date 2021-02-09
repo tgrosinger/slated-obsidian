@@ -50,13 +50,18 @@ export class TaskHandler {
    * This has the potential to be very expensive, so hopefully we only need to
    * do it once.
    */
-  public readonly getAllTasks = async (): Promise<TaskLine[]> => {
-    const nestedTasks = await Promise.all(
-      this.vault
-        .getMarkdownFiles()
-        .map((file) => this.normalizeFileTasks(file)),
-    );
-    return nestedTasks.flat();
+  public readonly getAllTasks = async (): Promise<
+    Record<string, TaskLine[]>
+  > => {
+    const files = this.vault.getMarkdownFiles();
+    const toReturn: Record<string, TaskLine[]> = {};
+    for (let i = 0; i < files.length; i++) {
+      const tasks = await this.normalizeFileTasks(files[i]);
+      if (tasks.length > 0) {
+        toReturn[files[i].basename] = tasks;
+      }
+    }
+    return toReturn;
   };
 
   /**

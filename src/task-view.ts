@@ -13,7 +13,7 @@ export class TaskView extends ItemView {
   private settings: ISettings;
 
   private hasLoaded: boolean;
-  private taskCache: TaskLine[];
+  private taskCache: Record<string, TaskLine[]>;
   private svelteComponent: TasksUI;
 
   private subscriptions: { id: number; hook: (val: any) => void }[];
@@ -63,9 +63,15 @@ export class TaskView extends ItemView {
   public get loading(): boolean {
     return !this.hasLoaded;
   }
-  public get tasks(): TaskLine[] {
+  public get tasks(): Record<string, TaskLine[]> {
+    console.log('Returning tasks list:');
+    console.log(this.taskCache);
     return this.taskCache;
   }
+  public readonly getTaskFiles = (): string[] => Object.keys(this.taskCache);
+
+  public readonly getTasksForFile = (filename: string): TaskLine[] =>
+    this.taskCache[filename];
 
   /**
    * The subscribe function implements the Store interface in Svelte. The
