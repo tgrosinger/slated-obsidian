@@ -4,28 +4,27 @@ import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import type { TaskHandler } from './task-handler';
 import type { TaskLine } from './task-line';
 import TasksUI from './ui/TasksUI.svelte';
+import { TaskCache } from './task-cache';
 
 export const TaskViewType = 'slated-tasks';
 
 export class TaskView extends ItemView {
-  private taskHandler: TaskHandler;
+  public taskCache: TaskCache;
+
   private vault: VaultIntermediate;
   private settings: ISettings;
 
   private hasLoaded: boolean;
-  private taskCache: Record<string, TaskLine[]>;
   private svelteComponent: TasksUI;
 
   private subscriptions: { id: number; hook: (val: any) => void }[];
 
   constructor(
     leaf: WorkspaceLeaf,
-    taskHandler: TaskHandler,
     vault: VaultIntermediate,
     settings: ISettings,
   ) {
     super(leaf);
-    this.taskHandler = taskHandler;
     this.vault = vault;
     this.settings = settings;
     this.hasLoaded = false;
@@ -63,15 +62,10 @@ export class TaskView extends ItemView {
   public get loading(): boolean {
     return !this.hasLoaded;
   }
-  public get tasks(): Record<string, TaskLine[]> {
-    console.log('Returning tasks list:');
-    console.log(this.taskCache);
-    return this.taskCache;
-  }
-  public readonly getTaskFiles = (): string[] => Object.keys(this.taskCache);
 
-  public readonly getTasksForFile = (filename: string): TaskLine[] =>
-    this.taskCache[filename];
+  public readonly notifyOfFileChange = (file: TFile): void => {
+    // TODO - update the taskcache and then call our notify
+  };
 
   /**
    * The subscribe function implements the Store interface in Svelte. The
@@ -112,9 +106,13 @@ export class TaskView extends ItemView {
   private readonly handleFileModified = (file: TFile): void => {};
 
   private readonly buildTaskCache = async (): Promise<void> => {
-    // TODO: Before calling this, display a nice loading message since this
-    // operation could take a while on really large vaults.
-    this.taskCache = await this.taskHandler.getAllTasks();
+    console.log(this.vault.getWeeklyNotes());
+
+    // TODO: Finish this
+    // Will need a callback mechanism for the taskcache to tell us if something
+    // has changed. I think the taskcache itself should probably have the
+    // obsidian listeners?
+    this.taskCache = new TaskCache(this.vault);
     this.hasLoaded = true;
     this.notify();
   };

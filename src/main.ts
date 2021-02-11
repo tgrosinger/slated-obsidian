@@ -29,6 +29,7 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
+  TAbstractFile,
   TFile,
 } from 'obsidian';
 import type { IWeekStartOption } from 'obsidian-calendar-ui';
@@ -66,12 +67,7 @@ export default class SlatedPlugin extends Plugin {
       this.registerView(
         TaskViewType,
         (leaf) =>
-          (this.taskView = new TaskView(
-            leaf,
-            this.taskHandler,
-            this.vault,
-            this.settings,
-          )),
+          (this.taskView = new TaskView(leaf, this.vault, this.settings)),
       );
 
       addIcon('slated', checkboxIcon);
@@ -90,10 +86,28 @@ export default class SlatedPlugin extends Plugin {
 
         if (this.lastFile) {
           this.taskHandler.processFile(this.lastFile);
+
+          // TODO: notify TaskView (who should then notify TaskCache and svelte)
         }
 
         this.lastFile = file;
         this.taskHandler.processFile(file);
+        // TODO: notify TaskView (who should then notify TaskCache and svelte)
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on('create', (file: TAbstractFile) => {
+        // TODO: notify TaskView (who should then notify TaskCache and svelte)
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on('delete', (file: TAbstractFile) => {
+        // TODO: notify TaskView (who should then notify TaskCache and svelte)
+      }),
+    );
+    this.registerEvent(
+      this.app.vault.on('rename', (file: TAbstractFile, oldPath: string) => {
+        // TODO: notify TaskView (who should then notify TaskCache and svelte)
       }),
     );
 

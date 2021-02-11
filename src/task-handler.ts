@@ -5,6 +5,8 @@ import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
 import type { TFile } from 'obsidian';
 
+// TODO: Switch taskCache to use the TaskCache class
+
 export class TaskHandler {
   private readonly settings: ISettings;
   private readonly vault: VaultIntermediate;
@@ -41,27 +43,6 @@ export class TaskHandler {
     );
     this.taskCache[file.basename] = tasks;
     return this.propogateCompletedTasks(newlyCompletedTasks);
-  };
-
-  /**
-   * getAllTasks scans every file in the Vault looking for tasks. Each task
-   * found is converted into a TaskLine and returned.
-   *
-   * This has the potential to be very expensive, so hopefully we only need to
-   * do it once.
-   */
-  public readonly getAllTasks = async (): Promise<
-    Record<string, TaskLine[]>
-  > => {
-    const files = this.vault.getMarkdownFiles();
-    const toReturn: Record<string, TaskLine[]> = {};
-    for (let i = 0; i < files.length; i++) {
-      const tasks = await this.normalizeFileTasks(files[i]);
-      if (tasks.length > 0) {
-        toReturn[files[i].basename] = tasks;
-      }
-    }
-    return toReturn;
   };
 
   /**

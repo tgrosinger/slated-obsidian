@@ -3,6 +3,8 @@ import type { TFile, Vault } from 'obsidian';
 import {
   createDailyNote,
   getAllDailyNotes,
+  getAllMonthlyNotes,
+  getAllWeeklyNotes,
   getDailyNote,
   getDailyNoteSettings,
 } from 'obsidian-daily-notes-interface';
@@ -13,6 +15,10 @@ export class VaultIntermediate {
   constructor(vault: Vault) {
     this.vault = vault;
   }
+
+  public getDailyNotes = (): Record<string, TFile> => getAllDailyNotes();
+  public getWeeklyNotes = (): Record<string, TFile> => getAllWeeklyNotes();
+  public getMonthlyNotes = (): Record<string, TFile> => getAllMonthlyNotes();
 
   public getDailyNote = (date: Moment): Promise<TFile> => {
     const desiredNote = getDailyNote(date, getAllDailyNotes());
@@ -39,6 +45,4 @@ export class VaultIntermediate {
 
   public writeFile = (file: TFile, data: string): Promise<void> =>
     this.vault.modify(file, data);
-
-  public getMarkdownFiles = (): TFile[] => this.vault.getMarkdownFiles();
 }
