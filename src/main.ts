@@ -67,7 +67,12 @@ export default class SlatedPlugin extends Plugin {
       this.registerView(
         TaskViewType,
         (leaf) =>
-          (this.taskView = new TaskView(leaf, this.vault, this.settings)),
+          (this.taskView = new TaskView(
+            leaf,
+            this.taskHandler,
+            this.vault,
+            this.settings,
+          )),
       );
 
       addIcon('slated', checkboxIcon);

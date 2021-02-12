@@ -67,6 +67,28 @@ export class TaskHandler {
   public readonly getCachedTasksForFile = (file: TFile): TaskLine[] =>
     this.taskCache[file.basename];
 
+  public readonly getFileTasks = async (file: TFile): Promise<TaskLine[]> => {
+    const fileContents = await this.vault.readFile(file, false);
+    if (!fileContents) {
+      return [];
+    }
+
+    const splitFileContents = fileContents.split('\n');
+    return splitFileContents
+      .map((line, index) => ({ line, lineNum: index }))
+      .filter(({ line }) => this.isLineTask(line))
+      .map(
+        ({ lineNum }) =>
+          new TaskLine(
+            lineNum,
+            file,
+            splitFileContents,
+            this.vault,
+            this.settings,
+          ),
+      );
+  };
+
   /**
    * Test if this line is a task. This is called for every line in a file after
    * every save, so performance is essential.
@@ -97,26 +119,7 @@ export class TaskHandler {
     file: TFile,
   ): Promise<TaskLine[]> => {
     console.debug('Slated: Normalizing tasks in file: ' + file.basename);
-
-    const fileContents = await this.vault.readFile(file, false);
-    if (!fileContents) {
-      return [];
-    }
-
-    const splitFileContents = fileContents.split('\n');
-    const taskLines = splitFileContents
-      .map((line, index) => ({ line, lineNum: index }))
-      .filter(({ line }) => this.isLineTask(line))
-      .map(
-        ({ lineNum }) =>
-          new TaskLine(
-            lineNum,
-            file,
-            splitFileContents,
-            this.vault,
-            this.settings,
-          ),
-      );
+    const taskLines = await this.getFileTasks(file);
 
     // XXX: This will cause a file write for each task which needs to be modified.
     // Hopefully there aren't so many tasks modified at once that it's problematic,

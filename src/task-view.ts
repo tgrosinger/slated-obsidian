@@ -11,6 +11,7 @@ export const TaskViewType = 'slated-tasks';
 export class TaskView extends ItemView {
   public taskCache: TaskCache;
 
+  private taskHandler: TaskHandler;
   private vault: VaultIntermediate;
   private settings: ISettings;
 
@@ -21,10 +22,12 @@ export class TaskView extends ItemView {
 
   constructor(
     leaf: WorkspaceLeaf,
+    taskHandler: TaskHandler,
     vault: VaultIntermediate,
     settings: ISettings,
   ) {
     super(leaf);
+    this.taskHandler = taskHandler;
     this.vault = vault;
     this.settings = settings;
     this.hasLoaded = false;
@@ -112,7 +115,7 @@ export class TaskView extends ItemView {
     // Will need a callback mechanism for the taskcache to tell us if something
     // has changed. I think the taskcache itself should probably have the
     // obsidian listeners?
-    this.taskCache = new TaskCache(this.vault);
+    this.taskCache = new TaskCache(this.taskHandler, this.vault);
     this.hasLoaded = true;
     this.notify();
   };

@@ -29,11 +29,11 @@
     <p>Loading...</p>
   {:else}
     <!-- TODO: Define keys in the each clauses-->
-    {#each $view.getTaskFiles() as filename}
+    {#each $view.taskCache.listFiles() as filename}
       <div>{filename}</div>
       <!-- TODO: Only display daily and weekly notes, ordered chronologically -->
       <!-- TODO: Allow dragging tasks between sections to move between notes -->
-      {#each $view.getTasksForFile(filename) as task}
+      {#each $view.taskCache.getTasksForPeriodicNote(filename) as task}
         <TaskLine {task} />
       {/each}
     {:else}
