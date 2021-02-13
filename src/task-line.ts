@@ -279,13 +279,20 @@ export class TaskLine {
     }
 
     const currentNoteDate = this.vault.findMomentForDailyNote(this.file);
-    const nextDate = this.repeater
-      .asRRule()
-      .after(currentNoteDate.endOf('day').toDate());
+    const nextDate = window
+      .moment(
+        this.repeater.asRRule().after(currentNoteDate.endOf('day').toDate()),
+      )
+      .startOf('day');
 
-    const nextOccurenceFile = await this.vault.getDailyNote(
-      window.moment(nextDate),
-    );
+    console.debug({
+      msg: 'Creating next task repetition',
+      repeater: this.repeater.toString(),
+      completed_note_date: currentNoteDate,
+      next_note_date: nextDate,
+    });
+
+    const nextOccurenceFile = await this.vault.getDailyNote(nextDate);
     return addTaskRepetition(
       nextOccurenceFile,
       this,
