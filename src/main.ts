@@ -158,12 +158,19 @@ export default class SlatedPlugin extends Plugin {
 
     this.addCommand({
       id: 'move-incompleted-today',
-      name: 'Move incompleted tasks from current file to today',
-      callback: () => {
+      name: 'Move incomplete tasks from current file to today',
+      checkCallback: (checking: boolean) => {
         const activeLeaf = this.app.workspace.activeLeaf;
         if (!(activeLeaf.view instanceof MarkdownView)) {
           return;
         }
+
+        if (checking) {
+          // Disallow moving tasks if currently looking at today's note
+          const m = this.vault.findMomentForDailyNote(activeLeaf.view.file);
+          return !(m && m.isSame(new Date(), 'day'));
+        }
+
         this.taskHandler.moveIncompleted(
           activeLeaf.view.file,
           window.moment().startOf('day'),
