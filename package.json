@@ -1,6 +1,6 @@
 {
   "name": "slated-obsidian",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Task management - schedule, move, and repeat tasks",
   "main": "main.js",
   "scripts": {
