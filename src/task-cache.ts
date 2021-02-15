@@ -1,7 +1,7 @@
-import type { TFile } from 'obsidian';
 import type { TaskHandler } from './task-handler';
 import type { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
+import type { TFile } from 'obsidian';
 
 export type periodicNoteID = string;
 
@@ -16,14 +16,14 @@ export interface fileTasks {
   tasks: TaskLine[];
 }
 export class TaskCache {
-  private dailyNotes: Record<periodicNoteID, TFile>;
-  private weeklyNotes: Record<periodicNoteID, TFile>;
-  private monthlyNotes: Record<periodicNoteID, TFile>;
+  private readonly dailyNotes: Record<periodicNoteID, TFile>;
+  private readonly weeklyNotes: Record<periodicNoteID, TFile>;
+  private readonly monthlyNotes: Record<periodicNoteID, TFile>;
   private hasLoaded: boolean;
   private subscriptions: { id: number; hook: (val: any) => void }[];
 
-  private vault: VaultIntermediate;
-  private taskHandler: TaskHandler;
+  private readonly vault: VaultIntermediate;
+  private readonly taskHandler: TaskHandler;
 
   /**
    * List of Daily, Weekly, and Monthly notes ordered chronologically.
@@ -133,7 +133,7 @@ export class TaskCache {
         async (periodicNoteID): Promise<fileTasks> => {
           const file = this.getFileForPeriodicNote(periodicNoteID);
           return {
-            file: file,
+            file,
             type: this.noteTypeForPeriodicNote(periodicNoteID),
             tasks: file ? await this.taskHandler.getFileTasks(file) : [],
           };

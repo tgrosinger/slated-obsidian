@@ -1,16 +1,16 @@
 import type { ISettings } from './settings';
-import type { VaultIntermediate } from './vault';
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { TaskCache } from './task-cache';
 import type { TaskHandler } from './task-handler';
 import TasksUI from './ui/TasksUI.svelte';
-import { TaskCache } from './task-cache';
+import type { VaultIntermediate } from './vault';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
 
 export const TaskViewType = 'slated-tasks';
 
 export class TaskView extends ItemView {
   public taskCache: TaskCache;
 
-  private settings: ISettings;
+  private readonly settings: ISettings;
   private svelteComponent: TasksUI;
 
   constructor(

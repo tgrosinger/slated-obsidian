@@ -1,7 +1,8 @@
 <script lang="ts">
   import { fileTasks, noteType, TaskCache } from 'src/task-cache';
+  import type { TaskLine } from 'src/task-line';
   import ButtonGroup from './ButtonGroup.svelte';
-  import TaskLine from './TaskLine.svelte';
+  import TaskBlock from './TaskBlock.svelte';
 
   // Creation Parameters
   export let taskCache: TaskCache;
@@ -73,7 +74,7 @@
           {file.file.basename}
         </div>
         {#each file.tasks.filter(shouldDisplayTask) as task (file.file.basename + task.lineNum)}
-          <TaskLine {task} />
+          <TaskBlock {task} />
         {/each}
       </div>
     {:else}
