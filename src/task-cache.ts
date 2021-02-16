@@ -1,9 +1,7 @@
 import type { TaskHandler } from './task-handler';
 import type { TaskLine } from './task-line';
-import type { VaultIntermediate } from './vault';
-import type { TFile } from 'obsidian';
-
-export type PeriodicNoteID = string;
+import type { PeriodicNoteID, VaultIntermediate } from './vault';
+import type { TAbstractFile, TFile } from 'obsidian';
 
 export enum NoteType {
   Day = 1,
@@ -16,9 +14,9 @@ export interface FileTasks {
   tasks: TaskLine[];
 }
 export class TaskCache {
-  private readonly dailyNotes: Record<PeriodicNoteID, TFile>;
-  private readonly weeklyNotes: Record<PeriodicNoteID, TFile>;
-  private readonly monthlyNotes: Record<PeriodicNoteID, TFile>;
+  private dailyNotes: Record<PeriodicNoteID, TFile>;
+  private weeklyNotes: Record<PeriodicNoteID, TFile>;
+  private monthlyNotes: Record<PeriodicNoteID, TFile>;
   private hasLoaded: boolean;
   private subscriptions: { id: number; hook: (val: any) => void }[];
 
@@ -32,16 +30,13 @@ export class TaskCache {
   private taskLineCache: FileTasks[];
 
   constructor(taskHandler: TaskHandler, vault: VaultIntermediate) {
-    this.dailyNotes = vault.getDailyNotes();
-    this.weeklyNotes = vault.getWeeklyNotes();
-    this.monthlyNotes = vault.getMonthlyNotes();
     this.vault = vault;
     this.taskHandler = taskHandler;
     this.subscriptions = [];
     this.taskLineCache = [];
     this.hasLoaded = false;
 
-    this.initialize(); // non-blocking, calls notify when complete
+    //this.initialize(); // non-blocking, calls notify when complete
   }
 
   /**
@@ -84,6 +79,34 @@ export class TaskCache {
     return this.taskLineCache;
   }
 
+  public readonly fileOpenHook = async (file: TFile): Promise<void> => {
+    const cache = this.taskLineCache.find((ft) => ft.file === file);
+    if (cache) {
+      cache.tasks = await this.taskHandler.getFileTasks(file);
+      this.notify();
+    }
+  };
+
+  public readonly fileCreateHook = (file: TAbstractFile): void => {
+    // TODO: A more granular addition of the new file would be more efficient
+    // Cannot call initialize on every file-create event because Obsidian fires
+    // that event for ever single file when first starting.
+    //this.initialize(); // non-blocking
+  };
+
+  public readonly fileDeleteHook = (file: TAbstractFile): void => {
+    // TODO: A more granular removal of the file would be more efficient
+    this.initialize(); // non-blocking
+  };
+
+  public readonly fileRenameHook = (
+    file: TAbstractFile,
+    oldPath: string,
+  ): void => {
+    // TODO: A more granular update of the file would be more efficient
+    this.initialize(); // non-blocking
+  };
+
   /**
    * Notify subscriptions of a change.
    */
@@ -95,7 +118,11 @@ export class TaskCache {
   /**
    * Load any necessary state asynchronously
    */
-  private readonly initialize = async (): Promise<void> => {
+  public readonly initialize = async (): Promise<void> => {
+    console.log('initializing');
+    this.dailyNotes = this.vault.getDailyNotes();
+    this.weeklyNotes = this.vault.getWeeklyNotes();
+    this.monthlyNotes = this.vault.getMonthlyNotes();
     this.periodicNoteList = this.listFiles();
     await this.populateTaskLineCache();
 

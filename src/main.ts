@@ -33,6 +33,7 @@ import {
   TFile,
 } from 'obsidian';
 import type { IWeekStartOption } from 'obsidian-calendar-ui';
+import { TaskCache } from './task-cache';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?
@@ -52,6 +53,7 @@ export default class SlatedPlugin extends Plugin {
 
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;
+  private taskCache: TaskCache;
 
   private lastFile: TFile | undefined;
 
@@ -60,24 +62,34 @@ export default class SlatedPlugin extends Plugin {
 
     this.vault = new VaultIntermediate(this.app.vault);
     this.taskHandler = new TaskHandler(this.vault, this.settings);
+    this.taskCache = new TaskCache(this.taskHandler, this.vault);
 
-    MarkdownPreviewRenderer.registerPostProcessor(this.renderMovedTasks);
+    this.app.workspace.onLayoutReady(() => {
+      this.taskCache.initialize();
+    });
 
     if (this.settings.enableTaskView) {
       this.registerView(
         TaskViewType,
         (leaf) =>
-          (this.taskView = new TaskView(
-            leaf,
-            this.taskHandler,
-            this.vault,
-            this.settings,
-          )),
+          (this.taskView = new TaskView(leaf, this.taskCache, this.settings)),
+      );
+
+      this.registerEvent(
+        this.app.vault.on('create', this.taskCache.fileCreateHook),
+      );
+      this.registerEvent(
+        this.app.vault.on('delete', this.taskCache.fileDeleteHook),
+      );
+      this.registerEvent(
+        this.app.vault.on('rename', this.taskCache.fileRenameHook),
       );
 
       addIcon('slated', checkboxIcon);
       this.addRibbonIcon('slated', 'Slated', this.initSlatedView);
     }
+
+    MarkdownPreviewRenderer.registerPostProcessor(this.renderMovedTasks);
 
     this.registerEvent(
       this.app.workspace.on('file-open', (file: TFile) => {
@@ -91,28 +103,12 @@ export default class SlatedPlugin extends Plugin {
 
         if (this.lastFile) {
           this.taskHandler.processFile(this.lastFile);
-
-          // TODO: notify TaskView (who should then notify TaskCache and svelte)
+          this.taskCache.fileOpenHook(this.lastFile);
         }
 
         this.lastFile = file;
         this.taskHandler.processFile(file);
-        // TODO: notify TaskView (who should then notify TaskCache and svelte)
-      }),
-    );
-    this.registerEvent(
-      this.app.vault.on('create', (file: TAbstractFile) => {
-        // TODO: notify TaskView (who should then notify TaskCache and svelte)
-      }),
-    );
-    this.registerEvent(
-      this.app.vault.on('delete', (file: TAbstractFile) => {
-        // TODO: notify TaskView (who should then notify TaskCache and svelte)
-      }),
-    );
-    this.registerEvent(
-      this.app.vault.on('rename', (file: TAbstractFile, oldPath: string) => {
-        // TODO: notify TaskView (who should then notify TaskCache and svelte)
+        this.taskCache.fileOpenHook(file);
       }),
     );
 

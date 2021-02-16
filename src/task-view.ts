@@ -1,8 +1,6 @@
 import type { ISettings } from './settings';
-import { TaskCache } from './task-cache';
-import type { TaskHandler } from './task-handler';
+import type { TaskCache } from './task-cache';
 import TasksUI from './ui/TasksUI.svelte';
-import type { VaultIntermediate } from './vault';
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 
 export const TaskViewType = 'slated-tasks';
@@ -13,15 +11,10 @@ export class TaskView extends ItemView {
   private readonly settings: ISettings;
   private svelteComponent: TasksUI;
 
-  constructor(
-    leaf: WorkspaceLeaf,
-    taskHandler: TaskHandler,
-    vault: VaultIntermediate,
-    settings: ISettings,
-  ) {
+  constructor(leaf: WorkspaceLeaf, taskCache: TaskCache, settings: ISettings) {
     super(leaf);
     this.settings = settings;
-    this.taskCache = new TaskCache(taskHandler, vault);
+    this.taskCache = taskCache;
   }
 
   public readonly getIcon = (): string => 'slated';
