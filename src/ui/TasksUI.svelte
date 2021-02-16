@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileTasks, noteType, TaskCache } from 'src/task-cache';
+  import { FileTasks, NoteType, TaskCache } from 'src/task-cache';
   import type { TaskLine } from 'src/task-line';
   import ButtonGroup from './ButtonGroup.svelte';
   import TaskBlock from './TaskBlock.svelte';
@@ -26,10 +26,10 @@
   let activeTaskStatuses = [0, 1, 2];
   let activeNoteTypes = [1, 2, 3];
 
-  const shouldDisplayFile = (f: fileTasks): boolean =>
-    (f.type === noteType.Day && activeNoteTypes.contains(1)) ||
-    (f.type === noteType.Week && activeNoteTypes.contains(2)) ||
-    (f.type === noteType.Month && activeNoteTypes.contains(3));
+  const shouldDisplayFile = (f: FileTasks): boolean =>
+    (f.type === NoteType.Day && activeNoteTypes.contains(1)) ||
+    (f.type === NoteType.Week && activeNoteTypes.contains(2)) ||
+    (f.type === NoteType.Month && activeNoteTypes.contains(3));
 
   const shouldDisplayTask = (t: TaskLine): boolean =>
     !(

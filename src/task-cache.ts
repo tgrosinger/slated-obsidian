@@ -3,22 +3,22 @@ import type { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import type { TFile } from 'obsidian';
 
-export type periodicNoteID = string;
+export type PeriodicNoteID = string;
 
-export enum noteType {
+export enum NoteType {
   Day = 1,
   Week,
   Month,
 }
-export interface fileTasks {
+export interface FileTasks {
   file: TFile;
-  type: noteType;
+  type: NoteType;
   tasks: TaskLine[];
 }
 export class TaskCache {
-  private readonly dailyNotes: Record<periodicNoteID, TFile>;
-  private readonly weeklyNotes: Record<periodicNoteID, TFile>;
-  private readonly monthlyNotes: Record<periodicNoteID, TFile>;
+  private readonly dailyNotes: Record<PeriodicNoteID, TFile>;
+  private readonly weeklyNotes: Record<PeriodicNoteID, TFile>;
+  private readonly monthlyNotes: Record<PeriodicNoteID, TFile>;
   private hasLoaded: boolean;
   private subscriptions: { id: number; hook: (val: any) => void }[];
 
@@ -28,8 +28,8 @@ export class TaskCache {
   /**
    * List of Daily, Weekly, and Monthly notes ordered chronologically.
    */
-  private periodicNoteList: periodicNoteID[];
-  private taskLineCache: fileTasks[];
+  private periodicNoteList: PeriodicNoteID[];
+  private taskLineCache: FileTasks[];
 
   constructor(taskHandler: TaskHandler, vault: VaultIntermediate) {
     this.dailyNotes = vault.getDailyNotes();
@@ -80,7 +80,7 @@ export class TaskCache {
    */
   public readonly set = (_: any): void => {};
 
-  public get files(): fileTasks[] {
+  public get files(): FileTasks[] {
     return this.taskLineCache;
   }
 
@@ -103,7 +103,7 @@ export class TaskCache {
     this.notify();
   };
 
-  private readonly getFileForPeriodicNote = (id: periodicNoteID): TFile => {
+  private readonly getFileForPeriodicNote = (id: PeriodicNoteID): TFile => {
     switch (id.split('-', 1)[0]) {
       case 'day':
         return this.dailyNotes[id];
@@ -115,14 +115,14 @@ export class TaskCache {
     return undefined;
   };
 
-  private readonly noteTypeForPeriodicNote = (id: periodicNoteID): noteType => {
+  private readonly noteTypeForPeriodicNote = (id: PeriodicNoteID): NoteType => {
     switch (id.split('-', 1)[0]) {
       case 'day':
-        return noteType.Day;
+        return NoteType.Day;
       case 'week':
-        return noteType.Week;
+        return NoteType.Week;
       case 'month':
-        return noteType.Month;
+        return NoteType.Month;
     }
     return undefined;
   };
@@ -130,7 +130,7 @@ export class TaskCache {
   private readonly populateTaskLineCache = async (): Promise<void> => {
     const files = await Promise.all(
       this.periodicNoteList.map(
-        async (periodicNoteID): Promise<fileTasks> => {
+        async (periodicNoteID): Promise<FileTasks> => {
           const file = this.getFileForPeriodicNote(periodicNoteID);
           return {
             file,
@@ -152,7 +152,7 @@ export class TaskCache {
    *   - week-2021-02-21T00:00:00-08:00
    *   - month-2021-02-01T00:00:00-08:00
    */
-  private readonly listFiles = (): periodicNoteID[] => {
+  private readonly listFiles = (): PeriodicNoteID[] => {
     const dailyNoteKeys = Object.keys(this.dailyNotes).reverse();
     const weeklyNoteKeys = Object.keys(this.weeklyNotes).reverse();
     const monthlyNoteKeys = Object.keys(this.monthlyNotes).reverse();
@@ -160,7 +160,7 @@ export class TaskCache {
     let weeklyI = 0;
     let monthlyI = 0;
 
-    const orderedNoteNames: periodicNoteID[] = [];
+    const orderedNoteNames: PeriodicNoteID[] = [];
 
     for (const currentDailyNote of dailyNoteKeys) {
       if (
