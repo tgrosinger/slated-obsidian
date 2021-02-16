@@ -3557,40 +3557,40 @@ object.values@^1.1.1:
     es-abstract "^1.18.0-next.1"
     has "^1.0.3"
 
-obsidian-calendar-ui@0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.3.0.tgz#3c3af76a6995d2b17e7185d19b1fdf180e9106ce"
-  integrity sha512-C07BIq04m+jKF0foZOB6dzxRXHRDFJs2vDYEH97qV2iKC00TOYHwwFg8PgRNQARs+TZGRGI3Tn05xIzy9c7Jdg==
+obsidian-calendar-ui@0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/obsidian-calendar-ui/-/obsidian-calendar-ui-0.3.3.tgz#1766873d62994953c9b4cfd4cbb6425c934369f0"
+  integrity sha512-JmQZ59gHkE3kMLK1R6eSoccVgP6uEiTX8vwRgOhQ+k3BN5KR0kxVcuG6U7Uyxr/pzWuhxW4DwTtHAscEdYzigA==
   dependencies:
-    obsidian-daily-notes-interface "0.5.1"
-    svelte "3.31.0"
-    tslib "2.0.3"
+    obsidian-daily-notes-interface "0.7.1"
+    svelte "3.32.3"
+    tslib "2.1.0"
 
-obsidian-daily-notes-interface@0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.5.1.tgz#8fe28eab46e7fb789c8fc935dd3c74232b6e15f9"
-  integrity sha512-QwSAN7ob6r05e+IFhIY1Knn1H2zM4p3MCmUdbtNOFxPe0MQWsLAK5fjt0ST1usm7z0rVuTbNHJAzXxNRQaDlzg==
-  dependencies:
-    obsidian obsidianmd/obsidian-api#master
-    tslib "2.0.3"
-
-obsidian-daily-notes-interface@0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.7.0.tgz#ad627987583e2dddd8ec911c57f2bc355ef52d1b"
-  integrity sha512-mSck8eMN7z5afeMrtVTLxUpP0GbBfciSZnoo6EyZige8ItknKQKqDRLlEoEZGEy49iExKUdQbOqvNdX7yQifPA==
+obsidian-daily-notes-interface@0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.7.1.tgz#d8a418de743036afd0977a74556ac9899ef798a1"
+  integrity sha512-juBFqCPwsCivAVPuef1XNRE6LAoecZT5bHQvrtfqQAP+ekiUy+7jPG9UvGWb8qPE0KU1omfE3lFOKlU/DLS7WA==
   dependencies:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.0.3"
 
-"obsidian@github:obsidianmd/obsidian-api#master":
+obsidian-daily-notes-interface@0.7.2:
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/obsidian-daily-notes-interface/-/obsidian-daily-notes-interface-0.7.2.tgz#02f732707abe7f68269fd8fed816ea60320b2ed1"
+  integrity sha512-NKnC5lIB8qnf6otXTcXSPt6aJQxydstvJXntQyKNcqoQtta9bJDG++VyJ1ijORUFeK2QZzG9hHCDTnb7Om47Tg==
+  dependencies:
+    obsidian obsidianmd/obsidian-api#master
+    tslib "2.0.3"
+
+"obsidian@https://github.com/obsidianmd/obsidian-api/archive/81ab85ade4552c9116c1e10d009127e62019c923.tar.gz":
   version "0.11.0"
-  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/81ab85ade4552c9116c1e10d009127e62019c923"
+  resolved "https://github.com/obsidianmd/obsidian-api/archive/81ab85ade4552c9116c1e10d009127e62019c923.tar.gz#2dc7c01bae46aaf3001fcd54092ddb3e3e7155b8"
   dependencies:
     "@types/codemirror" "0.0.98"
 
-"obsidian@https://github.com/obsidianmd/obsidian-api/archive/9b69506127863102e1102cdeb4d14f523d08583e.tar.gz":
-  version "0.10.12"
-  resolved "https://github.com/obsidianmd/obsidian-api/archive/9b69506127863102e1102cdeb4d14f523d08583e.tar.gz#39d682ecea65050dd8acef55831b2058cc809abd"
+obsidian@obsidianmd/obsidian-api#master:
+  version "0.11.0"
+  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/81ab85ade4552c9116c1e10d009127e62019c923"
   dependencies:
     "@types/codemirror" "0.0.98"
 
@@ -4515,11 +4515,6 @@ svelte-preprocess@4.6.9, svelte-preprocess@^4.0.0:
     detect-indent "^6.0.0"
     strip-indent "^3.0.0"
 
-svelte@3.31.0:
-  version "3.31.0"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.31.0.tgz#13966e5f55b975bc86675469bb2c58dd0e558d97"
-  integrity sha512-r+n8UJkDqoQm1b+3tA3Lh6mHXKpcfOSOuEuIo5gE2W9wQYi64RYX/qE6CZBDDsP/H4M+N426JwY7XGH4xASvGQ==
-
 svelte@3.32.3:
   version "3.32.3"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.32.3.tgz#db0c50c65573ecffe4e2f4924e4862d8f9feda74"
@@ -4670,15 +4665,15 @@ tslib@2.0.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.0.3.tgz#8e0741ac45fc0c226e58a17bfc3e64b9bc6ca61c"
   integrity sha512-uZtkfKblCEQtZKBF6EBXVZeQNl82yqtDQdv+eck8u7tdPxjLu2/lp5/uPW+um2tpuxINHWy3GhiccY7QgEaVHQ==
 
+tslib@2.1.0, tslib@^2.0.3:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.1.0.tgz#da60860f1c2ecaa5703ab7d39bc05b6bf988b97a"
+  integrity sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==
+
 tslib@^1.10.0, tslib@^1.8.1:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
-
-tslib@^2.0.3:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.1.0.tgz#da60860f1c2ecaa5703ab7d39bc05b6bf988b97a"
-  integrity sha512-hcVC3wYEziELGGmEEXue7D75zbwIIVUMWAVbHItGPx0ziyXxrOMQx4rQEVEV45Ut/1IotuEvwqPopzIOkDMf0A==
 
 tsutils@^3.17.1:
   version "3.20.0"
