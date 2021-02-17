@@ -56,25 +56,6 @@ export class VaultIntermediate {
   /**
    * NOTE: Untested, ended up needing after writing this,
    * but it seemed useful so I kept it just in case.
-   */
-  private getDateUID = (
-    file: TFile,
-    settings: IPeriodicNoteSettings,
-    granularity: IGranularity,
-  ): PeriodicNoteID | undefined => {
-    if (settings.folder && !file.path.startsWith(settings.folder)) {
-      return undefined; // Not in the right folder
-    }
-
-    const date = window.moment(file.basename, settings.format, true);
-    if (date.isValid()) {
-      return `${granularity}-${date.startOf(granularity).format()}`;
-    }
-  };
-
-  /**
-   * NOTE: Untested, ended up needing after writing this,
-   * but it seemed useful so I kept it just in case.
    *
    * Returns a periodic note ID for the file.
    * NOTE: The values returned are not actually file names, but values similar to:
@@ -99,6 +80,25 @@ export class VaultIntermediate {
     uid = this.getDateUID(file, mSettings, 'month');
     if (uid) {
       return uid;
+    }
+  };
+
+  /**
+   * NOTE: Untested, ended up needing after writing this,
+   * but it seemed useful so I kept it just in case.
+   */
+  private readonly getDateUID = (
+    file: TFile,
+    settings: IPeriodicNoteSettings,
+    granularity: IGranularity,
+  ): PeriodicNoteID | undefined => {
+    if (settings.folder && !file.path.startsWith(settings.folder)) {
+      return undefined; // Not in the right folder
+    }
+
+    const date = window.moment(file.basename, settings.format, true);
+    if (date.isValid()) {
+      return `${granularity}-${date.startOf(granularity).format()}`;
     }
   };
 }

@@ -11,6 +11,7 @@ import {
   tryToConfigureGlobalMoment,
 } from './localization';
 import { ISettings, settingsWithDefaults } from './settings';
+import { TaskCache } from './task-cache';
 import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
 import { TaskView, TaskViewType } from './task-view';
@@ -33,7 +34,6 @@ import {
   TFile,
 } from 'obsidian';
 import type { IWeekStartOption } from 'obsidian-calendar-ui';
-import { TaskCache } from './task-cache';
 
 // TODO: Can I use a webworker to perform a scan of files in the vault for
 // tasks that would otherwise be missed and not have a repetition created?

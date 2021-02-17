@@ -36,7 +36,7 @@ export class TaskCache {
     this.taskLineCache = [];
     this.hasLoaded = false;
 
-    //this.initialize(); // non-blocking, calls notify when complete
+    // this.initialize(); // non-blocking, calls notify when complete
   }
 
   /**
@@ -91,7 +91,7 @@ export class TaskCache {
     // TODO: A more granular addition of the new file would be more efficient
     // Cannot call initialize on every file-create event because Obsidian fires
     // that event for ever single file when first starting.
-    //this.initialize(); // non-blocking
+    // this.initialize(); // non-blocking
   };
 
   public readonly fileDeleteHook = (file: TAbstractFile): void => {
