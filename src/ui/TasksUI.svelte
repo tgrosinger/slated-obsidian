@@ -74,7 +74,7 @@
           {file.file.basename}
         </div>
         {#each file.tasks.filter(shouldDisplayTask) as task (file.file.basename + task.lineNum)}
-          <TaskBlock {task} />
+          <TaskBlock {task} notify={taskCache.notify} />
         {/each}
       </div>
     {:else}

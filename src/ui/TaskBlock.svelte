@@ -4,13 +4,27 @@
   import { quintOut } from 'svelte/easing';
 
   import type { TaskLine } from 'src/task-line';
+  import TaskRepeat from './TaskRepeat.svelte';
 
   // Creation Parameters
   export let task: TaskLine;
+  export let notify: () => void;
 
   // State
   let selected = false;
+  let configuringRepetition = false;
+
+  const toggleConfigureRepetition = (): void => {
+    configuringRepetition = !configuringRepetition;
+  };
+  const saveAndCloseRepetition = (): void => {
+    configuringRepetition = false;
+    notify();
+  };
 </script>
+
+<!-- TODO: Make the checkbox operational -->
+<!-- TODO: Add a link somewhere to jump back to the actual location of this task -->
 
 <div class={selected ? 'task-line task-line-expanded' : 'task-line'}>
   <div
@@ -55,21 +69,39 @@
         </label>
       {/if}
 
-      <h2>Repetition</h2>
-      {#if task.repeats}
-        {#if !task.isOriginalInstance}
-          <label>
-            Repeats From:
-            <input type="text" disabled={true} value={task.repeatsFrom} />
-          </label>
-        {/if}
-      {:else}
-        <button>Configure Repetition</button>
+      <label on:click={toggleConfigureRepetition}>
+        Repeat:
+        <input
+          type="text"
+          disabled={true}
+          value={task.repeats ? task.repeater.toText() : 'None'}
+        />
+      </label>
+
+      {#if configuringRepetition}
+        <div
+          class="task-line-content"
+          transition:slide|local={{
+            delay: 0,
+            duration: 350,
+            easing: quintOut,
+          }}
+        >
+          <TaskRepeat {task} close={saveAndCloseRepetition} />
+        </div>
+      {/if}
+
+      {#if task.repeatsFrom}
+        <label>
+          Repeat Origin:
+          <input type="text" disabled={true} value={task.repeatsFrom} />
+        </label>
       {/if}
     </div>
   {/if}
 </div>
 
+<!-- TODO: Add a link somewhere to jump back to the actual location of this task -->
 <style>
   .task-line {
     padding: 4px;
@@ -97,5 +129,9 @@
   .task-line-content h2 {
     margin-top: 5px;
     line-height: 1em;
+  }
+
+  .task-line-content label {
+    display: block;
   }
 </style>
