@@ -13,6 +13,10 @@
   const today = window.moment();
   let createLinks = true;
 
+  $: if (!createLinks) {
+    moveChildren = true;
+  }
+
   const onClickDay = async (
     date: Moment,
     isMetaPressed: boolean,
@@ -39,7 +43,11 @@
 </div>
 <div class="slated-move-option">
   <label>
-    <input type="checkbox" bind:checked={moveChildren} />
+    <input
+      type="checkbox"
+      disabled={!createLinks}
+      bind:checked={moveChildren}
+    />
     Move sub-items and tasks
   </label>
 </div>
