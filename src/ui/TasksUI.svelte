@@ -1,4 +1,15 @@
 <script lang="ts">
+  import {
+    cbCheckedIconSvg,
+    cbUncheckedIconSvg,
+    moved2IconSvg,
+    repeatingIconSvg,
+    nonRepeatingIconSvg,
+    dailyIconSvg,
+    weeklyIconSvg,
+    monthlyIconSvg,
+  } from 'src/graphics';
+
   import { FileTasks, NoteType, TaskCache } from 'src/task-cache';
   import type { TaskLine } from 'src/task-line';
   import ButtonGroup from './ButtonGroup.svelte';
@@ -9,17 +20,17 @@
 
   // Constants
   const taskStatusFilterButtons = [
-    { id: 0, text: 'Repeating' },
-    { id: 1, text: 'Non-Repeating' },
-    { id: 2, text: 'Incomplete' },
-    { id: 3, text: 'Moved' },
-    { id: 4, text: 'Complete' },
+    { id: 0, icon: repeatingIconSvg },
+    { id: 1, icon: nonRepeatingIconSvg },
+    { id: 2, icon: cbUncheckedIconSvg },
+    { id: 3, icon: cbCheckedIconSvg },
+    { id: 4, icon: moved2IconSvg },
   ];
 
   const noteTypeFilterButtons = [
-    { id: 1, text: 'Daily' },
-    { id: 2, text: 'Weekly' },
-    { id: 3, text: 'Monthly' },
+    { id: 1, icon: dailyIconSvg },
+    { id: 2, icon: weeklyIconSvg },
+    { id: 3, icon: monthlyIconSvg },
   ];
 
   // State
@@ -36,8 +47,8 @@
       (t.repeats && !activeTaskStatuses.contains(0)) ||
       (!t.repeats && !activeTaskStatuses.contains(1)) ||
       (t.incomplete && !activeTaskStatuses.contains(2)) ||
-      (t.moved && !activeTaskStatuses.contains(3)) ||
-      (t.complete && !activeTaskStatuses.contains(4))
+      (t.complete && !activeTaskStatuses.contains(3)) ||
+      (t.moved && !activeTaskStatuses.contains(4))
     );
 </script>
 
@@ -45,6 +56,7 @@
   <ButtonGroup
     buttons={taskStatusFilterButtons}
     activeButtonIDs={activeTaskStatuses}
+    extraButtonClass="slated-task-view-filter-button"
     onUpdate={(ids) => {
       activeTaskStatuses = ids;
       taskCache.notify();
@@ -53,6 +65,7 @@
   <ButtonGroup
     buttons={noteTypeFilterButtons}
     activeButtonIDs={activeNoteTypes}
+    extraButtonClass="slated-task-view-filter-button"
     onUpdate={(ids) => {
       activeNoteTypes = ids;
       taskCache.notify();

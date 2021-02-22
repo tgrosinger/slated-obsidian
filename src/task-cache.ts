@@ -52,8 +52,6 @@ export class TaskCache {
     );
     const newID = maxID + 1;
 
-    console.log('adding sub');
-
     this.subscriptions.push({ id: newID, hook: subscription });
     subscription(this);
 
@@ -111,7 +109,6 @@ export class TaskCache {
    * Notify subscriptions of a change.
    */
   public readonly notify = (): void => {
-    console.log('notifying');
     this.subscriptions.forEach(({ hook }) => hook(this));
   };
 

@@ -1,24 +1,31 @@
 <script lang="ts">
   type IButton = {
     id: number;
-    text: string;
+    text?: string;
+    icon?: string;
   };
 
   type Button = {
     id: number;
-    text: string;
+    text?: string;
+    icon?: string;
     active: boolean;
   };
 
   export let buttons: IButton[];
   export let activeButtonIDs: number[];
   export let onUpdate: (ids: number[]) => void;
+  export let extraButtonClass: string = '';
+
+  $: activeClass = 'mod-cta ' + extraButtonClass;
+  $: inactiveClass = extraButtonClass;
 
   $: _buttons = buttons.map(
     (btn): Button => {
       return {
         id: btn.id,
         text: btn.text,
+        icon: btn.icon,
         active: activeButtonIDs.includes(btn.id),
       };
     },
@@ -41,6 +48,14 @@
 
 {#each _buttons as button}
   <button
-    class={button.active ? 'mod-cta' : ''}
-    on:click={newToggleButton(button)}>{button.text}</button>
+    class={button.active ? activeClass : inactiveClass}
+    on:click={newToggleButton(button)}
+  >
+    {#if button.icon}
+      {@html button.icon}
+    {/if}
+    {#if button.text}
+      {button.text}
+    {/if}
+  </button>
 {/each}
