@@ -79,6 +79,11 @@
  *  Task Move Modal
  */
 
+.slated-move-option label {
+  color: var(--text-muted);
+  font-size: small;
+}
+
 /*
  *  Donate - in Settings
  */

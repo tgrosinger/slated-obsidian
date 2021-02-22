@@ -133,7 +133,7 @@ export default class SlatedPlugin extends Plugin {
         }
 
         this.withTaskLine((task: TaskLine) => {
-          new TaskMoveModal(this.app, task).open();
+          new TaskMoveModal(this.app, task, this.settings).open();
         });
       },
     });
@@ -293,10 +293,12 @@ export default class SlatedPlugin extends Plugin {
 
 class TaskMoveModal extends Modal {
   private readonly task: TaskLine;
+  private readonly settings: ISettings;
 
-  constructor(app: App, task: TaskLine) {
+  constructor(app: App, task: TaskLine, settings: ISettings) {
     super(app);
     this.task = task;
+    this.settings = settings;
   }
 
   public onOpen = (): void => {
@@ -306,6 +308,7 @@ class TaskMoveModal extends Modal {
       props: {
         task: this.task,
         close: () => this.close(),
+        moveChildren: this.settings.moveSubItems,
       },
     });
   };
@@ -402,6 +405,18 @@ class SettingsTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.settings.aliasLinks).onChange((value) => {
           this.plugin.settings.aliasLinks = value;
+          this.plugin.saveData(this.plugin.settings);
+        });
+      });
+
+    new Setting(containerEl)
+      .setName('Move sub-tasks with task')
+      .setDesc(
+        'When a task is moved, move any subtasks or list items to the new location.',
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.settings.moveSubItems).onChange((value) => {
+          this.plugin.settings.moveSubItems = value;
           this.plugin.saveData(this.plugin.settings);
         });
       });

@@ -304,6 +304,7 @@ export class TaskLine {
   public readonly move = async (
     date: Moment,
     createLinks = true,
+    moveChildren = true,
   ): Promise<void> => {
     if (!this._blockID && createLinks) {
       this.addBlockID();
@@ -322,10 +323,17 @@ export class TaskLine {
       return;
     }
 
-    await addTaskMove(newFile, this, this.settings, this.vault, createLinks);
+    await addTaskMove(
+      newFile,
+      this,
+      this.settings,
+      this.vault,
+      createLinks,
+      moveChildren,
+    );
 
     if (createLinks) {
-      if (this.subContent.length > 0) {
+      if (moveChildren && this.subContent.length > 0) {
         await removeLines(
           this.file,
           this.lineNum + 1, // Leave the main line, remove subcontent

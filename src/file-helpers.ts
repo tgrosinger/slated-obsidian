@@ -46,10 +46,11 @@ export const addTaskMove = async (
   settings: ISettings,
   vault: VaultIntermediate,
   createLinks = true,
+  moveChildren = true,
 ): Promise<void> => {
   console.debug('Slated: Moving task to file: ' + file.basename);
 
-  const linesToInsert = task.subContent.slice();
+  const linesToInsert = moveChildren ? task.subContent.slice() : [];
   linesToInsert.unshift(createLinks ? task.lineAsMovedFrom() : task.line);
 
   return withFileContents(file, vault, (lines: string[]): boolean => {
