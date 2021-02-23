@@ -48,19 +48,26 @@ export class TaskHandler {
   /**
    * moveIncompleted moves all tasks in a file which are not complete to the
    * daily note for the provided moment.
+   *
+   * Tasks are moved one at a time so that we do not duplicate sub-tasks, and
+   * so that we are not confused by changing line numbers in the source file as
+   * we remove tasks. It's not very efficient, but it does seem to work.
    */
   public readonly moveIncompleted = async (
     file: TFile,
     to: Moment,
   ): Promise<void> => {
-    const tasks = await this.normalizeFileTasks(file);
-    const incompleteTasks = tasks.filter((task) => task.incomplete);
+    while (true) {
+      const tasks = await this.normalizeFileTasks(file);
+      if (!tasks || !tasks.length) {
+        return;
+      }
+      const firstIncomplete = tasks.find((task) => task.incomplete);
+      if (!firstIncomplete) {
+        return;
+      }
 
-    // Moving tasks is not thread safe since they read and write to files
-    // Move in reverse order to get around line number changing issue caused by
-    // moving tasks with subitems.
-    for (let i = incompleteTasks.length - 1; i >= 0; i--) {
-      await incompleteTasks[i].move(to);
+      await firstIncomplete.move(to);
     }
   };
 
