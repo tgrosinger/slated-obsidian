@@ -286,6 +286,11 @@ export default class SlatedPlugin extends Plugin {
         })();
 
         listItem.addClass('task-list-item');
+        if (icon === movedIconSvg) {
+          listItem.addClass('is-deferred');
+        } else if (icon === skippedIconSvg) {
+          listItem.addClass('is-skipped');
+        }
         innerEl.insertBefore(Element(icon), innerEl.firstChild);
       });
   };
