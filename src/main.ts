@@ -21,15 +21,9 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
-  TAbstractFile,
   TFile,
 } from 'obsidian';
 import type { IWeekStartOption } from 'obsidian-calendar-ui';
-
-// TODO: Can I use a webworker to perform a scan of files in the vault for
-// tasks that would otherwise be missed and not have a repetition created?
-
-// TODO: Add an option for the preferred divider type
 
 declare global {
   interface Window {
@@ -144,6 +138,29 @@ export default class SlatedPlugin extends Plugin {
     });
 
     this.addSettingTab(new SettingsTab(this.app, this));
+
+    if (!this.settings.displayedRemoveLinksNotice) {
+      const div = createDiv();
+      div
+        .createEl('p')
+        .setText(
+          'The Slated plugin has been updated to remove links between tasks.',
+        );
+      div
+        .createEl('p')
+        .setText(
+          'After much reflection, it was decided that this functionality was not the right direction for Slated and caused undue complexity.',
+        );
+      div
+        .createEl('p')
+        .setText(
+          'This change may result in some existing tasks not moving or repeating correctly. If you experience issues with tasks, please recreate the line without links to other notes. If you prefer the old functionality, you can restore it by manually installing the old version from https://github.com/tgrosinger/slated-obsidian/releases/tag/0.2.2',
+        );
+      div.createEl('p').setText('Thank you for your patience.');
+      new NotificationModal(this.app, 'Slated Plugin Update Notes', div).open();
+      this.settings.displayedRemoveLinksNotice = true;
+      await this.saveData(this.settings);
+    }
   }
 
   private async loadSettings(): Promise<void> {
@@ -243,6 +260,23 @@ export default class SlatedPlugin extends Plugin {
         }
         innerEl.insertBefore(Element(icon), innerEl.firstChild);
       });
+  };
+}
+
+class NotificationModal extends Modal {
+  private readonly title: string;
+  private readonly body: HTMLElement;
+
+  constructor(app: App, title: string, body: HTMLElement) {
+    super(app);
+    this.title = title;
+    this.body = body;
+  }
+
+  public onOpen = (): void => {
+    const { titleEl, contentEl } = this;
+    titleEl.setText(this.title);
+    contentEl.appendChild(this.body);
   };
 }
 
