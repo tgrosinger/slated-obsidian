@@ -58,9 +58,6 @@ const format = 'YYYY-MM-DD';
 const startDateStr = '2020-12-31';
 const startDate = moment(startDateStr);
 
-const escapeRegExp = (str: string): string =>
-  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-
 const getMockFileWithBasename = (basename: string): MockProxy<TFile> => {
   const mockFile = mock<TFile>();
   mockFile.basename = basename;
@@ -112,10 +109,8 @@ describe('taskHandler.processFile', () => {
 
     await taskHandler.processFile(file);
 
-    expect(fileContents[file.basename]).toMatch(
-      new RegExp(
-        escapeRegExp('- [ ] a test task ; Every Sunday ^task-') + '[a-z0-9]{4}',
-      ),
+    expect(fileContents[file.basename]).toEqual(
+      '- [ ] a test task ; Every Sunday',
     );
   });
 
@@ -127,12 +122,10 @@ describe('taskHandler.processFile', () => {
 
     expect(fileContents[file.basename]).toHaveLines(
       [
-        escapeRegExp('- [ ] a test task ; Every Sunday ^task-') +
-          '[a-zA-Z0-9]{4}',
-        escapeRegExp('- [ ] another task; Every Thursday ^task-') +
-          '[a-zA-Z0-9]{4}',
+        '- [ ] a test task ; Every Sunday',
+        '- [ ] another task; Every Thursday',
       ],
-      [0, 1],
+      [],
     );
   });
 
@@ -159,8 +152,7 @@ describe('taskHandler.processFile', () => {
         '',
         '## Tasks',
         '',
-        escapeRegExp('- [ ] a test task; Every Monday ^task-') +
-          '[a-zA-Z0-9]{4}',
+        '- [ ] a test task; Every Monday',
         '  - a subtask',
         '',
         '## Notes',
@@ -168,13 +160,12 @@ describe('taskHandler.processFile', () => {
         '- These are my notes',
         '',
       ],
-      [4],
+      [],
     );
   });
 
   test('Newly completed tasks are propogated', async () => {
-    fileContents[file.basename] =
-      '- [ ] a test task ; Every Sunday ^task-abc123';
+    fileContents[file.basename] = '- [ ] a test task ; Every Sunday';
 
     const futureFiles: TFile[] = [];
     vault.getDailyNote.mockImplementation((date) => {
@@ -185,14 +176,13 @@ describe('taskHandler.processFile', () => {
 
     await taskHandler.processFile(file);
 
-    fileContents[file.basename] =
-      '- [x] a test task ; Every Sunday ^task-abc123';
+    fileContents[file.basename] = '- [x] a test task ; Every Sunday';
 
     await taskHandler.processFile(file);
 
     expect(futureFiles).toHaveLength(1);
     expect(fileContents[futureFiles[0].basename]).toEqual(
-      '## Tasks\n\n- [ ] a test task ; Every Sunday [[2020-12-31#^task-abc123|<< Origin]]\n',
+      '## Tasks\n\n- [ ] a test task ; Every Sunday\n',
     );
   });
 });
