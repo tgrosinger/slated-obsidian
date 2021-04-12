@@ -20,17 +20,6 @@ export const checkboxIcon = `
 /**
  * Sized so that this fits inline with actual checkbox inputs
  */
-export const movedIconSvg = `
-<svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
- <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path transform="scale(.26458)" d="m165.26 45.489v-19.196c0-9.7004-7.8093-17.51-17.51-17.51h-122.18c-9.7004 0-17.51 7.8093-17.51 17.51v139.45c0 9.7004 7.8093 17.51 17.51 17.51h122.18c9.7004 0 17.51-7.8093 17.51-17.51v-17.186" stroke-miterlimit="31.5" stroke-width="16"/>
-  <path d="m54.542 15.083 11.35 10.512-11.274 10.131m-26.509-10.055 37.783-0.076176" stroke-width="4.2333"/>
- </g>
-</svg>`;
-
-/**
- * Sized so that this fits inline with actual checkbox inputs
- */
 export const skippedIconSvg = `
 <svg class="slated-task-icon" width="67.866mm" height="50.848mm" version="1.1" viewBox="0 0 67.866 50.848" xmlns="http://www.w3.org/2000/svg">
  <g fill="none" stroke-linecap="round" stroke-linejoin="round">

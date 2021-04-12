@@ -3,8 +3,6 @@ import {
   addTaskRepetition,
   getHeaderDepth,
   removeLines,
-  removeTask,
-  updateTask,
 } from './file-helpers';
 import { RepeatAdapter } from './repeat';
 import type { ISettings } from './settings';
@@ -22,32 +20,6 @@ const taskRe = /^\s*- \[[ xX>\-]\] /;
  */
 const repeatScheduleRe = /[;📅]\s*([-a-zA-Z0-9 =;:\,]+)/;
 
-/**
- * Matches the backlink to the original task when a task is moved.
- *   <[[2020-12-31#^task-abcd]]
- *   [[2020-12-31#^task-abcd|< Origin]]
- */
-const movedFromRe = /(?:<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\])|(?:\[\[([^\]]+)#\^[-a-zA-Z0-9]+\|< Origin\]\])/;
-
-/**
- * Matces the link to where a task was moved.
- *   >[[2020-12-31]]
- */
-const movedToRe = />\[\[([^\]]+)\]\]/;
-
-/**
- * Matches the backlink to where a task repeated from.
- *   <<[[22020-12-31#^task-abcd]]
- *   [[22020-12-31#^task-abcd|<< Origin]]
- */
-const repeatsFromRe = /(?:<<\[\[([^\]]+)#\^[-a-zA-Z0-9]+(|[^\]]+)?\]\])|(?:\[\[([^\]]+)#\^[-a-zA-Z0-9]+\|<< Origin\]\])/;
-
-/**
- * Matches a block hash.
- *   ^task-abcd
- */
-const blockHashRe = /\^([-a-zA-Z0-9]+)/;
-
 export class TaskLine {
   public readonly lineNum: number;
   public readonly subContent: string[];
@@ -59,17 +31,8 @@ export class TaskLine {
 
   private _line: string;
 
-  /**
-   * Do not use directly, instead use baseTaskContent() which memoizes.
-   */
-  private _basetask: string;
-
   private _repeats: boolean;
   private _repeatConfig: string;
-  private _blockID: string;
-  private readonly _movedToNoteName: string;
-  private readonly _movedFromNoteName: string;
-  private readonly _repeatsFromNoteName: string;
 
   constructor(
     lineNum: number,
@@ -97,43 +60,6 @@ export class TaskLine {
       this._repeatConfig = repeatMatches[1];
     } else {
       this._repeats = false;
-    }
-
-    const blockIDMatches = blockHashRe.exec(this._line);
-    if (
-      blockIDMatches &&
-      blockIDMatches.length === 2 &&
-      blockIDMatches[1] !== ''
-    ) {
-      this._blockID = blockIDMatches[1];
-    } else {
-      this._blockID = '';
-    }
-
-    const movedFromLink = movedFromRe.exec(this._line);
-    if (movedFromLink && movedFromLink.length >= 4) {
-      if (movedFromLink[1]) {
-        this._movedFromNoteName = movedFromLink[1].split('|')[0];
-      } else if (movedFromLink[3]) {
-        this._movedFromNoteName = movedFromLink[3].split('|')[0];
-      }
-    }
-
-    const movedToLink = movedToRe.exec(this._line);
-    if (movedToLink) {
-      if (movedToLink.length > 1 && movedToLink[1] !== '') {
-        this._movedToNoteName = movedToLink[1].split('|')[0];
-      }
-    }
-
-    const repeatsFromLink = repeatsFromRe.exec(this._line);
-    if (repeatsFromLink && repeatsFromLink.length >= 4) {
-      if (repeatsFromLink[1]) {
-        this._repeatsFromNoteName = repeatsFromLink[1].split('|')[0];
-      } else if (repeatsFromLink[3]) {
-        // this is the case for when the link is aliased with Origin
-        this._repeatsFromNoteName = repeatsFromLink[3].split('|')[0];
-      }
     }
   }
 
@@ -178,16 +104,6 @@ export class TaskLine {
     return innerChar === ' ';
   }
 
-  public get moved(): boolean {
-    const matches = taskRe.exec(this._line);
-    if (!matches) {
-      return false;
-    }
-
-    const innerChar = matches[0].trimStart()[3];
-    return innerChar === '>';
-  }
-
   public get skipped(): boolean {
     const matches = taskRe.exec(this._line);
     if (!matches) {
@@ -198,62 +114,12 @@ export class TaskLine {
     return innerChar === '-';
   }
 
-  // isOriginalInstance indicates if this is the task actually annotated with a
-  // block ID, or if instead it is referring to another task by blockID.
-  public get isOriginalInstance(): boolean {
-    if (this.repeats) {
-      return !this.repeatsFrom;
-    }
-
-    if (this._movedFromNoteName) {
-      return false;
-    }
-
-    return true;
-  }
-
-  // Converts the line to be used in places where it was moved from another note.
-  // Something like:
-  // - [ ] This is the task <[[2020-12-25^task-abc123]]
-  // - [ ] This is the task [[2020-12-25^task-abc123|< Origin]]
-  public lineAsMovedFrom = (): string => {
-    const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
-    const linkPrefix = this.settings.aliasLinks ? '' : '<';
-    const alias = this.settings.aliasLinks ? '|< Origin' : '';
-    return `${this.taskContentNoLinks().trimRight()} ${linkPrefix}[[${rootTaskLink}${alias}]]`;
-  };
-
   // Converts the line to be used in places where it was copied to another note
   // because it repeats.
   // Something like:
-  // - [ ] This is the task ; Every Sunday <<[[2020-12-25^task-abc123]]
-  // - [ ] This is the task ; Every Sunday [[2020-12-25^task-abc123|<< Origin]]
-  public lineAsRepeated = (): string => {
-    const rootTaskLink = `${this.originalFileName()}#^${this._blockID}`;
-    const uncheckedContent = this.taskContentNoLinks().replace(
-      /\[[xX]\]/,
-      '[ ]',
-    );
-    const linkPrefix = this.settings.aliasLinks ? '' : '<<';
-    const alias = this.settings.aliasLinks ? '|<< Origin' : '';
-    return `${uncheckedContent}${linkPrefix}[[${rootTaskLink}${alias}]]`;
-  };
-
-  public get movedTo(): string {
-    return this._movedToNoteName || '';
-  }
-
-  public get movedFrom(): string {
-    return this._movedFromNoteName || '';
-  }
-
-  public get repeatsFrom(): string {
-    return this._repeatsFromNoteName || '';
-  }
-
-  public get blockID(): string {
-    return this._blockID;
-  }
+  // - [ ] This is the task ; Every Sunday
+  // - [ ] This is the task ; Every Sunday
+  public lineAsRepeated = (): string => this.line.replace(/\[[xX]\]/, '[ ]');
 
   /**
    * Return whether the line stored is actually a valid Markdown task. NOTE:
@@ -301,53 +167,12 @@ export class TaskLine {
     );
   };
 
-  public readonly move = async (
-    date: Moment,
-    createLinks = true,
-    moveChildren = true,
-  ): Promise<void> => {
-    if (!this._blockID && createLinks) {
-      this.addBlockID();
-    }
-
+  public readonly move = async (date: Moment): Promise<void> => {
     const newFile = await this.vault.getDailyNote(date);
 
-    if (newFile.basename === this.originalFileName()) {
-      // We are essentially "un-defering" the task
-      // Rather than a normal move, delete the line in this file and
-      // reset the original line
+    await addTaskMove(newFile, this, this.settings, this.vault);
 
-      const undeferredLine = `${this.taskContentNoLinks()}^${this._blockID}`;
-      await updateTask(newFile, this, undeferredLine, true, this.vault);
-      await removeTask(this.file, this, this.vault);
-      return;
-    }
-
-    await addTaskMove(
-      newFile,
-      this,
-      this.settings,
-      this.vault,
-      createLinks,
-      moveChildren,
-    );
-
-    if (createLinks) {
-      if (moveChildren && this.subContent.length > 0) {
-        await removeLines(
-          this.file,
-          this.lineNum + 1, // Leave the main line, remove subcontent
-          this.subContent.length,
-          this.vault,
-        );
-      }
-
-      // Update the main task line to indicate moved
-      this._line = this.lineAsMovedTo(date);
-      return this.save();
-    }
-
-    // Else, remove this task and subcontent
+    // Remove this task and subcontent
     return removeLines(
       this.file,
       this.lineNum,
@@ -367,7 +192,6 @@ export class TaskLine {
     if (!this._repeatConfig) {
       // Adding a repeat config to a task that previously did not have one
       this._line = this._line.trimRight() + ' 📅 ' + repeater.toText();
-      this.addBlockID();
     } else {
       this._line = this._line
         .replace(this._repeatConfig, repeater.toText() + ' ')
@@ -392,108 +216,10 @@ export class TaskLine {
       return;
     }
 
-    await this.addBlockIDIfMissing();
     await this.createNextRepetition();
 
     this._line = this._line.replace(/\[ \]/, '[-]');
     return this.save();
-  };
-
-  public readonly addBlockIDIfMissing = (): Promise<void> => {
-    if (this.repeats && !this.blockID) {
-      this.addBlockID();
-      return this.save();
-    }
-  };
-
-  /**
-   * Returns the tasks with no repetition config, block ID, links to moved or
-   * repeat locations, or the markdown checkbox. Just the bare task contents.
-   */
-  public readonly baseTaskContent = (): string => {
-    let l = this.taskContentNoLinks();
-    l = l.replace(taskRe, '');
-    l = l.replace('📅', ';').replace(repeatScheduleRe, '');
-    return l;
-  };
-
-  /**
-   * Converts the line to be used in places where it was moved to another note.
-   * Something like:
-   * - [>] This is the task >[[2020-12-25]] ^task-abc123
-   */
-  private readonly lineAsMovedTo = (date: Moment): string => {
-    const newFileName = this.vault.fileNameForMoment(date);
-    const content = this.taskContentNoLinks().replace(/\[[ xX]\]/, '[>]');
-
-    // If this task was already moved to this location, then we want to preserve
-    // the link to where it was moved from
-    const movedFrom = this._movedFromNoteName
-      ? (() => {
-          const linkPrefix = this.settings.aliasLinks ? '' : '<';
-          const alias = this.settings.aliasLinks ? '|< Origin' : '';
-          return `${linkPrefix}[[${this._movedFromNoteName}#^${this._blockID}${alias}]] `;
-        })()
-      : '';
-
-    // If this task was already moved to this location, then we should not put
-    // the blockID on this line, instead it is included in the movedFrom
-    // reference.
-    const blockID = movedFrom ? '' : ` ^${this._blockID}`;
-
-    return `${content}${movedFrom}>[[${newFileName}]]${blockID}`;
-  };
-
-  /**
-   * Create a blockID and append to the line.
-   */
-  private readonly addBlockID = (): void => {
-    if (this._blockID !== '') {
-      return;
-    }
-
-    this._blockID = createTaskBlockHash();
-    this._line = this._line.trimRight() + ' ^' + this._blockID;
-  };
-
-  /**
-   * Returns the task line with no repetition or move links.
-   */
-  private readonly taskContentNoLinks = (): string => {
-    if (this._basetask) {
-      return this._basetask;
-    }
-
-    let line = this._line;
-    line = line.replace(movedFromRe, '');
-    line = line.replace(movedToRe, '');
-    line = line.replace(repeatsFromRe, '');
-    line = line.replace(blockHashRe, '');
-    this._basetask = line;
-    return line;
-  };
-
-  /**
-   * Attempts to return the name of the file from which this task originated.
-   * That could be a file which this task was moved from, or it could be the
-   * source of the repetition of this task.
-   */
-  private readonly originalFileName = (): string => {
-    if (this.isOriginalInstance) {
-      return this.file.basename;
-    }
-
-    if (this._movedFromNoteName) {
-      return this._movedFromNoteName;
-    }
-
-    if (this._repeatsFromNoteName) {
-      return this._repeatsFromNoteName;
-    }
-
-    throw new Error(
-      `Slated: Unable to find original file name for task: ${this._line}`,
-    );
   };
 
   /**
@@ -565,16 +291,6 @@ const getParentHeaderIndex = (
     }
   }
   return -1;
-};
-
-const createTaskBlockHash = (): string => {
-  let result = 'task-';
-  const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for (let i = 0; i < 4; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
 };
 
 const getLineIndentLevel = (line: string): number =>

@@ -36,7 +36,7 @@ export class TaskHandler {
       return;
     }
 
-    const tasks = await this.normalizeFileTasks(file);
+    const tasks = await this.getFileTasks(file);
     const newlyCompletedTasks = this.filterNewlyCompletedTasks(
       file.basename,
       tasks,
@@ -58,7 +58,7 @@ export class TaskHandler {
     to: Moment,
   ): Promise<void> => {
     while (true) {
-      const tasks = await this.normalizeFileTasks(file);
+      const tasks = await this.getFileTasks(file);
       if (!tasks || !tasks.length) {
         return;
       }
@@ -112,30 +112,8 @@ export class TaskHandler {
       trimmed.startsWith('- [ ] ') ||
       trimmed.startsWith('- [x] ') ||
       trimmed.startsWith('- [X] ') ||
-      trimmed.startsWith('- [-] ') ||
-      trimmed.startsWith('- [>] ')
+      trimmed.startsWith('- [-] ')
     );
-  };
-
-  /**
-   * Scan the file looking for tasks. Parse the task, and if it is a repeating
-   * task, ensure it has a block ID and validate the repeat config. Normalized
-   * file is saved, then returns a list of all the TaskItems.
-   */
-  private readonly normalizeFileTasks = async (
-    file: TFile,
-  ): Promise<TaskLine[]> => {
-    console.debug('Slated: Normalizing tasks in file: ' + file.basename);
-    const taskLines = await this.getFileTasks(file);
-
-    // XXX: This will cause a file write for each task which needs to be modified.
-    // Hopefully there aren't so many tasks modified at once that it's problematic,
-    // but it may be necessary to change this to batch writes.
-    for (let i = 0; i < taskLines.length; i++) {
-      await taskLines[i].addBlockIDIfMissing();
-    }
-
-    return taskLines;
   };
 
   private readonly filterNewlyCompletedTasks = (
@@ -155,7 +133,7 @@ export class TaskHandler {
 
       for (let i = 0; i < prevTasks.length; i++) {
         const prevTask = prevTasks[i];
-        if (task.blockID === prevTask.blockID) {
+        if (task.line === prevTask.line) {
           // if prevTask complete then not newly completed
           return !prevTask.complete;
         }

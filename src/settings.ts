@@ -3,9 +3,6 @@ import type { ILocaleOverride, IWeekStartOption } from 'obsidian-calendar-ui';
 export interface ISettings {
   tasksHeader: string;
   blankLineAfterHeader: boolean;
-  aliasLinks: boolean;
-  moveSubItems: boolean;
-  enableTaskView: boolean;
 
   // Calendar view
   localeOverride: ILocaleOverride;
@@ -15,9 +12,6 @@ export interface ISettings {
 const defaultSettings: ISettings = {
   tasksHeader: '## Tasks',
   blankLineAfterHeader: true,
-  aliasLinks: true,
-  moveSubItems: true,
-  enableTaskView: false,
 
   localeOverride: 'system-default',
   weekStart: 'locale',

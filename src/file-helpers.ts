@@ -17,11 +17,6 @@ export const addTaskRepetition = async (
   );
 
   return withFileContents(file, vault, (lines: string[]): boolean => {
-    const blockIDIndex = getBlockIDIndex(lines, task.blockID);
-    if (blockIDIndex !== -1) {
-      return false; // TODO: Verify it is actually the correct format and such
-    }
-
     const taskSectionIndex = getIndexTasksHeading(
       lines,
       task.headings,
@@ -45,13 +40,11 @@ export const addTaskMove = async (
   task: TaskLine,
   settings: ISettings,
   vault: VaultIntermediate,
-  createLinks = true,
-  moveChildren = true,
 ): Promise<void> => {
   console.debug('Slated: Moving task to file: ' + file.basename);
 
-  const linesToInsert = moveChildren ? task.subContent.slice() : [];
-  linesToInsert.unshift(createLinks ? task.lineAsMovedFrom() : task.line);
+  const linesToInsert = task.subContent.slice();
+  linesToInsert.unshift(task.line);
 
   return withFileContents(file, vault, (lines: string[]): boolean => {
     const taskSectionIndex = getIndexTasksHeading(
@@ -85,27 +78,6 @@ export const removeLines = async (
   withFileContents(file, vault, (lines: string[]): boolean => {
     lines.splice(start, count);
     return true;
-  });
-
-export const updateTask = async (
-  file: TFile,
-  task: TaskLine,
-  newLine: string,
-  addSubContent: boolean,
-  vault: VaultIntermediate,
-): Promise<void> =>
-  withFileContents(file, vault, (lines: string[]): boolean => {
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf(task.blockID) === -1) {
-        continue;
-      }
-
-      const linesToInsert = addSubContent ? task.subContent.slice() : [];
-      linesToInsert.unshift(newLine);
-      lines.splice(i, 1, ...linesToInsert);
-      return true;
-    }
-    return false;
   });
 
 /**

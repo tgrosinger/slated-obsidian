@@ -6,22 +6,16 @@
 
   // Creation Parameters
   export let task: TaskLine;
-  export let moveChildren: boolean;
   export let close: () => void;
 
   // Internal Properties
   const today = window.moment();
-  let createLinks = true;
-
-  $: if (!createLinks) {
-    moveChildren = true;
-  }
 
   const onClickDay = async (
     date: Moment,
     isMetaPressed: boolean,
   ): Promise<void> => {
-    await task.move(date.startOf('day'), createLinks, moveChildren);
+    await task.move(date.startOf('day'));
     close();
   };
 </script>
@@ -34,20 +28,3 @@
   showWeekNums={false}
   localeData={today.localeData()}
 />
-
-<div class="slated-move-option">
-  <label>
-    <input type="checkbox" bind:checked={createLinks} />
-    Create bi-directional links
-  </label>
-</div>
-<div class="slated-move-option">
-  <label>
-    <input
-      type="checkbox"
-      disabled={!createLinks}
-      bind:checked={moveChildren}
-    />
-    Move sub-items and tasks
-  </label>
-</div>

@@ -1,11 +1,4 @@
-import {
-  buyMeACoffee,
-  checkboxIcon,
-  Element,
-  movedIconSvg,
-  paypal,
-  skippedIconSvg,
-} from './graphics';
+import { buyMeACoffee, Element, paypal, skippedIconSvg } from './graphics';
 import {
   shouldConfigureGlobalMoment,
   tryToConfigureGlobalMoment,
@@ -14,13 +7,11 @@ import { ISettings, settingsWithDefaults } from './settings';
 import { TaskCache } from './task-cache';
 import { TaskHandler } from './task-handler';
 import { TaskLine } from './task-line';
-import { TaskView, TaskViewType } from './task-view';
 import TaskMove from './ui/TaskMove.svelte';
 import TaskRepeat from './ui/TaskRepeat.svelte';
 import { VaultIntermediate } from './vault';
 import type { default as MomentType, WeekSpec } from 'moment';
 import {
-  addIcon,
   App,
   MarkdownPostProcessorContext,
   MarkdownPreviewRenderer,
@@ -49,7 +40,6 @@ declare global {
 
 export default class SlatedPlugin extends Plugin {
   public settings: ISettings;
-  private taskView: TaskView;
 
   private vault: VaultIntermediate;
   private taskHandler: TaskHandler;
@@ -67,27 +57,6 @@ export default class SlatedPlugin extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       this.taskCache.initialize();
     });
-
-    if (this.settings.enableTaskView) {
-      this.registerView(
-        TaskViewType,
-        (leaf) =>
-          (this.taskView = new TaskView(leaf, this.taskCache, this.settings)),
-      );
-
-      this.registerEvent(
-        this.app.vault.on('create', this.taskCache.fileCreateHook),
-      );
-      this.registerEvent(
-        this.app.vault.on('delete', this.taskCache.fileDeleteHook),
-      );
-      this.registerEvent(
-        this.app.vault.on('rename', this.taskCache.fileRenameHook),
-      );
-
-      addIcon('slated', checkboxIcon);
-      this.addRibbonIcon('slated', 'Slated', this.initSlatedView);
-    }
 
     MarkdownPreviewRenderer.registerPostProcessor(this.renderMovedTasks);
 
@@ -133,7 +102,7 @@ export default class SlatedPlugin extends Plugin {
         }
 
         this.withTaskLine((task: TaskLine) => {
-          new TaskMoveModal(this.app, task, this.settings).open();
+          new TaskMoveModal(this.app, task).open();
         });
       },
     });
@@ -185,20 +154,6 @@ export default class SlatedPlugin extends Plugin {
     }
   }
 
-  private readonly initSlatedView = (): void => {
-    const existing = this.app.workspace.getLeavesOfType(TaskViewType);
-    if (existing.length) {
-      this.app.workspace.revealLeaf(existing[0]);
-      return;
-    }
-
-    const newLeaf = this.app.workspace.splitActiveLeaf('vertical');
-    newLeaf.setViewState({
-      type: TaskViewType,
-      active: true,
-    });
-  };
-
   private readonly taskChecker = (): boolean => {
     if (
       this.app.workspace.activeLeaf === undefined ||
@@ -248,8 +203,7 @@ export default class SlatedPlugin extends Plugin {
       .filter(
         (listItem) =>
           !listItem.hasClass('task-list-item') &&
-          (listItem.getText().trimStart().startsWith('[>]') ||
-            listItem.getText().trimStart().startsWith('[-]')),
+          listItem.getText().trimStart().startsWith('[-]'),
       )
       .forEach((listItem) => {
         let innerEl: HTMLElement = listItem;
@@ -275,8 +229,6 @@ export default class SlatedPlugin extends Plugin {
 
         const icon = ((): string => {
           switch (removedPrefix) {
-            case '[>] ':
-              return movedIconSvg;
             case '[-] ':
               return skippedIconSvg;
             default:
@@ -286,9 +238,7 @@ export default class SlatedPlugin extends Plugin {
         })();
 
         listItem.addClass('task-list-item');
-        if (icon === movedIconSvg) {
-          listItem.addClass('is-deferred');
-        } else if (icon === skippedIconSvg) {
+        if (icon === skippedIconSvg) {
           listItem.addClass('is-skipped');
         }
         innerEl.insertBefore(Element(icon), innerEl.firstChild);
@@ -298,22 +248,19 @@ export default class SlatedPlugin extends Plugin {
 
 class TaskMoveModal extends Modal {
   private readonly task: TaskLine;
-  private readonly settings: ISettings;
 
-  constructor(app: App, task: TaskLine, settings: ISettings) {
+  constructor(app: App, task: TaskLine) {
     super(app);
     this.task = task;
-    this.settings = settings;
   }
 
   public onOpen = (): void => {
     const { contentEl } = this;
-    const app = new TaskMove({
+    new TaskMove({
       target: contentEl,
       props: {
         task: this.task,
         close: () => this.close(),
-        moveChildren: this.settings.moveSubItems,
       },
     });
   };
@@ -334,7 +281,7 @@ class TaskRepeatModal extends Modal {
 
   public onOpen = (): void => {
     const { contentEl } = this;
-    const app = new TaskRepeat({
+    new TaskRepeat({
       target: contentEl,
       props: {
         task: this.task,
@@ -398,30 +345,6 @@ class SettingsTab extends PluginSettingTab {
           }
 
           this.plugin.settings.tasksHeader = value;
-          this.plugin.saveData(this.plugin.settings);
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Alias backlinks to original tasks')
-      .setDesc(
-        'When a task is moved or repeats, use the "Origin" alias in the backlink',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.aliasLinks).onChange((value) => {
-          this.plugin.settings.aliasLinks = value;
-          this.plugin.saveData(this.plugin.settings);
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Move sub-tasks with task')
-      .setDesc(
-        'When a task is moved, move any subtasks or list items to the new location.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.moveSubItems).onChange((value) => {
-          this.plugin.settings.moveSubItems = value;
           this.plugin.saveData(this.plugin.settings);
         });
       });
