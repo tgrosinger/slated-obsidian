@@ -7,8 +7,6 @@ Advanced task management in the Obsidian knowledgebase.
 - Move all incomplete tasks to today's daily note
 - All in 100% Obsidian Markdown!
 
-Coming Soon: View, filter, and modify tasks across daily, weekly, and monthly notes from a single interface.
-
 ## Screenshots
 
 ![move-incomplete-tasks](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/move-incomplete-tasks.gif)
@@ -29,18 +27,15 @@ them to a hotkey, or using the command palette.
 Repetition configs can also be edited manually, however using the interface
 helps ensure a valid repetition config has been created.
 
-Tasks can also be moved to another day, and the original task and the moved
-task will link bidirectionally.
+Tasks can also be moved to another day.
 
 ![task-move](https://raw.githubusercontent.com/tgrosinger/slated-obsidian/main/resources/screenshots/task-move.png)
 
 ## Task Format
 
-- [ ] This task is incomplete and repeats ; Every Monday and Tuesday ^task-1234
-- [-] This repeating task occurence was skipped ; Every Sunday ^task-5678
-- [>] This task was moved to >[[2021-05-01]] ^task-9101
+- [ ] This task is incomplete and repeats ; Every Monday and Tuesday
+- [-] This repeating task occurence was skipped ; Every Sunday
 - [x] This task was completed
-- [ ] This task was moved here from [[2020-12-31|< Origin]]
 - [ ] This task has sub-items that will move with it
   - [ ] Sub items can be a task
   - Or not
@@ -49,13 +44,12 @@ task will link bidirectionally.
 
 ### More Examples
 
-- [ ] Go to the dentist ;8:30am ^jzzz3f4
-- [x] Make ferry reservation 📅 7:00am ^0sd238l
+- [ ] Go to the dentist ;8:30am
+- [x] Make ferry reservation 📅 7:00am
 - [ ] (A) Vacuum the stairs
-- [ ] Make bread ;Every Sunday ^ze6w5od
-- [ ] Bring dog to the vet [[2020-11-22^3k2codg|< Origin]]
-- [>] Wash the car >[[2021-05-01]] ^task-9sdy
-- [ ] Do the dishes 📅 Every weekday at 5pm ^task-3ddx
+- [ ] Make bread ;Every Sunday
+- [ ] Bring dog to the vet
+- [ ] Do the dishes 📅 Every weekday at 5pm
 
 ## Pricing
 
@@ -69,4 +63,7 @@ my way through one of the following methods:
 
 ## Credits
 
-A huge thank you to [Liam Cain](https://github.com/liamcain) for adapting the [Obsidian Calendar Plugin](https://github.com/liamcain/obsidian-calendar-plugin) and making it broadly usable by other plugins!
+A huge thank you to [Liam Cain](https://github.com/liamcain) for adapting the
+[Obsidian Calendar
+Plugin](https://github.com/liamcain/obsidian-calendar-plugin) and making it
+broadly usable by other plugins!
