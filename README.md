@@ -5,6 +5,7 @@ Advanced task management in the Obsidian knowledgebase.
 - Setup repeating tasks
 - Defer tasks to another daily note
 - Move all incomplete tasks to today's daily note
+- Works in Obsidian Mobile
 - All in 100% Obsidian Markdown!
 
 ## Screenshots
