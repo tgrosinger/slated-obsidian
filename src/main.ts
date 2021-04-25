@@ -45,7 +45,11 @@ export default class SlatedPlugin extends Plugin {
     await this.loadSettings();
 
     this.vault = new VaultIntermediate(this.app.vault);
-    this.taskHandler = new TaskHandler(this.vault, this.settings);
+    this.taskHandler = new TaskHandler(
+      this.vault,
+      this.app.metadataCache,
+      this.settings,
+    );
     this.taskCache = new TaskCache(this.taskHandler, this.vault);
 
     this.app.workspace.onLayoutReady(() => {

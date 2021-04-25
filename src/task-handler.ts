@@ -3,17 +3,23 @@ import type { ISettings } from './settings';
 import { TaskLine } from './task-line';
 import type { VaultIntermediate } from './vault';
 import type { Moment } from 'moment';
-import type { TFile } from 'obsidian';
+import type { MetadataCache, TFile } from 'obsidian';
 
 // TODO: Switch taskCache to use the TaskCache class
 
 export class TaskHandler {
   private readonly settings: ISettings;
   private readonly vault: VaultIntermediate;
+  private readonly metadataCache: MetadataCache;
   private taskCache: Record<string, TaskLine[]>;
 
-  constructor(vault: VaultIntermediate, settings: ISettings) {
+  constructor(
+    vault: VaultIntermediate,
+    metadataCache: MetadataCache,
+    settings: ISettings,
+  ) {
     this.vault = vault;
+    this.metadataCache = metadataCache;
     this.settings = settings;
     this.taskCache = {};
   }
@@ -75,25 +81,27 @@ export class TaskHandler {
     this.taskCache[file.basename];
 
   public readonly getFileTasks = async (file: TFile): Promise<TaskLine[]> => {
-    const fileContents = await this.vault.readFile(file, false);
-    if (!fileContents) {
+    const cachedListItems = this.metadataCache.getFileCache(file).listItems;
+    if (!cachedListItems || cachedListItems.length === 0) {
       return [];
     }
 
+    const fileContents = await this.vault.readFile(file, false);
     const splitFileContents = fileContents.split('\n');
-    return splitFileContents
-      .map((line, index) => ({ line, lineNum: index }))
-      .filter(({ line }) => this.isLineTask(line))
-      .map(
-        ({ lineNum }) =>
-          new TaskLine(
-            lineNum,
-            file,
-            splitFileContents,
-            this.vault,
-            this.settings,
-          ),
-      );
+
+    // TODO: Pass info about list start and parent
+
+    return cachedListItems
+      .filter((li) => li.task)
+      .map((li) => {
+        return new TaskLine(
+          li.position.start.line,
+          file,
+          splitFileContents,
+          this.vault,
+          this.settings,
+        );
+      });
   };
 
   /**

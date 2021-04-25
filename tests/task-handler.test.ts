@@ -3,7 +3,7 @@ import { TaskHandler } from '../src/task-handler';
 import type { VaultIntermediate } from '../src/vault';
 import { mock, MockProxy } from 'jest-mock-extended';
 import moment from 'moment';
-import type { TFile } from 'obsidian';
+import type { MetadataCache, TFile } from 'obsidian';
 
 declare global {
   namespace jest {
@@ -71,6 +71,7 @@ const p = (str: string): Promise<string> => Promise.resolve(str);
 
 let file: MockProxy<TFile>;
 let vault: jest.Mocked<VaultIntermediate>;
+let metadataCache: jest.Mocked<MetadataCache>;
 let settings: jest.Mocked<ISettings>;
 let taskHandler: TaskHandler;
 let fileContents: Record<string, string>;
@@ -85,7 +86,8 @@ beforeAll(() => {
 beforeEach(() => {
   window.moment = moment;
   vault = mock<VaultIntermediate>();
-  taskHandler = new TaskHandler(vault, settings);
+  metadataCache = mock<MetadataCache>();
+  taskHandler = new TaskHandler(vault, metadataCache, settings);
 
   vault.findMomentForDailyNote.mockImplementation((dailyNote) => {
     const date = moment(dailyNote.basename, format, true);
