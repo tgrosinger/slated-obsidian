@@ -1,6 +1,6 @@
 {
   "name": "slated-obsidian",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Task management - schedule, move, and repeat tasks",
   "main": "main.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "jest": "26.6.3",
     "jest-mock-extended": "1.0.10",
     "moment": "2.29.1",
-    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/bbd5525cba2e0aefc27c87b378805c155ae8d5b1.tar.gz",
+    "obsidian": "https://github.com/obsidianmd/obsidian-api/archive/eb459522e7e35983e3e6c2358301a21b26de7b64.tar.gz",
     "rollup": "2.35.1",
     "rollup-plugin-svelte": "7.0.0",
     "svelte-check": "1.1.34",
