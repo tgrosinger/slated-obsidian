@@ -3,6 +3,7 @@ import {
   addTaskRepetition,
   getHeaderDepth,
   removeLines,
+  markTaskAsCopied,
 } from './file-helpers';
 import { RepeatAdapter } from './repeat';
 import type { ISettings } from './settings';
@@ -171,7 +172,18 @@ export class TaskLine {
     const newFile = await this.vault.getDailyNote(date);
 
     await addTaskMove(newFile, this, this.settings, this.vault);
-
+    
+    
+    if (this.settings.preserveMovedTasks) {
+      // MARK WITH [>], and preserve
+      return markTaskAsCopied(
+        this.file,
+        this.lineNum,
+        this.subContent.length + 1,
+        this.vault,
+      )
+    }
+    
     // Remove this task and subcontent
     return removeLines(
       this.file,

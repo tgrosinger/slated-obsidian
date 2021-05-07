@@ -80,6 +80,19 @@ export const removeLines = async (
     return true;
   });
 
+export const markTaskAsCopied = async (
+  file: TFile,
+  start: number,
+  count: number,
+  vault: VaultIntermediate,
+): Promise<void> =>
+  withFileContents(file, vault, (lines: string[]): boolean => {
+    const tasksToMark = lines.slice(start, start + count);
+    const markedTasks = tasksToMark.map((t) => t.replace('[ ]', '[>]'));
+    lines.splice(start, count, ...markedTasks);
+    return true;
+  });
+
 /**
  * Read the file contents and pass to the provided function as a list of lines.
  * If the provided function returns true, write the array back to the file.

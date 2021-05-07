@@ -368,6 +368,20 @@ class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName('Preserve incomplete tasks once moved.')
+      .setDesc(
+        'After moving a task, mark as moved with [>] in current note rather than deleting it.',
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.preserveMovedTasks)
+          .onChange((value) => {
+            this.plugin.settings.preserveMovedTasks = value;
+            this.plugin.saveData(this.plugin.settings);
+          });
+      });
+
+    new Setting(containerEl)
       .setName('Tasks section header')
       .setDesc(
         'Markdown header to use when creating tasks section in a document',

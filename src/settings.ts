@@ -3,6 +3,7 @@ import type { ILocaleOverride, IWeekStartOption } from 'obsidian-calendar-ui';
 export interface ISettings {
   tasksHeader: string;
   blankLineAfterHeader: boolean;
+  preserveMovedTasks: boolean;
 
   // Notifications
   displayedRemoveLinksNotice: boolean;
@@ -15,6 +16,7 @@ export interface ISettings {
 const defaultSettings: ISettings = {
   tasksHeader: '## Tasks',
   blankLineAfterHeader: true,
+  preserveMovedTasks: false,
 
   displayedRemoveLinksNotice: false,
 
