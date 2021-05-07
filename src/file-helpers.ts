@@ -80,6 +80,18 @@ export const removeLines = async (
     return true;
   });
 
+// markTaskAsCopied marks {count} the tasks starting on line {start} as copied
+// by 
+
+
+/**
+ * @description marks {count} the tasks starting on line {start} as copied by inserting '>' between brackets
+ * @param {TFile} file
+ * @param {number} start -- the line number of the first task to mark as copied
+ * @param {number} count -- the number of tasks to mark as copied
+ * @param {VaultIntermediate} vault 
+ * @returns 
+ */
 export const markTaskAsCopied = async (
   file: TFile,
   start: number,
