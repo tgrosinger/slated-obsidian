@@ -81,6 +81,27 @@ export const removeLines = async (
   });
 
 /**
+ * @description marks {count} the tasks starting on line {start} as copied by inserting '>' between brackets
+ * @param {TFile} file
+ * @param {number} start -- the line number of the first task to mark as copied
+ * @param {number} count -- the number of tasks to mark as copied
+ * @param {VaultIntermediate} vault
+ * @returns
+ */
+export const markTaskAsCopied = async (
+  file: TFile,
+  start: number,
+  count: number,
+  vault: VaultIntermediate,
+): Promise<void> =>
+  withFileContents(file, vault, (lines: string[]): boolean => {
+    const tasksToMark = lines.slice(start, start + count);
+    const markedTasks = tasksToMark.map((t) => t.replace('[ ]', '[>]'));
+    lines.splice(start, count, ...markedTasks);
+    return true;
+  });
+
+/**
  * Read the file contents and pass to the provided function as a list of lines.
  * If the provided function returns true, write the array back to the file.
  * NOTE: If useCache is true, the fn is not allowed to update the file!
