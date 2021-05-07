@@ -368,9 +368,9 @@ class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Preserve incomplete tasks once moved.')
+      .setName('Preserve incomplete tasks once copied')
       .setDesc(
-        'After moving a task, mark as moved with [>] in current note rather than deleting it.',
+        'After copying a task to the new note, mark as moved with [>] in current note rather than deleting it.',
       )
       .addToggle((toggle) => {
         toggle
