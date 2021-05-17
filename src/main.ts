@@ -142,29 +142,6 @@ export default class SlatedPlugin extends Plugin {
     });
 
     this.addSettingTab(new SettingsTab(this.app, this));
-
-    if (!this.settings.displayedRemoveLinksNotice) {
-      const div = createDiv();
-      div
-        .createEl('p')
-        .setText(
-          'The Slated plugin has been updated to remove links between tasks.',
-        );
-      div
-        .createEl('p')
-        .setText(
-          'After much reflection, it was decided that this functionality was not the right direction for Slated and caused undue complexity.',
-        );
-      div
-        .createEl('p')
-        .setText(
-          'This change may result in some existing tasks not moving or repeating correctly. If you experience issues with tasks, please recreate the line without links to other notes. If you prefer the old functionality, you can restore it by manually installing the old version from https://github.com/tgrosinger/slated-obsidian/releases/tag/0.2.2',
-        );
-      div.createEl('p').setText('Thank you for your patience.');
-      new NotificationModal(this.app, 'Slated Plugin Update Notes', div).open();
-      this.settings.displayedRemoveLinksNotice = true;
-      await this.saveData(this.settings);
-    }
   }
 
   private async loadSettings(): Promise<void> {
@@ -352,8 +329,7 @@ class SettingsTab extends PluginSettingTab {
       text: 'This plugin is in beta testing. Back up your data!',
     });
     containerEl.createEl('p', {
-      text:
-        'If you encounter bugs, or have feature requests, please submit them on Github.',
+      text: 'If you encounter bugs, or have feature requests, please submit them on Github.',
     });
     containerEl.createEl('p', { text: 'Thank you.' });
 

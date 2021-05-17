@@ -5,9 +5,6 @@ export interface ISettings {
   blankLineAfterHeader: boolean;
   preserveMovedTasks: boolean;
 
-  // Notifications
-  displayedRemoveLinksNotice: boolean;
-
   // Calendar view
   localeOverride: ILocaleOverride;
   weekStart: IWeekStartOption;
@@ -17,8 +14,6 @@ const defaultSettings: ISettings = {
   tasksHeader: '## Tasks',
   blankLineAfterHeader: true,
   preserveMovedTasks: false,
-
-  displayedRemoveLinksNotice: false,
 
   localeOverride: 'system-default',
   weekStart: 'locale',
