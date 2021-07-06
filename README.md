@@ -2,7 +2,7 @@
 
 ## ⚠ Project Archived
 
-Afer much thought and experimentation, I have decided to change directions with how I manage tasks in Obsidian. The approach I am taking now is different enough that I felt it warranted a new plugin, rather than adapting Slated and foisting it on the existing users. The new plugin is called [tq](https://github.com/tgrosinger/tq-obsidian) and has been in development for a while now. At the time of writing (2021-06-10) it was not yet published, but I hope to publish it soon.
+Afer much thought and experimentation, I have decided to change directions with how I manage tasks in Obsidian. The approach I am taking now is different enough that I felt it warranted a new plugin, rather than adapting Slated and foisting it on the existing users. The new plugin is called [tq](https://github.com/tgrosinger/tq-obsidian) and is availalbe in the community plugins list.
 
 If you would like to carry on the torch of Slated, please reach out to me and we can discuss un-archiving this repository.
 
