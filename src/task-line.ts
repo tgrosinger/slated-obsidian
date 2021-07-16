@@ -147,7 +147,7 @@ export class TaskLine {
 
     const currentNoteDate = this.vault.findMomentForDailyNote(this.file);
     const nextDate = window
-      .moment(
+      .moment.utc(
         this.repeater.asRRule().after(currentNoteDate.endOf('day').toDate()),
       )
       .startOf('day');
