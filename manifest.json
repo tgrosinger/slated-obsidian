@@ -5,7 +5,7 @@
   "authorUrl": "https://grosinger.net",
   "description": "Task Management - schedule, move, and repeat tasks",
   "isDesktopOnly": false,
-  "version": "0.5.1",
+  "version": "0.5.2",
   "minAppVersion": "0.12.1",
   "js": "main.js"
 }
