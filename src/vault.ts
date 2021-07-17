@@ -41,7 +41,8 @@ export class VaultIntermediate {
   public findMomentForDailyNote = (file: TFile): Moment | undefined => {
     const { format } = getDailyNoteSettings();
     const date = window.moment(file.basename, format, true);
-    return date.isValid() ? date : null;
+    const dateFullPath = window.moment(file.path.split(".md")[0], format, true)
+    return date.isValid() ? date : dateFullPath.isValid() ? dateFullPath : null;
   };
 
   public fileNameForMoment = (date: Moment): string =>
